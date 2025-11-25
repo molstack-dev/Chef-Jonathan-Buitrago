@@ -5,22 +5,32 @@
  * Organizado en secciones para facilitar el mantenimiento
  */
 
-/* 
+/* Importar la fuente Parisienne */
+@import url('https://fonts.googleapis.com/css2?family=Parisienne&display=swap');
+
+/* Definir la fuente Parisienne */
+@font-face {
+    font-family: 'Parisienne';
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url(https://fonts.gstatic.com/s/parisienne/v15/E21i_d3kivvAkxhLEVZpcy96DuKuavMw4Qu2VX0.woff2) format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+.parisienne-font {
+    font-family: 'Parisienne', cursive;
+}
+
+/* Estilos generales */
+/*
  * =============================================================================
  * FONTS
  * Estilos para fuentes personalizadas
  * =============================================================================
  */
 
-/* Fuente Parisienne para el nombre del chef */
-.parisienne-font {
-    font-family: 'Parisienne', cursive;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-    text-rendering: optimizeLegibility;
-    line-height: 1.4;
-    overflow: visible;
-}
+/* Already included in GENERAL STYLES section */
 
 /* 
  * =============================================================================
@@ -603,10 +613,10 @@ footer {
  * Clases de utilidad
  * =============================================================================
  */
- 
- /* Barra de progreso */
- .progress-fill {
-     height: 100%;
+
+/* Barra de progreso */
+.progress-fill {
+    height: 100%;
     background: linear-gradient(90deg, #1f1080, #962b1b);
     border-radius: 4px;
     transition: width 0.3s ease;

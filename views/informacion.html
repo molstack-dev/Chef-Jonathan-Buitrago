@@ -44,11 +44,11 @@
                     </div>
                     <div>
                         <h4 class="text-3xl font-semibold mb-6 text-white">Biografía</h4>
-                        <p class="text-gray-300 mb-6">Jonathan Buitrago es un reconocido chef pastelero y chocolatero colombiano con más de 10 años de experiencia en el sector gastronómico. Su pasión por la repostería lo ha llevado a convertirse en una figura destacada en el mundo de la pastelería nacional e internacional.
+                        <p class="text-gray-300 mb-6"><strong class="text-gray-50">Jonathan Buitrago</strong> es un reconocido chef pastelero y chocolatero colombiano con más de <strong class="text-gray-50">10 años</strong>  de experiencia en el sector gastronómico. Su pasión por la repostería lo ha llevado a convertirse en una figura destacada en el mundo de la pastelería nacional e internacional.
                         </p>
-                        <p class="text-gray-300 mb-6">En 2018 fue galardonado como el "Mejor Chocolatero de Colombia", un reconocimiento que respalda su maestría en el arte del chocolate. Su enfoque combina la tradición con la innovación, creando obras gastronómicas que deleitan los sentidos.
+                        <p class="text-gray-300 mb-6">En 2018 fue galardonado como el <strong class="text-gray-50">Mejor Chocolatero de Colombia</strong>, un reconocimiento que respalda su maestría en el arte del chocolate. Su enfoque combina la tradición con la innovación, creando obras gastronómicas que deleitan los sentidos.
                         </p>
-                        <p class="text-gray-300">Además de su labor como chef, Jonathan se dedica a la formación de nuevos talentos culinarios, compartiendo su conocimiento a través de cursos especializados y asesorías personalizadas.
+                        <p class="text-gray-300">Además de su labor como Chef, Jonathan se dedica a la formación de nuevos talentos culinarios, compartiendo su conocimiento a través de cursos especializados y asesorías personalizadas.
                         </p>
                     </div>
                 </div>
@@ -296,35 +296,6 @@
         <script src="../assets/script.js"></script>
         <script async src="//www.instagram.com/embed.js"></script>                    
 
-        <script>
-            function toggleFAQ(button) {
-                const answer = button.nextElementSibling;
-                const icon = button.querySelector('svg');
-                const isOpen = answer.classList.contains('faq-open');
-                document.querySelectorAll('.faq-answer').forEach(ans => {
-                    if (ans !== answer) {
-                        ans.classList.remove('faq-open');
-                        ans.style.maxHeight = null;
-                        ans.setAttribute('aria-hidden', 'true');
-                    }
-                });
-                document.querySelectorAll('.faq-question svg').forEach(ic => {
-                    if (ic !== icon) {
-                        ic.classList.remove('');
-                    }
-                });
-                if (!isOpen) {
-                    answer.classList.add('faq-open');
-                    answer.style.maxHeight = answer.scrollHeight + 'px';
-                    answer.setAttribute('aria-hidden', 'false');
-                    icon.classList.add('rotate-180');
-                } else {
-                    answer.classList.remove('faq-open');
-                    answer.style.maxHeight = null;
-                    answer.setAttribute('aria-hidden', 'true');
-                    icon.classList.remove('rotate-180');
-                }
-            }
-        </script>
+        
     </body>
 </html>
