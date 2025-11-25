@@ -166,39 +166,100 @@ document.addEventListener('DOMContentLoaded', function() {
     window.addEventListener('scroll', reveal);
     reveal(); // Initial check
 
-    // Formulario de login
-    const loginForm = document.getElementById('login-form');
-    if (loginForm) {
-        loginForm.addEventListener('submit', function(e) {
+    // Manejar envío del formulario de registro
+    const registerForm = document.getElementById('register-form');
+    if (registerForm) {
+        registerForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-
-            // Verificar credenciales específicas
-            // Seller: edwinalexandermolinasanabria@gmail.com / 0000
-            if (email === 'edwinalexandermolinasanabria@gmail.com' && password === '0000') {
-                // seller pages live under views/seller/
-                window.location.href = '../views/seller/seller.html';
-            }
-            // Admin: juandachacon56@gmail.com, edwinalexandermolinasanabria@gmail.com/ 1234
-            else if ((email === 'juandachacon56@gmail.com' || email === 'edwinalexandermolinasanabria@gmail.com') && password === '1234') {
-                // admin pages live under views/admin/
-                window.location.href = '../views/admin/admin.html';
-            } else {
-                // Simulación de login normal -> user pages under views/user/
-                window.location.href = '../views/user/user.html';
+            
+            const name = document.getElementById('register-name').value;
+            const email = document.getElementById('register-email').value;
+            const password = document.getElementById('register-password').value;
+            
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert('Registro exitoso. Por favor inicia sesión.', 'success');
+                    // Limpiar formulario
+                    registerForm.reset();
+                    // Redirigir al login después de 2 segundos
+                    setTimeout(() => {
+                        document.querySelector('#login-form').scrollIntoView({ behavior: 'smooth' });
+                    }, 2000);
+                } else {
+                    showAlert(data.message || 'Error en el registro', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error de conexión con el servidor', 'error');
             }
         });
     }
-
-    // Formulario de registro
-    const registerForm = document.getElementById('register-form');
-    if (registerForm) {
-        registerForm.addEventListener('submit', function(e) {
+    
+    // Manejar envío del formulario de login
+    const loginForm = document.getElementById('login-form');
+    if (loginForm) {
+        loginForm.addEventListener('submit', async function(e) {
             e.preventDefault();
-            // Simulación de registro
-            window.location.href = 'views/registro.html';
+            
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    showAlert(`Bienvenido ${data.user.name}`, 'success');
+                    // Guardar usuario en localStorage
+                    setCurrentUser(data.user);
+                    
+                    // Redirigir según rol después de 1 segundo
+                    setTimeout(() => {
+                        redirectToDashboard();
+                    }, 1000);
+                } else {
+                    showAlert(data.message || 'Error al iniciar sesión', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showAlert('Error de conexión con el servidor', 'error');
+            }
         });
+    }
+    
+    // Mostrar nombre de usuario en el dashboard si está logueado
+    const userNameElement = document.getElementById('user-name');
+    if (userNameElement) {
+        const user = getCurrentUser();
+        if (user) {
+            userNameElement.textContent = user.name;
+        } else {
+            // Si no hay usuario, redirigir al login
+            window.location.href = '../registro.html';
+        }
+    }
+    
+    // Manejar botón de logout
+    const logoutButton = document.getElementById('logout-button');
+    if (logoutButton) {
+        logoutButton.addEventListener('click', logout);
     }
 
     // Formularios de administración
@@ -311,11 +372,74 @@ document.addEventListener('DOMContentLoaded', function() {
 
 });
 
-// Función para toggle del menú móvil
+// Función para alternar menú móvil
 function toggleMobileMenu() {
-    const mobileMenu = document.getElementById('mobile-menu');
-    if (mobileMenu) {
-        mobileMenu.classList.toggle('hidden');
+    const menu = document.getElementById('mobile-menu');
+    if (menu) {
+        menu.classList.toggle('hidden');
+    }
+}
+
+// Función para mostrar alertas
+function showAlert(message, type = 'success') {
+    // Eliminar alertas anteriores
+    const existingAlert = document.querySelector('.alert');
+    if (existingAlert) {
+        existingAlert.remove();
+    }
+    
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type}`;
+    alertDiv.textContent = message;
+    
+    // Insertar la alerta al principio del formulario o contenedor principal
+    const form = document.querySelector('form') || document.querySelector('.container');
+    if (form) {
+        form.parentNode.insertBefore(alertDiv, form);
+        
+        // Eliminar la alerta después de 5 segundos
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+}
+
+// Función para obtener datos del usuario desde localStorage
+function getCurrentUser() {
+    const user = localStorage.getItem('currentUser');
+    return user ? JSON.parse(user) : null;
+}
+
+// Función para guardar datos del usuario en localStorage
+function setCurrentUser(user) {
+    localStorage.setItem('currentUser', JSON.stringify(user));
+}
+
+// Función para cerrar sesión
+function logout() {
+    localStorage.removeItem('currentUser');
+    window.location.href = '../index.html';
+}
+
+// Función para redirigir según rol del usuario
+function redirectToDashboard() {
+    const user = getCurrentUser();
+    if (user) {
+        switch(user.role) {
+            case 'admin':
+                window.location.href = 'admin/admin.html';
+                break;
+            case 'seller':
+                window.location.href = 'seller/seller.html';
+                break;
+            case 'user':
+                window.location.href = 'user/user.html';
+                break;
+            default:
+                window.location.href = '../index.html';
+        }
     }
 }
 
