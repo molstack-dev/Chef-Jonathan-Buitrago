@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const password = document.getElementById('register-password').value;
             
             try {
-                const response = await fetch('/api/register', {
+                const response = await fetch('/backend/api/register.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const password = document.getElementById('login-password').value;
             
             try {
-                const response = await fetch('/api/login', {
+                const response = await fetch('/backend/api/login.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
