@@ -1,96 +1,93 @@
 <?php
-// init_db.php - Inicializar la base de datos SQLite con todas las tablas
+// init_db.php - Inicializar la base de datos MySQL con todas las tablas
 
 require_once 'config.php';
 
 try {
-    // Habilitar claves foráneas en SQLite
-    $pdo->exec("PRAGMA foreign_keys = ON");
-
     // Crear tabla de usuarios
     $pdo->exec("CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        password TEXT NOT NULL,
-        role TEXT CHECK(role IN ('admin', 'seller', 'user')) NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )");
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        role ENUM('admin', 'seller', 'user') NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     // Crear tabla de cursos
     $pdo->exec("CREATE TABLE IF NOT EXISTS courses (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT NOT NULL,
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
         description TEXT,
-        price REAL,
-        duration TEXT,
-        category TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )");
+        price DECIMAL(10, 2),
+        duration VARCHAR(100),
+        category VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     // Crear tabla de clientes
     $pdo->exec("CREATE TABLE IF NOT EXISTS clients (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT,
-        phone TEXT,
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        phone VARCHAR(20),
         address TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )");
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     // Crear tabla de vendedores/trabajadores
     $pdo->exec("CREATE TABLE IF NOT EXISTS sellers (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        email TEXT,
-        phone TEXT,
-        commission_rate REAL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )");
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255),
+        phone VARCHAR(20),
+        commission_rate DECIMAL(5, 2),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     // Crear tabla de ventas
     $pdo->exec("CREATE TABLE IF NOT EXISTS sales (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        client_id INTEGER,
-        seller_id INTEGER,
-        course_id INTEGER,
-        amount REAL,
-        date DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (client_id) REFERENCES clients(id),
-        FOREIGN KEY (seller_id) REFERENCES sellers(id),
-        FOREIGN KEY (course_id) REFERENCES courses(id)
-    )");
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        client_id INT,
+        seller_id INT,
+        course_id INT,
+        amount DECIMAL(10, 2),
+        date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL,
+        FOREIGN KEY (seller_id) REFERENCES sellers(id) ON DELETE SET NULL,
+        FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     // Crear tabla de comisiones
     $pdo->exec("CREATE TABLE IF NOT EXISTS commissions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        seller_id INTEGER,
-        sale_id INTEGER,
-        amount REAL,
-        date DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (seller_id) REFERENCES sellers(id),
-        FOREIGN KEY (sale_id) REFERENCES sales(id)
-    )");
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        seller_id INT,
+        sale_id INT,
+        amount DECIMAL(10, 2),
+        date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (seller_id) REFERENCES sellers(id) ON DELETE SET NULL,
+        FOREIGN KEY (sale_id) REFERENCES sales(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     // Crear tabla de visitas
     $pdo->exec("CREATE TABLE IF NOT EXISTS visits (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        client_id INTEGER,
-        date DATETIME DEFAULT CURRENT_TIMESTAMP,
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        client_id INT,
+        date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         notes TEXT,
-        FOREIGN KEY (client_id) REFERENCES clients(id)
-    )");
+        FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     // Crear tabla de registros
     $pdo->exec("CREATE TABLE IF NOT EXISTS registrations (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        client_id INTEGER,
-        course_id INTEGER,
-        status TEXT CHECK(status IN ('pending', 'confirmed', 'completed')) DEFAULT 'pending',
-        registration_date DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY (client_id) REFERENCES clients(id),
-        FOREIGN KEY (course_id) REFERENCES courses(id)
-    )");
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        client_id INT,
+        course_id INT,
+        status ENUM('pending', 'confirmed', 'completed') DEFAULT 'pending',
+        registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE,
+        FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci");
 
     // Insertar datos iniciales
     // Verificar si ya existen datos
