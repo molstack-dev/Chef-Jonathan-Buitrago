@@ -1,10 +1,13 @@
 <?php
+require_once '../cors.php';
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: POST');
-header('Access-Control-Allow-Headers: Content-Type');
 
 require_once '../config.php';
+
+// Iniciar sesión si no está iniciada
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -40,6 +43,12 @@ try {
         echo json_encode(['message' => 'Credenciales inválidas']);
         exit;
     }
+
+    // Iniciar sesión
+    $_SESSION['user_id'] = $user['id'];
+    $_SESSION['user_email'] = $user['email'];
+    $_SESSION['user_name'] = $user['name'];
+    $_SESSION['user_role'] = $user['role'];
 
     // No enviar contraseña en la respuesta
     unset($user['password']);

@@ -1,9 +1,10 @@
-# Chef Jonathan Buitrago - Versión PHP (SQLite)
+# Chef Jonathan Buitrago - Versión PHP (MySQL)
 
 ## ✅ Cambios Realizados
 
 ### 1. **Base de Datos SQLite (Local)**
-- Migración de MySQL a **SQLite** para desarrollo local sin dependencias externas.
+- Uso de **MySQL** con XAMPP para desarrollo local.
+- El nombre de la base es: `chef_jonathan`.
 - Archivo de base de datos: `backend/chef_jonathan.sqlite3`
 - Totalmente portátil y funciona con PHP por defecto.
 
@@ -124,7 +125,7 @@ curl http://localhost:8000/backend/api/clients.php
 
 ```
 backend/
-├── config.php              # Configuración SQLite
+├── config.php              # Configuración MySQL
 ├── init_db.php             # Inicializar base de datos
 ├── chef_jonathan.sqlite3   # Base de datos (auto-generada)
 └── api/
@@ -152,4 +153,4 @@ backend/
 
 ---
 
-**Rama**: `php` | **Base de Datos**: SQLite | **Servidor**: PHP Built-in
+**Rama**: `php` | **Base de Datos**: MySQL | **Servidor**: PHP Built-in

@@ -1,23 +1,34 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // Toast notification function
+    window.showToast = function(message, type = 'success') {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+            container = document.createElement('div');
+            container.id = 'toast-container';
+            container.className = 'fixed top-24 right-4 z-50 flex flex-col gap-2';
+            document.body.appendChild(container);
+        }
+
+        const toast = document.createElement('div');
+        toast.className = `px-4 py-3 rounded-lg shadow-lg text-white text-sm ${
+            type === 'success' ? 'bg-green-600' :
+            type === 'error' ? 'bg-red-600' :
+            'bg-amber-600'
+        }`;
+        toast.textContent = message;
+        container.appendChild(toast);
+
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(20px)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 3000);
+    };
+
     // Mobile menu toggle for all pages
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');
-    
-    if (mobileMenuButton && mobileMenu) {
-        mobileMenuButton.addEventListener('click', () => {
-            mobileMenu.classList.toggle('hidden');
-        });
-    }
-
-    // Close mobile menu on link click
-    const mobileMenuLinks = document.querySelectorAll('#mobile-menu a');
-    for (const link of mobileMenuLinks) {
-        link.addEventListener('click', function() {
-            if (!mobileMenu.classList.contains('hidden')) {
-                mobileMenu.classList.add('hidden');
-            }
-        });
-    }
 
     // Formulario de edición de perfil
     const editProfileBtn = document.getElementById('edit-profile');
@@ -43,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         profileForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            // Aquí iría la lógica para guardar los cambios
+            console.log('Profile changes saved');
             profileInputs.forEach(input => input.disabled = true);
             actionButtons.classList.add('hidden');
             editProfileBtn.classList.remove('hidden');
@@ -55,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (passwordForm) {
         passwordForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            // Aquí iría la lógica para cambiar la contraseña
+            console.log('Password change requested');
             passwordForm.reset();
         });
     }
@@ -123,7 +134,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     const reservationForm = document.getElementById('reservation-form');
-    if(reservationForm){
+    if (reservationForm) {
         reservationForm.addEventListener('submit', function(event) {
             event.preventDefault();
             const type = document.getElementById('reservation-type').value;
@@ -132,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const messageDisplay = document.getElementById('reservation-message-display');
 
             if (!type || !date) {
-                alert('Por favor, completa todos los campos requeridos.');
+                showToast('Por favor, completa todos los campos requeridos.', 'error');
                 return;
             }
 
@@ -262,25 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {
         logoutButton.addEventListener('click', logout);
     }
 
-    // Formularios de administración
-    const adminForms = [
-        'create-user-form', 'modify-user-form', 'inactivate-user-form',
-        'register-inscription-form', 'modify-inscription-form', 'cancel-inscription-form',
-        'create-service-form', 'modify-service-form', 'inactivate-service-form',
-        'register-completion-form', 'generate-certificate-form', 'generate-invoice-form'
-    ];
-
-    adminForms.forEach(formId => {
-        const form = document.getElementById(formId);
-        if (form) {
-            form.addEventListener('submit', function(e) {
-                e.preventDefault();
-                alert('Operación realizada exitosamente (simulada).');
-                form.reset();
-            });
-        }
-    });
-
+   
     // Funcionalidad de FAQ
     const faqQuestions = document.querySelectorAll('.faq-question');
     faqQuestions.forEach(question => {
@@ -577,6 +570,9 @@ function toggleFAQ(button) {
     // Polling localStorage for changes and re-render tables when needed
     let lastSnapshot = '';
     function pollAndRender(){
+        // Skip polling on admin pages to avoid conflicts with admin-tables.js
+        if (window.location.pathname.includes('/admin/')) return;
+        
         const raw = localStorage.getItem(STORAGE_KEY) || '';
         if(raw !== lastSnapshot){
             lastSnapshot = raw;
@@ -592,56 +588,6 @@ function toggleFAQ(button) {
     pollAndRender();
 
 })();
-
-// --- Mobile menu handling for all pages ---
-document.addEventListener('DOMContentLoaded', function() {
-    // Mobile menu handling for all pages with toggleMobileMenu button
-    const mobileMenuButtons = document.querySelectorAll('button[id="mobile-menu-button"]');
-    mobileMenuButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const targetMenuId = this.getAttribute('data-target') || 'mobile-menu';
-            const mobileMenu = document.getElementById(targetMenuId);
-            if (mobileMenu) {
-                mobileMenu.classList.toggle('hidden');
-            }
-        });
-    });
-
-    // FAQ questions handling
-    const faqQuestions = document.querySelectorAll('.faq-question');
-    faqQuestions.forEach(question => {
-        question.addEventListener('click', function() {
-            const allAnswers = document.querySelectorAll('.faq-answer');
-            const allIcons = document.querySelectorAll('.faq-question svg');
-            const answer = this.nextElementSibling;
-            const icon = this.querySelector('svg');
-            const isHidden = answer.classList.contains('hidden');
-
-            // Cerrar todas las otras respuestas
-            allAnswers.forEach(ans => {
-                if (ans !== answer) {
-                    ans.classList.add('hidden');
-                }
-            });
-
-            allIcons.forEach(ic => {
-                if (ic !== icon) {
-                    ic.classList.remove('rotate-180');
-                }
-            });
-
-            // Toggle the clicked answer
-            if (isHidden) {
-                answer.classList.remove('hidden');
-                icon.classList.add('rotate-180');
-            } else {
-                answer.classList.add('hidden');
-                icon.classList.remove('rotate-180');
-            }
-        });
-    });
-});
-
 // --- Immediate save helpers and form handlers (attach safely) ---
 (function(){
     const STORAGE_KEY = 'chef_localDB_v1';
@@ -756,14 +702,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const id = t.getAttribute('data-id');
             const db = loadLocalDB(); if(!db) return;
             const idx = (db.users||[]).findIndex(x => String(x.id) === String(id));
-            if(idx === -1) return alert('Usuario no encontrado');
+            if(idx === -1) return showToast('Usuario no encontrado', 'error');
             const user = db.users[idx];
             const name = prompt('Nombre:', user.name || '');
             if(name === null) return;
             const email = prompt('Email:', user.email || '');
             if(email === null) return;
-            if(!name.trim()){ return alert('El nombre es requerido'); }
-            if(!isEmail(email)){ return alert('Email no válido'); }
+            if(!name.trim()){ return showToast('El nombre es requerido', 'error'); }
+            if(!isEmail(email)){ return showToast('Email no válido', 'error'); }
             user.name = name.trim(); user.email = email.trim(); user.updatedAt = new Date().toISOString();
             db.users[idx] = user; saveLocalDB(db); try{ renderUsers(); }catch(e){}
             return;
@@ -777,29 +723,78 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Clients
         if(t.matches('.btn-edit-client')){
-            const id = t.getAttribute('data-id'); const db = loadLocalDB(); const idx = (db.clients||[]).findIndex(x => String(x.id) === String(id)); if(idx===-1) return alert('Cliente no encontrado');
+            const id = t.getAttribute('data-id');
+            const db = loadLocalDB();
+            const idx = (db.clients||[]).findIndex(x => String(x.id) === String(id));
+            if(idx===-1) return showToast('Cliente no encontrado', 'error');
+
             const client = db.clients[idx];
-            const name = prompt('Nombre:', client.name||''); if(name===null) return; if(!name.trim()) return alert('Nombre requerido');
-            const email = prompt('Email:', client.email||''); if(email===null) return; if(email && !isEmail(email)) return alert('Email no válido');
-            const phone = prompt('Teléfono:', client.phone||''); if(phone===null) return; if(phone && !isPhone(phone)) return alert('Teléfono no válido');
-            client.name = name.trim(); client.email = email.trim(); client.phone = phone.trim(); client.updatedAt = new Date().toISOString(); db.clients[idx]=client; saveLocalDB(db); try{ renderClients(); }catch(e){}
+            const name = prompt('Nombre:', client.name||'');
+            if(name===null) return;
+            if(!name.trim()) return showToast('Nombre requerido', 'error');
+
+            const email = prompt('Email:', client.email||'');
+            if(email===null) return;
+            if(email && !isEmail(email)) return showToast('Email no válido', 'error');
+
+            const phone = prompt('Teléfono:', client.phone||'');
+            if(phone===null) return;
+            if(phone && !isPhone(phone)) return showToast('Teléfono no válido', 'error');
+
+            client.name = name.trim();
+            client.email = email.trim();
+            client.phone = phone.trim();
+            client.updatedAt = new Date().toISOString();
+            db.clients[idx]=client;
+            saveLocalDB(db);
+            try{ renderClients(); }catch(e){}
             return;
         }
         if(t.matches('.btn-delete-client')){
-            const id = t.getAttribute('data-id'); if(!confirm('Eliminar cliente?')) return; const db = loadLocalDB(); db.clients = (db.clients||[]).filter(x => String(x.id)!==String(id)); saveLocalDB(db); try{ renderClients(); }catch(e){}; return;
+            const id = t.getAttribute('data-id');
+            if(!confirm('Eliminar cliente?')) return;
+            const db = loadLocalDB();
+            db.clients = (db.clients||[]).filter(x => String(x.id)!==String(id));
+            saveLocalDB(db);
+            try{ renderClients(); }catch(e){}
+            return;
         }
 
         // Sales
         if(t.matches('.btn-edit-sale')){
-            const id = t.getAttribute('data-id'); const db = loadLocalDB(); const idx = (db.sales||[]).findIndex(x => String(x.id) === String(id)); if(idx===-1) return alert('Venta no encontrada');
+            const id = t.getAttribute('data-id');
+            const db = loadLocalDB();
+            const idx = (db.sales||[]).findIndex(x => String(x.id) === String(id));
+            if(idx===-1) return showToast('Venta no encontrada', 'error');
+
             const sale = db.sales[idx];
-            const client = prompt('Cliente:', sale.client||''); if(client===null) return; if(!client.trim()) return alert('Cliente requerido');
-            const service = prompt('Servicio:', sale.service||''); if(service===null) return; const amount = prompt('Monto:', sale.amount||''); if(amount===null) return; if(amount && !isNumeric(amount)) return alert('Monto inválido');
-            sale.client = client.trim(); sale.service = service.trim(); sale.amount = amount; sale.updatedAt = new Date().toISOString(); db.sales[idx]=sale; saveLocalDB(db); try{ renderSales(); }catch(e){}
+            const client = prompt('Cliente:', sale.client||'');
+            if(client===null) return;
+            if(!client.trim()) return showToast('Cliente requerido', 'error');
+
+            const service = prompt('Servicio:', sale.service||'');
+            if(service===null) return;
+            const amount = prompt('Monto:', sale.amount||'');
+            if(amount===null) return;
+            if(amount && !isNumeric(amount)) return showToast('Monto inválido', 'error');
+
+            sale.client = client.trim();
+            sale.service = service.trim();
+            sale.amount = amount;
+            sale.updatedAt = new Date().toISOString();
+            db.sales[idx]=sale;
+            saveLocalDB(db);
+            try{ renderSales(); }catch(e){}
             return;
         }
         if(t.matches('.btn-delete-sale')){
-            const id = t.getAttribute('data-id'); if(!confirm('Eliminar venta?')) return; const db = loadLocalDB(); db.sales = (db.sales||[]).filter(x => String(x.id)!==String(id)); saveLocalDB(db); try{ renderSales(); }catch(e){}; return;
+            const id = t.getAttribute('data-id');
+            if(!confirm('Eliminar venta?')) return;
+            const db = loadLocalDB();
+            db.sales = (db.sales||[]).filter(x => String(x.id)!==String(id));
+            saveLocalDB(db);
+            try{ renderSales(); }catch(e){}
+            return;
         }
     });
 

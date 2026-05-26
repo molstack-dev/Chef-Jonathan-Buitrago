@@ -11,6 +11,9 @@
     <link rel="icon" type="image/png" href="../../img/icono.png">
 </head>
 <body class="bg-gray-900 text-white">
+    <!-- Contenedor de notificaciones -->
+    <div id="toast-container" class="fixed top-24 right-4 z-50 flex flex-col gap-2"></div>
+
     <!-- Header -->
     <header class="shadow-lg rounded-lg backdrop-blur">
         <div class="container mx-auto px-6 py-5 flex justify-between items-center">
@@ -57,8 +60,13 @@
                     <div class="product-card p-6 rounded-lg">
                         <h5 class="text-lg font-semibold mb-4">Crear Usuario</h5>
                         <form id="create-user-form">
-                            <input id="user-name" name="name" type="text" placeholder="Nombre" class="w-full mb-2 p-2 bg-gray-700 rounded" required>
+                            <input id="user-name" name="name" type="text" placeholder="Nombre" pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$" title="Solo letras y espacios" class="w-full mb-2 p-2 bg-gray-700 rounded" required>
                             <input id="user-email" name="email" type="email" placeholder="Email" class="w-full mb-2 p-2 bg-gray-700 rounded" required>
+                            <select id="user-role" name="role" class="w-full mb-2 p-2 bg-gray-800 rounded border border-gray-600" required>
+                                <option value="user">Usuario</option>
+                                <option value="seller">Vendedor</option>
+                                <option value="admin">Administrador</option>
+                            </select>
                             <input id="user-password" name="password" type="password" placeholder="Contraseña" class="w-full mb-4 p-2 bg-gray-700 rounded" required>
                             <button type="submit" class="w-full bg-purple-600 py-2 rounded hover:bg-purple-700">Crear</button>
                         </form>
@@ -76,58 +84,12 @@
                                             <th class="pb-3 text-gray-300">ID</th>
                                             <th class="pb-3 text-gray-300">Nombre</th>
                                             <th class="pb-3 text-gray-300">Email</th>
+                                            <th class="pb-3 text-gray-300">Rol</th>
                                             <th class="pb-3 text-gray-300">Fecha</th>
-                                            <th class="pb-3 text-gray-300">Estado</th>
                                             <th class="pb-3 text-gray-300">Acciones</th>
                                         </tr>
                                     </thead>
-                                    <tbody id="users-tbody">
-                                        <tr class="border-b border-gray-800">
-                                            <td class="py-3 text-gray-400 text-sm">001</td>
-                                            <td class="py-3 text-white text-sm">Juan Pérez</td>
-                                            <td class="py-3 text-gray-400 text-sm">juan@example.com</td>
-                                            <td class="py-3 text-gray-400 text-sm">15/03/24</td>
-                                            <td class="py-3">
-                                                <span class="px-2 py-1 bg-green-900 text-green-300 rounded-full text-xs">Activo</span>
-                                            </td>
-                                            <td class="py-3">
-                                                <div class="flex space-x-1">
-                                                    <button class="px-2 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 text-xs">Modificar</button>
-                                                    <button class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Inactivar</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr class="border-b border-gray-800">
-                                            <td class="py-3 text-gray-400 text-sm">002</td>
-                                            <td class="py-3 text-white text-sm">María Gómez</td>
-                                            <td class="py-3 text-gray-400 text-sm">maria@example.com</td>
-                                            <td class="py-3 text-gray-400 text-sm">22/02/24</td>
-                                            <td class="py-3">
-                                                <span class="px-2 py-1 bg-green-900 text-green-300 rounded-full text-xs">Activo</span>
-                                            </td>
-                                            <td class="py-3">
-                                                <div class="flex space-x-1">
-                                                    <button class="px-2 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 text-xs">Modificar</button>
-                                                    <button class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Inactivar</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr class="border-b border-gray-800">
-                                            <td class="py-3 text-gray-400 text-sm">003</td>
-                                            <td class="py-3 text-white text-sm">Carlos López</td>
-                                            <td class="py-3 text-gray-400 text-sm">carlos@example.com</td>
-                                            <td class="py-3 text-gray-400 text-sm">10/01/24</td>
-                                            <td class="py-3">
-                                                <span class="px-2 py-1 bg-red-900 text-red-300 rounded-full text-xs">Inactivo</span>
-                                            </td>
-                                            <td class="py-3">
-                                                <div class="flex space-x-1">
-                                                    <button class="px-2 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 text-xs">Modificar</button>
-                                                    <button class="px-2 py-1 bg-gray-600 text-white rounded text-xs cursor-not-allowed" disabled>Activar</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    </tbody>
+                                    <tbody id="users-tbody"></tbody>
                                 </table>
                             </div>
                         </div>
@@ -136,6 +98,50 @@
             </div>
         </div>
     </section>
+
+    <!-- Modal Editar Usuario -->
+    <div id="edit-user-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-semibold text-white mb-4">Modificar Usuario</h3>
+            <form id="edit-user-form" class="space-y-4">
+                <input type="hidden" id="edit-user-id">
+                <div>
+                    <label class="block text-gray-300 text-sm mb-2">Nombre</label>
+                    <input type="text" id="edit-user-name" pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$" title="Solo letras y espacios" class="w-full px-3 py-2 bg-gray-700 rounded text-white border border-gray-600 focus:border-amber-500" required>
+                </div>
+                <div>
+                    <label class="block text-gray-300 text-sm mb-2">Email</label>
+                    <input type="email" id="edit-user-email" class="w-full px-3 py-2 bg-gray-700 rounded text-white border border-gray-600 focus:border-amber-500" required>
+                </div>
+                <div>
+                    <label class="block text-gray-300 text-sm mb-2">Rol</label>
+                    <select id="edit-user-role" class="w-full px-3 py-2 bg-gray-700 rounded text-white border border-gray-600 focus:border-amber-500">
+                        <option value="user">Usuario</option>
+                        <option value="seller">Vendedor</option>
+                        <option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <div class="flex justify-end space-x-3">
+                    <button type="button" id="cancel-edit-user" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">Cancelar</button>
+                    <button type="submit" class="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Eliminar Usuario -->
+    <div id="delete-user-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 class="text-xl font-semibold text-white mb-4">Confirmar Eliminación</h3>
+            <p class="text-gray-300 mb-6">¿Estás seguro de que deseas eliminar este usuario? Esta acción no se puede deshacer.</p>
+            <p id="delete-user-name" class="text-red-400 font-semibold mb-6"></p>
+            <input type="hidden" id="delete-user-id">
+            <div class="flex justify-end space-x-3">
+                <button type="button" id="cancel-delete-user" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">Cancelar</button>
+                <button type="button" id="confirm-delete-user" class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">Eliminar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="border-t border-white-700 py-4">
@@ -157,5 +163,4 @@
     </footer>
 
     <script src="../../assets/script.js"></script>
-</body>
-</html>
+    <script src="../../assets/admin-tables.js"></script>

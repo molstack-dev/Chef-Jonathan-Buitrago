@@ -1,0 +1,44 @@
+# .htaccess - Configuración de Apache para Chef Jonathan Buitrago
+
+# Habilitar rewrite engine
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /Chef-Jonathan-Buitrago/
+
+    # Redirigir requests al archivo index correspondiente
+    # (Manejar extensiones .php que no existen como files)
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # Redirigir API calls
+    RewriteRule ^api/([a-z-]+)/?$ backend/api/$1.php [L,QSA]
+
+    # Redirigir vistas
+    RewriteRule ^view/([a-z]+)/?$ views/$1.html [L,QSA]
+</IfModule>
+
+# Seguridad: Prevenir acceso a archivos sensibles
+<FilesMatch "\.(env|db|sqlite|sqlite3)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
+
+# Mejorar el rendimiento con caché
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+
+# Gzip compression
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain text/html text/xml text/css text/javascript application/javascript
+</IfModule>

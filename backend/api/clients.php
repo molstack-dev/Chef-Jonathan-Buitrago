@@ -1,8 +1,6 @@
 <?php
+require_once '../cors.php';
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
-header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE');
-header('Access-Control-Allow-Headers: Content-Type');
 
 require_once '../config.php';
 
@@ -33,7 +31,7 @@ if ($method === 'GET') {
 
     try {
         $stmt = $pdo->prepare("INSERT INTO clients (name, email, phone, address) VALUES (?, ?, ?, ?)");
-        $stmt->execute([$name, $email, $phone, $address]);
+        $stmt->execute([$name, $email ?: null, $phone ?: null, $address ?: null]);
 
         $clientId = $pdo->lastInsertId();
 
@@ -68,7 +66,7 @@ if ($method === 'GET') {
 
     try {
         $stmt = $pdo->prepare("UPDATE clients SET name = ?, email = ?, phone = ?, address = ? WHERE id = ?");
-        $stmt->execute([$name, $email, $phone, $address, $id]);
+        $stmt->execute([$name ?: null, $email ?: null, $phone ?: null, $address ?: null, $id]);
 
         echo json_encode(['message' => 'Cliente actualizado exitosamente']);
     } catch (PDOException $e) {
