@@ -5,7 +5,7 @@ header('Access-Control-Allow-Origin: *');
 require_once '../config.php';
 
 try {
-    $stmt = $pdo->query("SELECT id, title, description, price, duration, category, created_at FROM courses ORDER BY created_at DESC");
+    $stmt = $pdo->query("SELECT id, title, description, description_detail, price, duration, category, image, created_at FROM courses ORDER BY created_at DESC");
     $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
     
     echo json_encode([

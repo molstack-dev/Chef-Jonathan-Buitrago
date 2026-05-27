@@ -11,6 +11,9 @@
     <link rel="icon" type="image/png" href="../../img/icono.png">
 </head>
 <body class="bg-gray-900 text-white">
+    <!-- Contenedor de notificaciones -->
+    <div id="toast-container" class="fixed top-24 right-4 z-50 flex flex-col gap-2"></div>
+
     <!-- Header -->
     <header class="shadow-lg rounded-lg backdrop-blur">
         <div class="container mx-auto px-6 py-5 flex justify-between items-center">
@@ -93,9 +96,8 @@
                                     <th class="pb-3 text-gray-300">Documentos</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                <tr class="border-b border-gray-800">
-                                    <td class="py-3 text-gray-400 text-sm">001</td>
+                            <tbody id="salidas-tbody">
+                                <tr><td colspan="6" class="py-6 text-center text-gray-400">Cargando...</td></tr>
                                     <td class="py-3 text-white text-sm">Juan Pérez</td>
                                     <td class="py-3 text-gray-400 text-sm">Chocolatería Avanzada</td>
                                     <td class="py-3 text-gray-400 text-sm">15/03/24</td>

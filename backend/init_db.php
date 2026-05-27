@@ -4,14 +4,44 @@
 require_once 'config.php';
 
 try {
+    // Desactivar checks de foreign keys para poder borrar
+    $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
+
+    // Eliminar tablas existentes si hay error de tablespace
+    $pdo->exec("DROP TABLE IF EXISTS reservations");
+    $pdo->exec("DROP TABLE IF EXISTS advisories");
+    $pdo->exec("DROP TABLE IF EXISTS registrations");
+    $pdo->exec("DROP TABLE IF EXISTS visits");
+    $pdo->exec("DROP TABLE IF EXISTS commissions");
+    $pdo->exec("DROP TABLE IF EXISTS sales");
+    $pdo->exec("DROP TABLE IF EXISTS courses");
+    $pdo->exec("DROP TABLE IF EXISTS sellers");
+    $pdo->exec("DROP TABLE IF EXISTS clients");
+    $pdo->exec("DROP TABLE IF EXISTS users");
+
+    // Reactivar foreign keys
+    $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
+
+    // Crear tabla de usuarios (antes de tablas que la referencian)
+    $pdo->exec("CREATE TABLE IF NOT EXISTS users (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        role ENUM('admin','seller','user') NOT NULL DEFAULT 'user',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
     // Crear tabla de cursos
     $pdo->exec("CREATE TABLE IF NOT EXISTS courses (
         id INT AUTO_INCREMENT PRIMARY KEY,
         title VARCHAR(255) NOT NULL,
         description TEXT,
+        description_detail TEXT,
         price DECIMAL(10, 2),
         duration VARCHAR(100),
         category VARCHAR(100),
+        image MEDIUMTEXT,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
@@ -136,12 +166,12 @@ try {
 
         // Insertar cursos
         $courses = [
-            ['Cata de Cacao', 'Una experiencia sensorial para descubrir los secretos del cacao, identificando notas y orígenes de distintas variedades.', 50000, '2 horas', 'evento'],
-            ['Pastelería de Vanguardia', 'Explora las últimas tendencias de la pastelería mundial, aplicando técnicas innovadoras y creativas a tus postres.', 150000, '10 semanas', 'cursos'],
-            ['Bombonería', 'Crea bombones artesanales con diferentes rellenos y acabados, dominando las técnicas profesionales de la chocolatería fina.', 95000, '6 semanas', 'cursos']
+            ['Cata de Cacao', 'Una experiencia sensorial para descubrir los secretos del cacao, identificando notas y orígenes de distintas variedades.', 50000, '2 horas', 'eventos', '../img/chef_jonathan_buitrago_post_12_5_2024_10_07_303366402308080947431.jpg'],
+            ['Pastelería de Vanguardia', 'Explora las últimas tendencias de la pastelería mundial, aplicando técnicas innovadoras y creativas a tus postres.', 150000, '10 semanas', 'cursos', '../img/chef_jonathan_buitrago_post_12_9_2019_8_46_522131343889580551158.jpg'],
+            ['Bombonería', 'Crea bombones artesanales con diferentes rellenos y acabados, dominando las técnicas profesionales de la chocolatería fina.', 95000, '6 semanas', 'cursos', '../img/chef_jonathan_buitrago_post_29_12_2021_8_36_232739425447496136534.jpg']
         ];
 
-        $stmt = $pdo->prepare("INSERT INTO courses (title, description, price, duration, category) VALUES (?, ?, ?, ?, ?)");
+        $stmt = $pdo->prepare("INSERT INTO courses (title, description, price, duration, category, image) VALUES (?, ?, ?, ?, ?, ?)");
         foreach ($courses as $course) {
             $stmt->execute($course);
         }

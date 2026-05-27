@@ -11,6 +11,9 @@
     <link rel="icon" type="image/png" href="../../img/icono.png">
 </head>
 <body class="bg-gray-900 text-white">
+    <!-- Contenedor de notificaciones -->
+    <div id="toast-container" class="fixed top-24 right-4 z-50 flex flex-col gap-2"></div>
+
     <!-- Header -->
     <header class="shadow-lg rounded-lg backdrop-blur">
         <div class="container mx-auto px-6 py-5 flex justify-between items-center">
@@ -57,13 +60,17 @@
                     <div class="product-card p-6 rounded-lg">
                         <h5 class="text-lg font-semibold mb-4">Registrar Inscripción</h5>
                         <form id="register-inscription-form">
-                            <input type="text" placeholder="ID Usuario" class="w-full mb-2 p-2 bg-gray-700 rounded" required>
-                            <select class="w-full mb-2 p-2 bg-gray-700 rounded" required>
-                                <option value="">Seleccionar Servicio</option>
-                                <option value="curso">Curso</option>
-                                <option value="asesoria">Asesoría</option>
+                            <select id="inscription-user" class="w-full mb-2 p-2 bg-gray-700 rounded" required>
+                                <option value="">Seleccionar Usuario</option>
                             </select>
-                            <input type="text" placeholder="ID Servicio" class="w-full mb-4 p-2 bg-gray-700 rounded" required>
+                            <select id="inscription-course" class="w-full mb-2 p-2 bg-gray-700 rounded" required>
+                                <option value="">Seleccionar Servicio</option>
+                            </select>
+                            <select id="inscription-status" class="w-full mb-4 p-2 bg-gray-700 rounded">
+                                <option value="pending">Pendiente</option>
+                                <option value="confirmed">Confirmado</option>
+                                <option value="completed">Completado</option>
+                            </select>
                             <button type="submit" class="w-full bg-purple-600 py-2 rounded hover:bg-purple-700">Registrar</button>
                         </form>
                     </div>
@@ -85,52 +92,8 @@
                                             <th class="pb-3 text-gray-300">Acciones</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr class="border-b border-gray-800">
-                                            <td class="py-3 text-gray-400 text-sm">001</td>
-                                            <td class="py-3 text-white text-sm">Juan Pérez</td>
-                                            <td class="py-3 text-gray-400 text-sm">Chocolatería Avanzada</td>
-                                            <td class="py-3 text-gray-400 text-sm">15/03/24</td>
-                                            <td class="py-3">
-                                                <span class="px-2 py-1 bg-green-900 text-green-300 rounded-full text-xs">Activo</span>
-                                            </td>
-                                            <td class="py-3">
-                                                <div class="flex space-x-1">
-                                                    <button class="px-2 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 text-xs">Modificar</button>
-                                                    <button class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Cancelar</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr class="border-b border-gray-800">
-                                            <td class="py-3 text-gray-400 text-sm">002</td>
-                                            <td class="py-3 text-white text-sm">María Gómez</td>
-                                            <td class="py-3 text-gray-400 text-sm">Pastelería Vanguardia</td>
-                                            <td class="py-3 text-gray-400 text-sm">22/02/24</td>
-                                            <td class="py-3">
-                                                <span class="px-2 py-1 bg-green-900 text-green-300 rounded-full text-xs">Activo</span>
-                                            </td>
-                                            <td class="py-3">
-                                                <div class="flex space-x-1">
-                                                    <button class="px-2 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 text-xs">Modificar</button>
-                                                    <button class="px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs">Cancelar</button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr class="border-b border-gray-800">
-                                            <td class="py-3 text-gray-400 text-sm">003</td>
-                                            <td class="py-3 text-white text-sm">Carlos López</td>
-                                            <td class="py-3 text-gray-400 text-sm">Cata de Cacao</td>
-                                            <td class="py-3 text-gray-400 text-sm">10/01/24</td>
-                                            <td class="py-3">
-                                                <span class="px-2 py-1 bg-red-900 text-red-300 rounded-full text-xs">Cancelado</span>
-                                            </td>
-                                            <td class="py-3">
-                                                <div class="flex space-x-1">
-                                                    <button class="px-2 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 text-xs">Modificar</button>
-                                                    <button class="px-2 py-1 bg-gray-600 text-white rounded text-xs cursor-not-allowed" disabled>Activar</button>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                    <tbody id="inscriptions-tbody">
+                                        <tr><td colspan="6" class="py-6 text-center text-gray-400">Cargando...</td></tr>
                                     </tbody>
                                 </table>
                             </div>

@@ -11,6 +11,9 @@
     <link rel="icon" type="image/png" href="../../img/icono.png">
 </head>
 <body class="bg-gray-900 text-white">
+    <!-- Contenedor de notificaciones -->
+    <div id="toast-container" class="fixed top-24 right-4 z-50 flex flex-col gap-2"></div>
+
     <!-- Header -->
     <header class="shadow-lg rounded-lg backdrop-blur">
         <div class="container mx-auto px-6 py-5 flex justify-between items-center">
@@ -138,23 +141,8 @@
                                     <th class="p-4 text-gray-300">Estado</th>
                                 </tr>
                             </thead>
-                            <tbody class="bg-gray-800 bg-opacity-90">
-                                <tr class="border-t border-gray-700">
-                                    <td class="p-4 text-white">Ana Gómez</td>
-                                    <td class="p-4 text-gray-300">Área de Cursos</td>
-                                    <td class="p-4 text-gray-300">09:15 AM</td>
-                                    <td class="p-4">
-                                        <span class="px-2 py-1 bg-green-900 text-green-300 rounded-full text-xs">Activa</span>
-                                    </td>
-                                </tr>
-                                <tr class="border-t border-gray-700">
-                                    <td class="p-4 text-white">Carlos Pérez</td>
-                                    <td class="p-4 text-gray-300">Administrativa</td>
-                                    <td class="p-4 text-gray-300">10:30 AM</td>
-                                    <td class="p-4">
-                                        <span class="px-2 py-1 bg-green-900 text-green-300 rounded-full text-xs">Activa</span>
-                                    </td>
-                                </tr>
+                            <tbody id="visitas-tbody" class="bg-gray-800 bg-opacity-90">
+                                <tr><td colspan="4" class="p-4 text-center text-gray-400">Cargando...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -193,25 +181,8 @@
                             <th class="p-4 text-gray-300">Duración</th>
                         </tr>
                     </thead>
-                    <tbody class="bg-gray-800 bg-opacity-90">
-                        <tr class="border-t border-gray-700">
-                            <td class="p-4 text-white">María Rodríguez</td>
-                            <td class="p-4 text-gray-300">1234567890</td>
-                            <td class="p-4 text-gray-300">Área de Cursos</td>
-                            <td class="p-4 text-gray-300">Consulta sobre cursos</td>
-                            <td class="p-4 text-gray-300">08:00 AM</td>
-                            <td class="p-4 text-gray-300">09:30 AM</td>
-                            <td class="p-4 text-gray-300">1h 30m</td>
-                        </tr>
-                        <tr class="border-t border-gray-700">
-                            <td class="p-4 text-white">Jorge López</td>
-                            <td class="p-4 text-gray-300">0987654321</td>
-                            <td class="p-4 text-gray-300">Área de Eventos</td>
-                            <td class="p-4 text-gray-300">Cotización evento</td>
-                            <td class="p-4 text-gray-300">09:15 AM</td>
-                            <td class="p-4 text-gray-300">10:00 AM</td>
-                            <td class="p-4 text-gray-300">45m</td>
-                        </tr>
+                    <tbody id="visitas-history-tbody" class="bg-gray-800 bg-opacity-90">
+                        <tr><td colspan="7" class="p-4 text-center text-gray-400">Cargando...</td></tr>
                     </tbody>
                 </table>
                 <!-- Paginación -->

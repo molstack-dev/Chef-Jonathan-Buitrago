@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmDeleteBtn.textContent = 'Eliminando...';
 
             try {
-                const response = await fetch('../../backend/api/users.php', {
+                const response = await fetch('../../backend/api/usuarios.php', {
                     method: 'DELETE',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

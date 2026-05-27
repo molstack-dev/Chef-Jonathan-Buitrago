@@ -11,6 +11,9 @@
         <link rel="icon" type="image/png" href="../../img/icono.png">
     </head>
     <body>
+        <!-- Contenedor de notificaciones -->
+        <div id="toast-container" class="fixed top-24 right-4 z-50 flex flex-col gap-2"></div>
+
         <!-- Header -->
         <header class="shadow-lg rounded-lg backdrop-blur">
             <div class="container mx-auto px-6 py-5 flex justify-between items-center">
@@ -125,30 +128,7 @@
                             </tr>
                         </thead>
                         <tbody id="commissions-tbody" class="bg-gray-800 bg-opacity-90">
-                            <tr class="border-t border-gray-700">
-                                <td class="p-4 text-gray-300">#V001</td>
-                                <td class="p-4 text-gray-300">15/03/2024</td>
-                                <td class="p-4 text-white">María Rodríguez</td>
-                                <td class="p-4 text-gray-300">Curso de Chocolatería</td>
-                                <td class="p-4 text-gray-300">$1,500,000</td>
-                                <td class="p-4 text-gray-300">15%</td>
-                                <td class="p-4 text-green-400">$225,000</td>
-                                <td class="p-4">
-                                    <span class="px-2 py-1 bg-green-900 text-green-300 rounded-full text-xs">Pagada</span>
-                                </td>
-                            </tr>
-                            <tr class="border-t border-gray-700">
-                                <td class="p-4 text-gray-300">#V002</td>
-                                <td class="p-4 text-gray-300">10/03/2024</td>
-                                <td class="p-4 text-white">Carlos Pérez</td>
-                                <td class="p-4 text-gray-300">Asesoría Personalizada</td>
-                                <td class="p-4 text-gray-300">$800,000</td>
-                                <td class="p-4 text-gray-300">12%</td>
-                                <td class="p-4 text-amber-400">$96,000</td>
-                                <td class="p-4">
-                                    <span class="px-2 py-1 bg-amber-900 text-amber-300 rounded-full text-xs">Pendiente</span>
-                                </td>
-                            </tr>
+                            <tr><td colspan="8" class="p-4 text-center text-gray-400">Cargando...</td></tr>
                             <tr class="border-t border-gray-700">
                                 <td class="p-4 text-gray-300">#V003</td>
                                 <td class="p-4 text-gray-300">05/03/2024</td>

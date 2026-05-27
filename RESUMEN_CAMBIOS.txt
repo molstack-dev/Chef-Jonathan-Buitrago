@@ -224,3 +224,79 @@ ARCHIVOS MODIFICADOS:
 PENDIENTE: Ninguno - módulo terminado
 
 ================================================================================
+
+================================================================================
+## CAMBIOS 2026-05-26 - admin-usuarios FINALIZADO
+================================================================================
+
+MÓDULO: admin-usuarios.html + admin-tables.js
+
+FUNCIONALIDADES IMPLEMENTADAS:
+
+1. CRUD de usuarios completo (crear, leer, actualizar, eliminar)
+2. Modal de edición con campos: Nombre, Email, Rol
+3. Eliminada columna "Estado" (no se usaba)
+4. Reemplazados todos los alert() por notificaciones toast
+5. Validación de nombre: solo letras y espacios (con acentos)
+6. Filtro en tiempo real + validación en servidor
+7. Fix de conflicto: script.js marcaba _bound y bloqueaba admin-tables.js
+
+ARCHIVOS MODIFICADOS:
+- views/admin/admin-usuarios.html
+- assets/admin-tables.js
+- backend/api/users.php
+- backend/api/usuarios-get.php
+- assets/script.js (toast global)
+
+PENDIENTE: Ninguno - módulo terminado
+
+================================================================================
+
+================================================================================
+## CAMBIOS 2026-05-26 - admin pages (CONTINUADO)
+================================================================================
+
+PÁGINAS ACTUALIZADAS CON TBODY DINÁMICO:
+
+1. admin-usuarios.html → tbody id="users-tbody" ✓
+2. admin-servicios.html → tbody id="courses-tbody" ✓ (ya funcional)
+3. admin-inscripciones.html → tbody id="inscriptions-tbody" + form mejorado ✓
+4. admin-vendedores.html → tbody id="sellers-tbody" + HTML corrupto arreglado ✓
+5. admin-visitas.html → tbody id="visitas-tbody" + id="visitas-history-tbody" ✓
+6. admin-salidas.html → tbody id="salidas-tbody" ✓
+
+API ENDPOINTS ASEGURADOS (formato correcto):
+- usuarios-get.php → {success: true, data: [...]} ✓
+- vendedores-get.php → {success: true, data: [...]} ✓
+- inscripciones-get.php → {success: true, data: [...]} ✓
+- visits-get.php (creado si no existe)
+
+courses.php: GET/POST/PUT/DELETE ✓
+
+TOQUES GLOBALES:
+- Notificaciones toast (reemplazan alerts) en admin-tables.js y script.js
+- showToast() disponible globalmente
+
+================================================================================
+
+================================================================================
+## CAMBIOS 2026-05-26 - seller y user pages (TBODY DINÁMICO)
+================================================================================
+
+PÁGINAS ACTUALIZADAS:
+
+SELLER:
+- seller-clientes.html → tbody id="clients-tbody" ✓
+- seller-ventas.html → tbody id="sales-tbody" ✓
+- seller-comisiones.html → tbody id="commissions-tbody" ✓
+
+USER:
+- user/agendar.html → tbody id="appointments-tbody" ✓
+- user/historial.html → tbody id="history-tbody" ✓
+- user/mis-cursos.html → diseño tarjetas (sin cambios)
+
+TODAS LAS PÁGINAS:
+- Datos estáticos removidos, tbody listo para recibir datos del backend
+- orphan rows limpiados de todas las tablas
+
+================================================================================

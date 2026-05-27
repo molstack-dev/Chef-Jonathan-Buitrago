@@ -1,31 +1,40 @@
+// Funciones globales - disponibles inmediatamente
+window.showToast = function(message, type = 'success') {
+    var container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        container.className = 'fixed top-24 right-4 z-50 flex flex-col gap-2';
+        document.body.appendChild(container);
+    }
+    var toast = document.createElement('div');
+    toast.className = 'px-4 py-3 rounded-lg shadow-lg text-white text-sm ' + (type === 'success' ? 'bg-green-600' : type === 'error' ? 'bg-red-600' : 'bg-amber-600');
+    toast.textContent = message;
+    container.appendChild(toast);
+    setTimeout(function() {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateX(20px)';
+        toast.style.transition = 'all 0.3s ease';
+        setTimeout(function() { toast.remove(); }, 300);
+    }, 3000);
+};
+
+window.showCourseDetails = function(title, detail) {
+    var modal = document.getElementById('courseDetailsModal');
+    var titleEl = document.getElementById('courseTitle');
+    var contentEl = document.getElementById('courseDetailsContent');
+    if (!modal || !titleEl || !contentEl) return;
+    titleEl.textContent = title;
+    contentEl.innerHTML = '<p class="text-gray-300">' + (detail || 'Sin detalles disponibles.') + '</p>';
+    modal.classList.remove('hidden');
+};
+
+window.closeCourseDetails = function() {
+    var modal = document.getElementById('courseDetailsModal');
+    if (modal) modal.classList.add('hidden');
+};
+
 document.addEventListener('DOMContentLoaded', function() {
-    // Toast notification function
-    window.showToast = function(message, type = 'success') {
-        let container = document.getElementById('toast-container');
-        if (!container) {
-            container = document.createElement('div');
-            container.id = 'toast-container';
-            container.className = 'fixed top-24 right-4 z-50 flex flex-col gap-2';
-            document.body.appendChild(container);
-        }
-
-        const toast = document.createElement('div');
-        toast.className = `px-4 py-3 rounded-lg shadow-lg text-white text-sm ${
-            type === 'success' ? 'bg-green-600' :
-            type === 'error' ? 'bg-red-600' :
-            'bg-amber-600'
-        }`;
-        toast.textContent = message;
-        container.appendChild(toast);
-
-        setTimeout(() => {
-            toast.style.opacity = '0';
-            toast.style.transform = 'translateX(20px)';
-            toast.style.transition = 'all 0.3s ease';
-            setTimeout(() => toast.remove(), 300);
-        }, 3000);
-    };
-
     // Mobile menu toggle for all pages
     const mobileMenuButton = document.getElementById('mobile-menu-button');
     const mobileMenu = document.getElementById('mobile-menu');
@@ -316,24 +325,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Funcionalidad del modal de detalles del curso
-    window.showCourseDetails = function(courseName) {
-        // Definir detalles para cada curso
-        const courseDetails = {
-            "Chocolatería Avanzada": "Domina las técnicas más sofisticadas del chocolate, desde el templado perfecto hasta la creación de bombones de autor. Incluye técnicas profesionales y consejos para trabajar con chocolate de alta calidad.",
-            "Pastelería de Vanguardia": "Explora las últimas tendencias de la pastelería mundial, aplicando técnicas innovadoras y creativas a tus postres. Aprende sobre ingredientes modernos y presentaciones artísticas.",
-            "Gestión de Emprendimientos Gastronómicos": "Aprende a crear y gestionar tu propio negocio de pastelería, desde la planificación del menú hasta la estrategia de marketing. Incluye aspectos financieros y de gestión.",
-            "Pastelería Vegana": "Aprende a crear postres deliciosos sin ingredientes de origen animal, utilizando alternativas vegetales innovadoras. Cubre técnicas para sustituir huevos, lácteos y otros ingredientes animales.",
-            "Pastelería Libre de Gluten": "Descubre cómo hacer postres increíbles sin gluten, utilizando harinas alternativas y técnicas especializadas. Ideal para personas con intolerancia al gluten.",
-            "Bases de Pastelería": "Domina los fundamentos esenciales de la pastelería, desde las técnicas básicas hasta recetas clásicas perfeccionadas. Ideal para principiantes.",
-            "Chocolatería": "Iníciate en el mundo del chocolate y aprende a trabajar con él, desde la selección del cacao hasta la creación de piezas artesanales. Cubre temperado, moldeado y decoración con chocolate.",
-            "Bombonería": "Crea bombones artesanales con diferentes rellenos y acabados, dominando las técnicas profesionales de la chocolatería fina. Aprende sobre rellenos, coberturas y decoración detallada.",
-            "Pastelería Keto": "Elabora postres bajos en carbohidratos y deliciosos, perfectos para dietas cetogénicas sin sacrificar el sabor. Incluye recetas y técnicas para pastelería baja en carbohidratos.",
-            "Cata de Cacao": "Una experiencia sensorial para descubrir los secretos del cacao, identificando notas y orígenes de distintas variedades. Incluye degustación y análisis sensorial del cacao."
-        };
-        
+    window.showCourseDetails = function(courseName, descriptionDetail) {
         // Mostrar el modal
         document.getElementById('courseTitle').textContent = courseName;
-        document.getElementById('courseDetailsContent').textContent = courseDetails[courseName] || "Detalles no disponibles.";
+        document.getElementById('courseDetailsContent').textContent = descriptionDetail || "Descripción detallada no disponible.";
         document.getElementById('courseDetailsModal').classList.remove('hidden');
     };
     

@@ -11,6 +11,9 @@
     <link rel="icon" type="image/png" href="../img/icono.png">
 </head>
 <body>
+    <!-- Contenedor de notificaciones -->
+    <div id="toast-container" class="fixed top-24 right-4 z-50 flex flex-col gap-2"></div>
+
     <!-- Header -->
     <header class="shadow-lg rounded-lg backdrop-blur">
         <div class="container mx-auto px-6 py-5 flex justify-between items-center">
@@ -41,316 +44,15 @@
             <div class="product-card p-6 rounded-xl mb-10">
                 <div class="flex flex-wrap gap-4 justify-center">
                     <button class="filter-btn active" data-filter="all">Todos</button>
-                    <button class="filter-btn active" data-filter="cursos">Cursos</button>
-                    <button class="filter-btn active" data-filter="asesorias">Asesorias</button>
-                    <button class="filter-btn active" data-filter="seminarios">Seminarios</button>
-                    <button class="filter-btn active" data-filter="diplomados">Diplomados</button>
-                    <button class="filter-btn active" data-filter="eventos">Eventos</button>
+                    <button class="filter-btn" data-filter="cursos">Cursos</button>
+                    <button class="filter-btn" data-filter="asesorias">Asesorías</button>
+                    <button class="filter-btn" data-filter="eventos">Eventos</button>
                 </div>
             </div>
             
-            <!-- Cursos -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                <!-- Curso 1 -->
-                <div class="product-card p-6 rounded-xl bg-gray-800 bg-opacity-90 fade-in flex flex-col h-full" data-category="diplomados">   
-                    <div class="mb-4">
-                        <span class="inline-block px-3 py-1 bg-purple text-white rounded-full text-sm">Diplomado</span>
-                    </div>
-                    <h4 class="text-2xl font-semibold mb-3 text-white">Chocolatería Avanzada</h4>
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-amber-500 font-bold">$120.000</span>
-                        <span class="text-gray-400 text-sm">8 semanas</span>
-                    </div>
-                    <div class="mb-4">
-                        <div class="flex items-center text-gray-400 text-sm mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            24 horas de contenido
-                        </div>
-                        <div class="flex items-center text-gray-400 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </path>
-                            </svg>
-                            Materiales descargables
-                        </div>
-                    </div>
-                        <div class="flex justify-end space-x-3 mt-auto">
-                        <a href="#" onclick="showCourseDetails('Chocolatería Avanzada'); return false;" class="flex-1 text-center py-2 bg-green text-white rounded-lg font-semibold hover:opacity-90 hover:text-white transition-opacity">Ver Detalles</a>
-                        <a href="catalogo.html#contacto" class="flex-1 text-center py-2 purple-border-button rounded-lg font-semibold transition-colors">Inscribirse</a>
-                    </div>
-                </div>
-              
-                <!-- Curso 2 -->
-                <div class="product-card p-6 rounded-xl bg-gray-800 bg-opacity-90 fade-in flex flex-col h-full" data-category="cursos">
-                    <div class="mb-4">
-                        <span class="inline-block px-3 py-1 bg-purple text-white rounded-full text-sm">Curso</span>
-                    </div>
-                    <h4 class="text-2xl font-semibold mb-3 text-white">Pastelería de Vanguardia</h4>
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-amber-500 font-bold">$150.000</span>
-                        <span class="text-gray-400 text-sm">10 semanas</span>
-                    </div>
-                    <div class="mb-4">
-                        <div class="flex items-center text-gray-400 text-sm mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            30 horas de contenido
-                        </div>
-                        <div class="flex items-center text-gray-400 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Materiales descargables
-                        </div>
-                    </div>
-                    <div class="flex justify-end space-x-3 mt-auto">
-                        <a href="#" onclick="showCourseDetails('Pastelería de Vanguardia'); return false;" class="flex-1 text-center py-2 bg-green text-white rounded-lg font-semibold hover:opacity-90 hover:text-white transition-opacity">Ver Detalles</a>
-                        <a href="catalogo.html#contacto" class="flex-1 text-center py-2 purple-border-button rounded-lg font-semibold transition-colors">Inscribirse</a>
-                    </div>
-                </div>
-
-                <!-- Curso 3 -->
-                <div class="product-card p-6 rounded-xl bg-gray-800 bg-opacity-90 fade-in flex flex-col h-full" data-category="seminarios">
-                    <div class="mb-4">
-                        <span class="inline-block px-3 py-1 bg-purple text-white rounded-full text-sm">Seminarios</span>
-                    </div>
-                    <h4 class="text-2xl font-semibold mb-3 text-white">Gestión de Emprendimientos Gastronómicos</h4>
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-amber-500 font-bold">$180.000</span>
-                        <span class="text-gray-400 text-sm">12 semanas</span>
-                    </div>
-                    <div class="mb-4">
-                        <div class="flex items-center text-gray-400 text-sm mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            45 horas de contenido
-                        </div>
-                        <div class="flex items-center text-gray-400 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Materiales descargables
-                        </div>
-                    </div>
-                    <div class="flex justify-end space-x-3 mt-auto">
-                        <a href="#" onclick="showCourseDetails('Gestión de Emprendimientos Gastronómicos'); return false;" class="flex-1 text-center py-2 bg-green text-white rounded-lg font-semibold hover:opacity-90 hover:text-white transition-opacity">Ver Detalles</a>
-                        <a href="catalogo.html#contacto" class="flex-1 text-center py-2 purple-border-button rounded-lg font-semibold transition-colors">Inscribirse</a>
-                    </div>
-                </div>
-
-                <!-- Pasteleria Vegana -->
-                <div class="product-card p-6 rounded-xl bg-gray-800 bg-opacity-90 fade-in flex flex-col h-full" data-category="cursos">
-                    <div class="mb-4">
-                        <span class="inline-block px-3 py-1 bg-purple text-white rounded-full text-sm">Curso</span>
-                    </div>
-                    <h4 class="text-2xl font-semibold mb-3 text-white">Pastelería Vegana</h4>
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-amber-500 font-bold">$90.000</span>
-                        <span class="text-gray-400 text-sm">6 semanas</span>
-                    </div>
-                    <div class="mb-4">
-                        <div class="flex items-center text-gray-400 text-sm mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            18 horas de contenido
-                        </div>
-                        <div class="flex items-center text-gray-400 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Materiales descargables
-                        </div>
-                    </div>
-                    <div class="flex justify-end space-x-3 mt-auto">
-                        <a href="#" onclick="showCourseDetails('Pastelería Vegana'); return false;" class="flex-1 text-center py-2 bg-green text-white rounded-lg font-semibold hover:opacity-90 hover:text-white transition-opacity">Ver Detalles</a>
-                        <a href="catalogo.html#contacto" class="flex-1 text-center py-2 purple-border-button rounded-lg font-semibold transition-colors">Inscribirse</a>
-                    </div>
-                </div>
-
-                <!-- Pasteleria Libre de Gluten -->
-                <div class="product-card p-6 rounded-xl bg-gray-800 bg-opacity-90 fade-in flex flex-col h-full" data-category="cursos">
-                    <div class="mb-4">
-                        <span class="inline-block px-3 py-1 bg-purple text-white rounded-full text-sm">Curso</span>
-                    </div>
-                    <h4 class="text-2xl font-semibold mb-3 text-white">Pastelería Libre de Gluten</h4>
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-amber-500 font-bold">$90.000</span>
-                        <span class="text-gray-400 text-sm">6 semanas</span>
-                    </div>
-                    <div class="mb-4">
-                        <div class="flex items-center text-gray-400 text-sm mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            18 horas de contenido
-                        </div>
-                        <div class="flex items-center text-gray-400 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Materiales descargables
-                        </div>
-                    </div>
-                    <div class="flex justify-end space-x-3 mt-auto">
-                        <a href="#" onclick="showCourseDetails('Pastelería Libre de Gluten'); return false;" class="flex-1 text-center py-2 bg-green text-white rounded-lg font-semibold hover:opacity-90 hover:text-white transition-opacity">Ver Detalles</a>
-                        <a href="catalogo.html#contacto" class="flex-1 text-center py-2 purple-border-button rounded-lg font-semibold transition-colors">Inscribirse</a>
-                    </div>
-                </div>
-
-                <!-- Bases de Pasteleria -->
-                <div class="product-card p-6 rounded-xl bg-gray-800 bg-opacity-90 fade-in flex flex-col h-full" data-category="cursos">
-                    <div class="mb-4">
-                        <span class="inline-block px-3 py-1 bg-purple text-white rounded-full text-sm">Curso</span>
-                    </div>
-                    <h4 class="text-2xl font-semibold mb-3 text-white">Bases de Pastelería</h4>
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-amber-500 font-bold">$75.000</span>
-                        <span class="text-gray-400 text-sm">4 semanas</span>
-                    </div>
-                    <div class="mb-4">
-                        <div class="flex items-center text-gray-400 text-sm mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            12 horas de contenido
-                        </div>
-                        <div class="flex items-center text-gray-400 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Materiales descargables
-                        </div>
-                    </div>
-                    <div class="flex justify-end space-x-3 mt-auto">
-                        <a href="#" onclick="showCourseDetails('Bases de Pastelería'); return false;" class="flex-1 text-center py-2 bg-green text-white rounded-lg font-semibold hover:opacity-90 hover:text-white transition-opacity">Ver Detalles</a>
-                        <a href="catalogo.html#contacto" class="flex-1 text-center py-2 purple-border-button rounded-lg font-semibold transition-colors">Inscribirse</a>
-                    </div>
-                </div>
-
-                <!-- Chocolateria -->
-                <div class="product-card p-6 rounded-xl bg-gray-800 bg-opacity-90 fade-in flex flex-col h-full" data-category="cursos">
-                    <div class="mb-4">
-                        <span class="inline-block px-3 py-1 bg-purple text-white rounded-full text-sm">Curso</span>
-                    </div>
-                    <h4 class="text-2xl font-semibold mb-3 text-white">Chocolatería</h4>
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-amber-500 font-bold">$85.000</span>
-                        <span class="text-gray-400 text-sm">5 semanas</span>
-                    </div>
-                    <div class="mb-4">
-                        <div class="flex items-center text-gray-400 text-sm mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            15 horas de contenido
-                        </div>
-                        <div class="flex items-center text-gray-400 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Materiales descargables
-                        </div>
-                    </div>
-                    <div class="flex justify-end space-x-3 mt-auto">
-                        <a href="#" onclick="showCourseDetails('Chocolatería'); return false;" class="flex-1 text-center py-2 bg-green text-white rounded-lg font-semibold hover:opacity-90 hover:text-white transition-opacity">Ver Detalles</a>
-                        <a href="catalogo.html#contacto" class="flex-1 text-center py-2 purple-border-button rounded-lg font-semibold transition-colors">Inscribirse</a>
-                    </div>
-                </div>
-
-                <!-- Bomboneria -->
-                <div class="product-card p-6 rounded-xl bg-gray-800 bg-opacity-90 fade-in flex flex-col h-full" data-category="cursos">
-                    <div class="mb-4">
-                        <span class="inline-block px-3 py-1 bg-purple text-white rounded-full text-sm">Curso</span>
-                    </div>
-                    <h4 class="text-2xl font-semibold mb-3 text-white">Bombonería</h4>
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-amber-500 font-bold">$95.000</span>
-                        <span class="text-gray-400 text-sm">6 semanas</span>
-                    </div>
-                    <div class="mb-4">
-                        <div class="flex items-center text-gray-400 text-sm mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            18 horas de contenido
-                        </div>
-                        <div class="flex items-center text-gray-400 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Materiales descargables
-                        </div>
-                    </div>
-                    <div class="flex justify-end space-x-3 mt-auto">
-                        <a href="#" onclick="showCourseDetails('Bombonería'); return false;" class="flex-1 text-center py-2 bg-green text-white rounded-lg font-semibold hover:opacity-90 hover:text-white transition-opacity">Ver Detalles</a>
-                        <a href="catalogo.html#contacto" class="flex-1 text-center py-2 purple-border-button rounded-lg font-semibold transition-colors">Inscribirse</a>
-                    </div>
-                </div>
-
-                <!-- Pasteleria Keto -->
-                <div class="product-card p-6 rounded-xl bg-gray-800 bg-opacity-90 fade-in flex flex-col h-full" data-category="cursos">
-                    <div class="mb-4">
-                        <span class="inline-block px-3 py-1 bg-purple text-white rounded-full text-sm">Curso</span>
-                    </div>
-                    <h4 class="text-2xl font-semibold mb-3 text-white">Pastelería Keto</h4>
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-amber-500 font-bold">$100.000</span>
-                        <span class="text-gray-400 text-sm">7 semanas</span>
-                    </div>
-                    <div class="mb-4">
-                        <div class="flex items-center text-gray-400 text-sm mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            21 horas de contenido
-                        </div>
-                        <div class="flex items-center text-gray-400 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Materiales descargables
-                        </div>
-                    </div>
-                    <div class="flex justify-end space-x-3 mt-auto">
-                        <a href="#" onclick="showCourseDetails('Pastelería Keto'); return false;" class="flex-1 text-center py-2 bg-green text-white rounded-lg font-semibold hover:opacity-90 hover:text-white transition-opacity">Ver Detalles</a>
-                        <a href="catalogo.html#contacto" class="flex-1 text-center py-2 purple-border-button rounded-lg font-semibold transition-colors">Inscribirse</a>
-                    </div>
-                </div>
-
-                <!-- Cata de Cacao -->
-                <div class="product-card p-6 rounded-xl bg-gray-800 bg-opacity-90 fade-in flex flex-col h-full" data-category="eventos">
-                    <div class="mb-4">
-                        <span class="inline-block px-3 py-1 bg-purple text-white rounded-full text-sm">Evento</span>
-                    </div>
-                    <h4 class="text-2xl font-semibold mb-3 text-white">Cata de Cacao</h4>
-                    <div class="flex justify-between items-center mb-4">
-                        <span class="text-amber-500 font-bold">$50.000</span>
-                        <span class="text-gray-400 text-sm">2 horas</span>
-                    </div>
-                    <div class="mb-4">
-                        <div class="flex items-center text-gray-400 text-sm mb-1">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            Evento único
-                        </div>
-                        <div class="flex items-center text-gray-400 text-sm">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            Degustación incluida
-                        </div>
-                    </div>
-                    <div class="flex justify-end space-x-3 mt-auto">
-                        <a href="#" onclick="showCourseDetails('Cata de Cacao'); return false;" class="flex-1 text-center py-2 bg-green text-white rounded-lg font-semibold hover:opacity-90 hover:text-white transition-opacity">Ver Detalles</a>
-                        <a href="catalogo.html#contacto" class="flex-1 text-center py-2 purple-border-button rounded-lg font-semibold transition-colors">Inscribirse</a>
-                    </div>
-                </div>
+            <!-- Cursos (cargados dinámicamente) -->
+            <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div class="col-span-full text-center text-gray-400 py-8">Cargando cursos...</div>
             </div>
             <!-- Sección de Adelantos de Cursos -->
             <div class="mt-20">
@@ -446,7 +148,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                   <div class="pt-3 flex items-center space-x-20">
+                                <div class="pt-3 flex items-center space-x-20">
                                     
                                         <!-- WhatsApp -->
                                         <a href="https://wa.me/573001234567" target="_blank" class="btn-whatsapp">
@@ -504,8 +206,8 @@
                         <div class="animate__animated animate__fadeInRight">
                             <div class="product-card rounded-xl p-0 overflow-hidden">
                                 <img src="../img/img_0314.webp"
-                                     alt="Chef"
-                                     class="object-cover w-full h-[34rem] rounded-xl">
+                                    alt="Chef"
+                                    class="object-cover w-full h-[34rem] rounded-xl">
                             </div>
                         </div>
                     </div>
@@ -534,6 +236,7 @@
     </footer>
 
     <script src="../assets/script.js"></script>
+    <script src="../assets/catalog-courses.js"></script>
     
     <!-- Modal para detalles del curso -->
     <div id="courseDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 overflow-auto">
