@@ -24,10 +24,8 @@
                 <a href="admin-usuarios.html" class="hover:text-purple-500 transition-colors">Usuarios</a>
                 <a href="admin-inscripciones.html" class="hover:text-purple-500 transition-colors">Inscripciones</a>
                 <a href="admin-servicios.html" class="hover:text-purple-500 transition-colors">Servicios</a>
-                <a href="admin-salidas.html" class="hover:text-purple-500 transition-colors">Salidas</a>
-                <a href="admin-visitas.html" class="hover:text-purple-500 transition-colors">Visitas</a>
-                <a href="admin-vendedores.html" class="hover:text-purple-500 transition-colors">Vendedores</a>
-                <a href="../../index.html" class="hover:text-purple-500 transition-colors">Cerrar Sesión</a>
+                <a href="admin-reembolsos.html" class="hover:text-purple-500 transition-colors">Reembolsos</a>
+                <a href="javascript:void(0)" onclick="logout()" class="hover:text-purple-500 transition-colors">Cerrar Sesión</a>
             </nav>
             <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="md:hidden text-white focus:outline-none p-2">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,10 +37,8 @@
             <a href="admin-usuarios.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Usuarios</a>
             <a href="admin-inscripciones.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Inscripciones</a>
             <a href="admin-servicios.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Servicios</a>
-            <a href="admin-salidas.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Salidas</a>
-            <a href="admin-visitas.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Visitas</a>
-            <a href="admin-vendedores.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Vendedores</a>
-            <a href="../../index.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Cerrar Sesión</a>
+            <a href="admin-reembolsos.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Reembolsos</a>
+            <a href="javascript:void(0)" onclick="logout()" class="block py-3 px-4 hover:text-purple-500 transition-all">Cerrar Sesión</a>
         </div>
     </header>
 
@@ -50,9 +46,32 @@
     <section class="pt-48 pb-12 bg-gray-900">
         <div class="container mx-auto px-6">
             <div class="max-w-3xl mx-auto text-center">
-                <h2 class="pb-12 text-5xl md:text-6xl font-bold text-white mb-4">Bienvenido<br></h2>
-                    <span class="parisienne-font text-7xl md:text-8xl">Jonathan Buitrago</span>
-                <p class="pt-24 pb-12 text-2xl text-gray-300">Panel de administración - Chef Jonathan Buitrago</p>
+                <h2 class="pb-12 text-5xl md:text-6xl font-bold text-white mb-4">Bienvenido</h2>
+                    <span id="admin-greeting-name" class="parisienne-font text-7xl md:text-8xl">Usuario</span>
+                <p class="pt-24 pb-12 text-2xl text-gray-300">Panel de administración - Desde tu panel puedes acceder a usuarios, inscripciones y servicios.</p>
+
+                <script>
+                    (function () {
+                        try {
+                            var user = (function () {
+                                var raw = localStorage.getItem('currentUser');
+                                return raw ? JSON.parse(raw) : null;
+                            })();
+
+                            var nameEl = document.getElementById('admin-greeting-name');
+                            if (!nameEl) return;
+
+                            if (user && user.name) {
+                                nameEl.textContent = user.name;
+                            } else {
+                                nameEl.textContent = 'Usuario';
+                            }
+                        } catch (e) {
+                            // no-op
+                        }
+                    })();
+                </script>
+
                 <div class="flex justify-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrow-down text-white animate-bounce" viewBox="0 0 16 16">
                         <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/>
@@ -82,21 +101,12 @@
                     <h4 class="text-2xl font-semibold mb-4 text-purple-400">Módulo 3</h4>
                     <p class="text-xl">Gestión de Servicios</p>
                 </a>
-                
-                <a href="admin-salidas.html" class="bg-gray-800 p-8 rounded-lg text-center hover:bg-purple-700 transition-all transform hover:scale-105">
-                    <h4 class="text-2xl font-semibold mb-4 text-purple-400">Módulo 4</h4>
-                    <p class="text-xl">Gestión de Salida</p>
+
+                <a href="admin-reembolsos.html" class="bg-gray-800 p-8 rounded-lg text-center hover:bg-purple-700 transition-all transform hover:scale-105">
+                    <h4 class="text-2xl font-semibold mb-4 text-amber-400">Módulo 4</h4>
+                    <p class="text-xl">Gestión de Reembolsos</p>
                 </a>
 
-                <a href="admin-visitas.html" class="bg-gray-800 p-8 rounded-lg text-center hover:bg-purple-700 transition-all transform hover:scale-105">
-                    <h4 class="text-2xl font-semibold mb-4 text-purple-400">Módulo 5</h4>
-                    <p class="text-xl">Control de Visitas</p>
-                </a>
-
-                <a href="admin-vendedores.html" class="bg-gray-800 p-8 rounded-lg text-center hover:bg-purple-700 transition-all transform hover:scale-105">
-                    <h4 class="text-2xl font-semibold mb-4 text-purple-400">Módulo 6</h4>
-                    <p class="text-xl">Control de Vendedores</p>
-                </a>
             </div>
             
             <div class="mt-16 text-center">

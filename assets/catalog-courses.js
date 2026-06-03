@@ -5,6 +5,7 @@
         var map = { cursos: 'Curso', asesorias: 'Asesoría', eventos: 'Evento', seminarios: 'Seminario', diplomados: 'Diplomado' };
         return map[cat] || cat || 'Curso';
     }
+
     function getBadgeClass(cat) {
         var map = { cursos: 'bg-purple-600', asesorias: 'bg-amber-600', eventos: 'bg-green-600', seminarios: 'bg-blue-600', diplomados: 'bg-red-600' };
         return map[cat] || 'bg-gray-600';
@@ -37,7 +38,16 @@
             card.setAttribute('data-category', c.category || 'cursos');
             card.setAttribute('data-title', c.title || '');
             card.setAttribute('data-detail', (c.description_detail || c.description || ''));
-            var imgHtml = c.image ? '<div class="rounded-lg mb-4 overflow-hidden flex items-center justify-center bg-gray-700" style="height: 295px;"><img src="' + c.image + '" class="max-h-full max-w-full object-contain rounded-lg" alt="' + c.title + '"></div>' : '';
+            // Guardar precio numérico puro para evitar problemas de formato
+            card.setAttribute('data-price', Number(c.price) || 0);
+
+            var imgHtml = c.image
+                ? '<div class="rounded-lg mb-4 overflow-hidden flex items-center justify-center bg-gray-700" style="height: auto;"><img src="' + c.image + '" class="max-h-full max-w-full object-contain rounded-lg" alt="' + c.title + '"></div>'
+                : '';
+
+            // Botón de inscripción redirige a registro.html
+            var inscriptionBtn = '<a href="registro.html" class="flex-1 text-center py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors">Inscribirse</a>';
+
             card.innerHTML =
                 imgHtml +
                 '<div class="mb-4">' +
@@ -53,12 +63,13 @@
                 '</div>' +
                 '<div class="flex justify-end space-x-3 mt-auto">' +
                 '<button class="ver-detalles-btn flex-1 text-center py-2 purple-border-button rounded-lg font-semibold transition-colors">Ver Detalles</button>' +
-                '<a href="registro.html" class="flex-1 text-center py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors">Inscribirse</a>' +
+                inscriptionBtn +
                 '</div>';
+
             grid.appendChild(card);
         });
 
-        // Delegacion de eventos para botones "Ver Detalles"
+        // Delegation de eventos para botón "Ver Detalles"
         grid.addEventListener('click', function(e) {
             if (e.target.classList.contains('ver-detalles-btn')) {
                 var card = e.target.closest('.product-card');
@@ -89,9 +100,7 @@
 
         try {
             var resp = await fetch('/backend/api/cursos-get.php');
-            console.log('Fetch response:', resp.status);
             var result = await resp.json();
-            console.log('Fetch result:', result);
 
             if (!result.success || result.data.length === 0) {
                 grid.innerHTML = '<div class="col-span-full text-center text-gray-400 py-8">No hay cursos disponibles.</div>';
@@ -99,10 +108,9 @@
             }
 
             allCourses = result.data;
-            console.log('allCourses loaded:', allCourses.length);
             setupFilters();
             renderCourses('all');
-        } catch(e) {
+        } catch (e) {
             console.error('Error loading courses:', e);
             grid.innerHTML = '<div class="col-span-full text-center text-red-400 py-8">Error: ' + e.message + '</div>';
         }
@@ -114,3 +122,4 @@
         loadCatalogCourses();
     }
 })();
+

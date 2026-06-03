@@ -24,10 +24,7 @@
                 <a href="admin.html" class="hover:text-purple-500 transition-colors">Panel Principal</a>
                 <a href="admin-inscripciones.html" class="hover:text-purple-500 transition-colors">Inscripciones</a>
                 <a href="admin-servicios.html" class="hover:text-purple-500 transition-colors">Servicios</a>
-                <a href="admin-salidas.html" class="hover:text-purple-500 transition-colors">Salidas</a>
-                <a href="admin-visitas.html" class="hover:text-purple-500 transition-colors">Visitas</a>
-                <a href="admin-vendedores.html" class="hover:text-purple-500 transition-colors">Vendedores</a>
-                <a href="../../index.html" class="hover:text-purple-500 transition-colors">Cerrar Sesión</a>
+                <a href="javascript:void(0)" onclick="logout()" class="hover:text-purple-500 transition-colors">Cerrar Sesión</a>
             </nav>
             <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="md:hidden text-white focus:outline-none p-2">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,10 +36,7 @@
             <a href="admin.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Panel Principal</a>
             <a href="admin-inscripciones.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Inscripciones</a>
             <a href="admin-servicios.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Servicios</a>
-            <a href="admin-salidas.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Salidas</a>
-            <a href="admin-visitas.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Visitas</a>
-            <a href="admin-vendedores.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Vendedores</a>
-            <a href="../../index.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Cerrar Sesión</a>
+            <a href="javascript:void(0)" onclick="logout()" class="block py-3 px-4 hover:text-purple-500 transition-all">Cerrar Sesión</a>
         </div>
     </header>
 
@@ -64,7 +58,6 @@
                             <input id="user-email" name="email" type="email" placeholder="Email" class="w-full mb-2 p-2 bg-gray-700 rounded" required>
                             <select id="user-role" name="role" class="w-full mb-2 p-2 bg-gray-800 rounded border border-gray-600" required>
                                 <option value="user">Usuario</option>
-                                <option value="seller">Vendedor</option>
                                 <option value="admin">Administrador</option>
                             </select>
                             <input id="user-password" name="password" type="password" placeholder="Contraseña" class="w-full mb-4 p-2 bg-gray-700 rounded" required>
@@ -117,7 +110,6 @@
                     <label class="block text-gray-300 text-sm mb-2">Rol</label>
                     <select id="edit-user-role" class="w-full px-3 py-2 bg-gray-700 rounded text-white border border-gray-600">
                         <option value="user">Usuario</option>
-                        <option value="seller">Vendedor</option>
                         <option value="admin">Administrador</option>
                     </select>
                 </div>

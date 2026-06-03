@@ -81,7 +81,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            $validRoles = ['admin', 'seller', 'user'];
+            $validRoles = ['admin', 'user'];
             if (!in_array($role, $validRoles, true)) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'Rol no válido']);
@@ -120,7 +120,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $role = isset($data['role']) ? trim($data['role']) : 'user';
 
             // Validar rol
-            $validRoles = ['admin', 'seller', 'user'];
+            $validRoles = ['admin', 'user'];
             if (!in_array($role, $validRoles, true)) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'Rol no válido']);

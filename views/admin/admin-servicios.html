@@ -24,10 +24,7 @@
                 <a href="admin.html" class="hover:text-purple-500 transition-colors">Panel Principal</a>
                 <a href="admin-usuarios.html" class="hover:text-purple-500 transition-colors">Usuarios</a>
                 <a href="admin-inscripciones.html" class="hover:text-purple-500 transition-colors">Inscripciones</a>
-                <a href="admin-salidas.html" class="hover:text-purple-500 transition-colors">Salidas</a>
-                <a href="admin-visitas.html" class="hover:text-purple-500 transition-colors">Visitas</a>
-                <a href="admin-vendedores.html" class="hover:text-purple-500 transition-colors">Vendedores</a>
-                <a href="../../index.html" class="hover:text-purple-500 transition-colors">Cerrar Sesión</a>
+                <a href="javascript:void(0)" onclick="logout()" class="hover:text-purple-500 transition-colors">Cerrar Sesión</a>
             </nav>
             <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="md:hidden text-white focus:outline-none p-2">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,10 +36,7 @@
             <a href="admin.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Panel Principal</a>
             <a href="admin-usuarios.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Usuarios</a>
             <a href="admin-inscripciones.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Inscripciones</a>
-            <a href="admin-salidas.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Salidas</a>
-            <a href="admin-visitas.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Visitas</a>
-            <a href="admin-vendedores.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Vendedores</a>
-            <a href="../../index.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Cerrar Sesión</a>
+            <a href="javascript:void(0)" onclick="logout()" class="block py-3 px-4 hover:text-purple-500 transition-all">Cerrar Sesión</a>
         </div>
     </header>
 
@@ -70,7 +64,7 @@
                             </select>
                             <input id="course-duration" type="text" placeholder="Duración (ej: 4 semanas)" class="w-full mb-2 p-2 bg-gray-700 rounded">
                             <input id="course-image" type="file" accept="image/*" class="w-full mb-2 p-2 bg-gray-700 rounded text-gray-300 text-sm">
-                            <input id="course-price" type="number" placeholder="Precio" class="w-full mb-4 p-2 bg-gray-700 rounded" required>
+                            <input id="course-price" type="number" placeholder="Precio (obligatorio)" min="1" step="1" class="w-full mb-4 p-2 bg-gray-700 rounded" required>
                             <button type="submit" class="w-full bg-purple-600 py-2 rounded hover:bg-purple-700">Crear</button>
                         </form>
                     </div>
@@ -82,7 +76,7 @@
                                 <h5 class="text-lg font-semibold text-white">Historial de Servicios</h5>
                                 <button class="mt-2 sm:mt-0 bg-green-600 py-1 px-4 rounded hover:bg-green-700 text-sm">Generar PDF</button>
                             </div>
-                            
+
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left">
                                     <thead>
@@ -99,6 +93,37 @@
                                         <tr><td colspan="6" class="py-6 text-center text-gray-400">Cargando...</td></tr>
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Gestión de Contenido de Cursos -->
+                <div class="mt-12">
+                    <h4 class="text-2xl font-semibold mb-6 text-purple-400">Contenido de Cursos</h4>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Seleccionar Curso y Agregar Contenido -->
+                        <div class="product-card p-6 rounded-lg">
+                            <h5 class="text-lg font-semibold mb-4">Agregar Contenido</h5>
+                            <select id="content-course-select" class="w-full mb-2 p-2 bg-gray-700 rounded" required>
+                                <option value="">Selecciona un curso</option>
+                            </select>
+                            <input id="content-title" type="text" placeholder="Título de la lección" class="w-full mb-2 p-2 bg-gray-700 rounded" required>
+                            <textarea id="content-description" placeholder="Descripción" class="w-full mb-2 p-2 bg-gray-700 rounded" rows="2"></textarea>
+                            <input id="content-video-url" type="url" placeholder="URL del video (YouTube)" class="w-full mb-2 p-2 bg-gray-700 rounded" required>
+                            <input id="content-preview-url" type="url" placeholder="URL video preview (opcional)" class="w-full mb-2 p-2 bg-gray-700 rounded">
+                            <input id="content-duration" type="text" placeholder="Duración (ej: 15:30)" class="w-full mb-2 p-2 bg-gray-700 rounded">
+                            <input id="content-order" type="number" placeholder="Orden" min="0" class="w-full mb-4 p-2 bg-gray-700 rounded">
+                            <button type="button" id="add-content-btn" class="w-full bg-blue-600 py-2 rounded hover:bg-blue-700">Agregar Contenido</button>
+                        </div>
+
+                        <!-- Lista de Contenido -->
+                        <div class="lg:col-span-2">
+                            <div class="product-card p-6 rounded-xl h-full">
+                                <h5 class="text-lg font-semibold text-white mb-4">Contenido del Curso</h5>
+                                <div id="course-content-list" class="space-y-3 max-h-96 overflow-y-auto">
+                                    <p class="text-gray-400 text-center py-6">Selecciona un curso para ver su contenido</p>
+                                </div>
                             </div>
                         </div>
                     </div>

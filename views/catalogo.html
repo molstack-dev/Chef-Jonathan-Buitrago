@@ -237,7 +237,29 @@
 
     <script src="../assets/script.js"></script>
     <script src="../assets/catalog-courses.js"></script>
-    
+
+    <!-- Modal para inscripción -->
+    <div id="inscriptionModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center">
+        <div class="bg-gray-800 p-8 rounded-xl max-w-md w-full mx-4">
+            <h3 id="inscriptionCourseName" class="text-2xl font-bold text-white mb-4"></h3>
+            <p id="inscriptionCoursePrice" class="text-amber-500 font-bold text-xl mb-6"></p>
+            <div class="bg-gray-700 p-4 rounded-lg mb-6">
+                <p class="text-gray-300 text-sm mb-2">Método de pago:</p>
+                <p class="text-white">💳 Nequi: 322 945 2346</p>
+                <p class="text-white">📱 Transferencia bancaria</p>
+                <p class="text-gray-400 text-xs mt-2">Envía el comprobante de pago por WhatsApp para confirmar tu inscripción</p>
+            </div>
+            <div class="flex space-x-3">
+                <a id="whatsappInscription" href="#" target="_blank" class="flex-1 text-center py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700">
+                    Confirmar por WhatsApp
+                </a>
+                <button onclick="closeInscriptionModal()" class="px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                    Cerrar
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal para detalles del curso -->
     <div id="courseDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 overflow-auto">
         <div class="min-h-screen px-4 py-12 flex items-center justify-center">

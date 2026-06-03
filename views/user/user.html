@@ -23,11 +23,14 @@
                 <nav class="hidden md:flex items-center space-x-10">
                     <a href="mis-cursos.html" class="hover:text-purple-500 transition-colors">Cursos</a>
                     <a href="historial.html" class="hover:text-purple-500 transition-colors">Historial</a>
-                    <a href="agendar.html" class="hover:text-purple-500 transition-colors">Agendar</a>
                     <a href="certificados.html" class="hover:text-purple-500 transition-colors">Certificados</a>
-                    <a href="perfil.html" class="w-10 h-10 rounded-full bg-purple-800 hover:bg-purple-500 flex items-center justify-center">U</a>
+                    <a href="agendar.html" class="hover:text-purple-500 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-cart2" viewBox="0 0 16 16"><path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l1.25 5h8.22l1.25-5zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg></a>
+                    <a href="perfil.html" class="w-10 h-8 rounded-full bg-purple-800 hover:bg-purple-500 flex items-center justify-center">U</a>
                 </nav>
                 <div class="flex md:hidden items-center space-x-3">
+                    <a href="agendar.html" class="text-white hover:text-purple-500 p-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-cart2" viewBox="0 0 16 16"><path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l1.25 5h8.22l1.25-5zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg>
+                    </a>
                     <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="text-white focus:outline-none p-1">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -38,18 +41,19 @@
             </div>
             <div id="mobile-menu" class="hidden rounded-lg items-center md:hidden container mx-auto px-6">
                 <a href="mis-cursos.html" class="block py-3 px-6 transition-all">Cursos</a>
-                    <a href="historial.html" class="block py-3 px-6 transition-all">Historial</a>
-                    <a href="agendar.html" class="block py-3 px-6 transition-all">Agendar</a>
-                    <a href="certificados.html" class="block py-3 px-6 transition-all">Certificados</a>
+                <a href="historial.html" class="block py-3 px-6 transition-all">Historial</a>
+                <a href="certificados.html" class="block py-3 px-6 transition-all">Certificados</a>
             </div>
         </header>
         <!-- Bienvenida de Usuarios -->
         <section class="pt-48 pb-12 bg-gray-900">
             <div class="container mx-auto px-6">
                 <div class="max-w-3xl mx-auto text-center">
-                    <h2 class="pb-12 text-5xl md:text-6xl font-bold text-white mb-4">Bienvenido<br></h2>
-                    <span class="parisienne-font text-7xl md:text-8xl">Usuario</span>
-                    <p class="pt-24 pb-12 text-2xl text-gray-300">Nos alegra verte por aquí. Desde tu panel puedes acceder a tus cursos, historial, certificados y agendar asesorías con Chef Jonathan.</p>
+                    <h2 class="pb-12 text-5xl md:text-6xl font-bold text-white mb-4">Bienvenido</h2>
+                    <span id="user-greeting-name" class="parisienne-font text-7xl md:text-8xl">Usuario</span>
+
+
+                    <p class="pt-24 pb-12 text-2xl text-gray-300">Nos alegra verte por aquí. Desde tu panel puedes acceder a tus cursos, historial, certificados y agendar Servicios con Chef Jonathan.</p>
                     <div class="flex justify-center">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-arrow-down text-white animate-bounce" viewBox="0 0 16 16">
                             <path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/>
@@ -75,8 +79,8 @@
                         </a>
                     
                         <a href="agendar.html" class="bg-gray-800 p-8 rounded-lg text-center hover:bg-purple-700 transition-all transform hover:scale-105">
-                            <h4 class="text-2xl font-semibold mb-4 text-purple-400">Agendar Asesoría</h4>
-                            <p class="text-xl">Solicita una asesoría personalizada.</p>
+                            <h4 class="text-2xl font-semibold mb-4 text-purple-400">Agendar Servicio</h4>
+                            <p class="text-xl">Solicita un Servicio personalizado.</p>
                         </a>
                     
                         <a href="certificados.html" class="bg-gray-800 p-8 rounded-lg text-center hover:bg-purple-700 transition-all transform hover:scale-105">
@@ -110,6 +114,29 @@
             </div>
         </footer>
     
+        <script>
+            (function () {
+                try {
+                    var user = (function () {
+                        var raw = localStorage.getItem('currentUser');
+                        return raw ? JSON.parse(raw) : null;
+                    })();
+
+                    var nameEl = document.getElementById('user-greeting-name');
+                    if (!nameEl) return;
+
+                    if (user && user.name) {
+                        nameEl.textContent = user.name;
+                    } else {
+                        // Fallback si el usuario no está en localStorage (por ejemplo si vienes directo del backend)
+                        nameEl.textContent = 'Usuario';
+                    }
+                } catch (e) {
+                    // no-op
+                }
+            })();
+        </script>
         <script src="../../assets/script.js"></script>
     </body>
 </html>
+

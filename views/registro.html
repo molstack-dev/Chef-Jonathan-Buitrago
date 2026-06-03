@@ -57,7 +57,7 @@
                                     <input type="password" id="login-password" class="w-full" required>
                                 </div>
                                 <div class="mb-6">
-                                    <a href="#" class="text-amber-500 text-sm hover:text-amber-400">¿Olvidaste tu contraseña?</a>
+                                    <a href="forgot-password.html" class="text-amber-500 text-sm hover:text-amber-400">¿Olvidaste tu contraseña?</a>
                                 </div>
                                 <button type="submit" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:opacity-90 transition-opacity">
                                     Iniciar Sesión
@@ -85,10 +85,25 @@
                                     <label for="register-confirm-password" class="block text-gray-300 mb-2">Confirmar Contraseña</label>
                                     <input type="password" id="register-confirm-password" class="w-full" required>
                                 </div>
+                                <div class="mb-4">
+                                    <label for="register-security-question" class="block text-gray-300 mb-2">Pregunta de Seguridad</label>
+                                    <select id="register-security-question" class="w-full py-4 bg-gray-700 text-gray-300 border border-gray-600" required>
+                                        <option value="">Selecciona una pregunta</option>
+                                        <option value="¿Cuál es el nombre de tu primera mascota?">¿Cuál es el nombre de tu primera mascota?</option>
+                                        <option value="¿Cuál es tu postre favorito?">¿Cuál es tu postre favorito?</option>
+                                        <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
+                                        <option value="¿Cuál es el nombre de tu mejor amigo/a?">¿Cuál es el nombre de tu mejor amigo/a?</option>
+                                        <option value="¿Cuál fue tu primera canción favorita?">¿Cuál fue tu primera canción favorita?</option>
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="register-security-answer" class="block text-gray-300 mb-2">Respuesta de Seguridad</label>
+                                    <input type="text" id="register-security-answer" class="w-full" required>
+                                </div>
                                 <div class="mb-6">
                                     <label class="flex items-center">
-                                        <input type="checkbox" class="rounded bg-gray-700 border-gray-600 text-amber-600 focus:ring-amber-500">
-                                        <span class="ml-2 text-gray-300 text-sm">Acepto los <a href="#" class="text-amber-500 hover:text-amber-400">Términos y Condiciones</a></span>
+                                        <input type="checkbox" id="register-terminos" class="rounded bg-gray-700 border-gray-600 text-amber-600 focus:ring-amber-500">
+                                        <span class="ml-2 text-gray-300 text-sm">Acepto los <a href="#" onclick="openTerminosModal(); return false;" class="text-amber-500 hover:text-amber-400">Términos y Condiciones</a></span>
                                     </label>
                                 </div>
                                 <button type="submit" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:opacity-90 transition-opacity">
@@ -119,7 +134,73 @@
                 </ul>
             </div>
         </footer>
-    
+
+        <!-- Modal Términos y Condiciones -->
+        <div id="terminos-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-gray-800 rounded-xl max-w-2xl w-full max-h-[90vh] overflow-hidden">
+                <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+                    <h3 class="text-xl font-semibold text-white">Términos y Condiciones</h3>
+                    <button onclick="closeTerminosModal()" class="text-gray-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6 overflow-y-auto max-h-[70vh] text-gray-300 text-sm space-y-4">
+                    <h4 class="text-lg font-semibold text-white">1. Aceptación de los Términos</h4>
+                    <p>Al acceder y utilizar este sitio web de Chef Jonathan Buitrago, usted acepta estar sujeto a estos Términos y Condiciones.</p>
+
+                    <h4 class="text-lg font-semibold text-white">2. Servicios Ofrecidos</h4>
+                    <p>Chef Jonathan Buitrago ofrece servicios de cursos de pastelería, asesorías personalizadas, catas y eventos especiales, y certificados de participación.</p>
+
+                    <h4 class="text-lg font-semibold text-white">3. Registro y Cuenta de Usuario</h4>
+                    <p>Usted es responsable de mantener la confidencialidad de su contraseña y de todas las actividades bajo su cuenta.</p>
+
+                    <h4 class="text-lg font-semibold text-white">4. Proceso de Inscripción</h4>
+                    <p>La inscripción se confirma mediante el pago del curso y verificación por WhatsApp.</p>
+
+                    <h4 class="text-lg font-semibold text-white">5. Cancelaciones y Reembolsos</h4>
+                    <p>Las cancelaciones deben comunicarse con al menos 48 horas de anticipación para ser elegibles para reembolso.</p>
+
+                    <h4 class="text-lg font-semibold text-white">6. Propiedad Intelectual</h4>
+                    <p>Todo el contenido del sitio es propiedad de Chef Jonathan Buitrago y está protegido por leyes de propiedad intelectual.</p>
+
+                    <h4 class="text-lg font-semibold text-white">7. Limitación de Responsabilidad</h4>
+                    <p>Chef Jonathan Buitrago no será responsable por daños derivados del uso del sitio o servicios.</p>
+
+                    <h4 class="text-lg font-semibold text-white">8. Contacto</h4>
+                    <p>WhatsApp: +57 322 945 2346 | Instagram: @chef_jonathan_buitrago</p>
+                </div>
+                <div class="p-4 border-t border-gray-700 flex justify-end">
+                    <button onclick="closeTerminosModal()" class="bg-gradient-to-r from-amber-600 to-orange-600 text-white py-2 px-6 rounded-lg font-semibold hover:opacity-90 transition-opacity">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        function openTerminosModal() {
+            document.getElementById('terminos-modal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeTerminosModal() {
+            document.getElementById('terminos-modal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        // Validar términos antes de enviar formulario de registro
+        const registerForm = document.getElementById('register-form');
+        if (registerForm) {
+            registerForm.addEventListener('submit', function(e) {
+                const terminosCheck = document.getElementById('register-terminos');
+                if (!terminosCheck.checked) {
+                    e.preventDefault();
+                    showToast('Debes aceptar los Términos y Condiciones', 'error');
+                }
+            });
+        }
+        </script>
         <script src="../assets/script.js"></script>
     </body>
 </html>

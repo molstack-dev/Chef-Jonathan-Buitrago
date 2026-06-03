@@ -3,3 +3,18 @@
 **/informe.md
 **/TODO.md
 **/PROYECTO_VENTAS_CHEF_JONATHAN_BUITRAGO.txt
+.env.local
+backend/phpmailer/smtp-config.php
+
+# Documentación (excepto README.md)
+**/README_PHP.md
+**/README_SOLUCION.md
+**/DIAGNOSTICO_Y_SOLUCIONES.md
+**/PLAN_IMPLEMENTACION_DETALLADO.md
+**/QUICK_START.txt
+**/RESUMEN_CAMBIOS.txt
+**/MODULOS_ANALISIS.md
+**/DIAGNOSTICO_SISTEMA.php
+**/ARCHIVOS_A_ELIMINAR.md
+
+

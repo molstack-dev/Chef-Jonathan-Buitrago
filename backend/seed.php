@@ -40,31 +40,6 @@ try {
         $stmt->execute($client);
     }
 
-    // Insertar vendedores
-    $sellers = [
-        ['Pedro Martínez', 'pedro@chefjonathan.com', '555-0201', 10.0],
-        ['Laura Sánchez', 'laura@chefjonathan.com', '555-0202', 15.0],
-        ['Miguel Torres', 'miguel@chefjonathan.com', '555-0203', 12.0]
-    ];
-
-    foreach ($sellers as $seller) {
-        $stmt = $pdo->prepare("INSERT INTO sellers (name, email, phone, commission_rate) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE name=name");
-        $stmt->execute($seller);
-    }
-
-    // Insertar visitas
-    $visits = [
-        [1, '2024-01-15', 'Interesado en curso de chocolatería'],
-        [2, '2024-01-20', 'Consulta sobre eventos corporativos'],
-        [3, '2024-01-25', 'Información sobre talleres'],
-        [4, '2024-02-01', 'Interés en asesoría personalizada']
-    ];
-
-    foreach ($visits as $visit) {
-        $stmt = $pdo->prepare("INSERT INTO visits (client_id, date, notes) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE client_id=client_id");
-        $stmt->execute($visit);
-    }
-
     // Insertar inscripciones (registrations)
     $registrations = [
         [1, 1, 'completed'], // Cliente 1 en curso 1
@@ -75,30 +50,6 @@ try {
     foreach ($registrations as $reg) {
         $stmt = $pdo->prepare("INSERT INTO registrations (client_id, course_id, status) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE client_id=client_id");
         $stmt->execute($reg);
-    }
-
-    // Insertar ventas
-    $sales = [
-        [1, 1, 50000, '2024-01-16'], // Vendedor 1, cliente 1, curso 1
-        [2, 2, 150000, '2024-01-21'], // Vendedor 2, cliente 2, curso 2
-        [3, 3, 95000, '2024-01-26']   // Vendedor 3, cliente 3, curso 3
-    ];
-
-    foreach ($sales as $sale) {
-        $stmt = $pdo->prepare("INSERT INTO sales (seller_id, client_id, amount, date) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE seller_id=seller_id");
-        $stmt->execute($sale);
-    }
-
-    // Insertar comisiones
-    $commissions = [
-        [1, 1, 5000, '2024-01-16'], // Vendedor 1, venta 1, 10% de 50000
-        [2, 2, 22500, '2024-01-21'], // Vendedor 2, venta 2, 15% de 150000
-        [3, 3, 11400, '2024-01-26']   // Vendedor 3, venta 3, 12% de 95000
-    ];
-
-    foreach ($commissions as $comm) {
-        $stmt = $pdo->prepare("INSERT INTO commissions (seller_id, sale_id, amount, date) VALUES (?, ?, ?, ?) ON DUPLICATE KEY UPDATE seller_id=seller_id");
-        $stmt->execute($comm);
     }
 
     echo "Datos iniciales insertados correctamente.\n";
