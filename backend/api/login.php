@@ -2,6 +2,7 @@
 require_once '../cors.php';
 header('Content-Type: application/json');
 
+require_once '../cors.php';
 require_once '../config.php';
 
 // Iniciar sesión si no está iniciada

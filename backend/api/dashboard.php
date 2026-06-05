@@ -3,7 +3,7 @@ header('Content-Type: text/html; charset=utf-8');
 
 // Sanitizar y validar el rol solicitado
 $role = $_GET['role'] ?? '';
-$validRoles = ['admin', 'seller', 'user'];
+$validRoles = ['admin', 'user'];
 
 if (empty($role) || !in_array($role, $validRoles)) {
     http_response_code(400);

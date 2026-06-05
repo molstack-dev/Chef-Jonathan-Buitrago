@@ -1,28 +1,31 @@
 <?php
 /**
- * cors.php - Configuración segura de CORS
+ * cors.php - Configuración CORS para desarrollo y producción
  * Incluir en todos los endpoints API
  */
-
-// Definir origen permitido (cambiar en producción)
-$allowedOrigins = [
-    'http://localhost:8000',
-    'http://localhost',
-    'http://127.0.0.1:8000',
-    'http://127.0.0.1'
-];
 
 // Obtener el origen de la solicitud
 $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
-// Validar origen
-if (in_array($origin, $allowedOrigins)) {
+// En desarrollo local, permitir cualquier origen localhost
+if (strpos($origin, 'localhost') !== false || strpos($origin, '127.0.0.1') !== false) {
     header("Access-Control-Allow-Origin: $origin");
+    header('Access-Control-Allow-Credentials: true');
+} elseif (!empty($origin)) {
+    // En producción, solo orígenes específicos
+    $allowedOrigins = [
+        'https://chefjonathanbuitrago.com'
+    ];
+    if (in_array($origin, $allowedOrigins)) {
+        header("Access-Control-Allow-Origin: $origin");
+        header('Access-Control-Allow-Credentials: true');
+    }
 }
 
 // Headers CORS
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Max-Age: 3600');
 
 // Manejar preflight

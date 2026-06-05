@@ -16,7 +16,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     try {
         // Si hay sesión activa
         if (isset($_SESSION['user_id'])) {
-            $stmt = $pdo->prepare("SELECT id, name, email, role FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT id, name, email, phone, role, password, security_question, security_answer FROM users WHERE id = ?");
             $stmt->execute([$_SESSION['user_id']]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
             
@@ -27,7 +27,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
         }
         
         // Si no hay sesión, retornar null
-        echo json_encode(['email' => null]);
+            echo json_encode(['email' => null]);
         exit;
     } catch (PDOException $e) {
         http_response_code(500);
@@ -64,27 +64,84 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
         // Crear usuario
         if ($data['action'] === 'create_user') {
-            if (!isset($data['name']) || !isset($data['email']) || !isset($data['password'])) {
-                http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
-                exit;
+            // Copia del contrato/validación de register.php para que admin-usuarios funcione.
+            $required = ['name', 'email', 'password', 'security_question', 'security_answer', 'phone', 'notify_email', 'notify_whatsapp'];
+            foreach ($required as $f) {
+                if (!isset($data[$f])) {
+                    http_response_code(400);
+                    echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
+                    exit;
+                }
             }
 
             $name = trim($data['name']);
             $email = trim($data['email']);
-            $password = $data['password'];
+            $password = (string)$data['password'];
             $role = isset($data['role']) ? trim($data['role']) : 'user';
 
-            if ($name === '' || $email === '' || $password === '' || $role === '') {
+            $security_question = trim($data['security_question']);
+            $security_answer = trim($data['security_answer']);
+            $phoneRaw = (string)$data['phone'];
+
+            $notify_email = isset($data['notify_email']) ? (bool)$data['notify_email'] : true;
+            $notify_whatsapp = isset($data['notify_whatsapp']) ? (bool)$data['notify_whatsapp'] : false;
+
+            if ($name === '' || $email === '' || $password === '' || $security_question === '' || $security_answer === '' || $phoneRaw === '' || $role === '') {
                 http_response_code(400);
-                echo json_encode(['success' => false, 'message' => 'Nombre, email, contraseña y rol no pueden estar vacíos']);
+                echo json_encode(['success' => false, 'message' => 'Todos los campos son requeridos']);
                 exit;
             }
 
-            $validRoles = ['admin', 'seller', 'user'];
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Email inválido']);
+                exit;
+            }
+
+            $phone = preg_replace('/\D+/', '', $phoneRaw);
+            if (empty($phone)) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => 'Teléfono inválido']);
+                exit;
+            }
+
+            $validRoles = ['admin', 'user'];
             if (!in_array($role, $validRoles, true)) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'Rol no válido']);
+                exit;
+            }
+
+            // Validar fortaleza de contraseña (misma lógica que register.php)
+            $errors = [];
+            if (strlen($password) < 8) $errors[] = 'La contraseña debe tener al menos 8 caracteres';
+            if (!preg_match('/[A-Z]/', $password)) $errors[] = 'La contraseña debe tener al menos una mayúscula';
+            if (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password)) $errors[] = 'La contraseña debe tener al menos un carácter especial';
+            if (preg_match_all('/\d+/', $password, $matches)) {
+                foreach ($matches[0] as $numSeq) {
+                    $len = strlen($numSeq);
+                    if ($len > 2) {
+                        $expectedDiff = null;
+                        $isSequence = true;
+                        for ($i = 0; $i < $len - 1; $i++) {
+                            $diff = intval($numSeq[$i + 1]) - intval($numSeq[$i]);
+                            if ($i === 0) {
+                                $expectedDiff = $diff;
+                            } elseif ($diff !== $expectedDiff || abs($diff) !== 1) {
+                                $isSequence = false;
+                                break;
+                            }
+                        }
+                        if ($isSequence && $expectedDiff !== null && abs($expectedDiff) === 1) {
+                            $errors[] = 'La contraseña no puede contener secuencias numéricas (123, 456, 789)';
+                            break;
+                        }
+                    }
+                }
+            }
+            if (count($errors) > 0) {
+                http_response_code(400);
+                echo json_encode(['success' => false, 'message' => $errors[0]]);
                 exit;
             }
 
@@ -93,18 +150,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$email]);
             if ($stmt->fetch()) {
                 http_response_code(409);
-                echo json_encode(['success' => false, 'message' => 'El email ya existe']);
+                echo json_encode(['success' => false, 'message' => 'El usuario ya existe']);
                 exit;
             }
 
-            // Crear el usuario
             $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
-            $stmt = $pdo->prepare("INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)");
-            $stmt->execute([$name, $email, $hashedPassword, $role]);
 
-            echo json_encode(['success' => true, 'message' => 'Usuario creado exitosamente']);
+            $stmt = $pdo->prepare(
+                "INSERT INTO users (name, email, phone, password, role, security_question, security_answer, notify_email, notify_whatsapp)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            );
+
+            $stmt->execute([
+                $name,
+                $email,
+                $phone,
+                $hashedPassword,
+                $role,
+                $security_question,
+                strtolower($security_answer),
+                $notify_email,
+                $notify_whatsapp
+            ]);
+
+            echo json_encode(['success' => true, 'message' => 'Usuario registrado exitosamente']);
             exit;
         }
+
 
         // Actualizar usuario
         if ($data['action'] === 'update_user') {
@@ -120,7 +192,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $role = isset($data['role']) ? trim($data['role']) : 'user';
 
             // Validar rol
-            $validRoles = ['admin', 'seller', 'user'];
+            $validRoles = ['admin', 'user'];
             if (!in_array($role, $validRoles, true)) {
                 http_response_code(400);
                 echo json_encode(['success' => false, 'message' => 'Rol no válido']);

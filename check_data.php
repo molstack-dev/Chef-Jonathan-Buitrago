@@ -1,6 +1,6 @@
 <?php
 require 'backend/config.php';
-$tables = ['users', 'courses', 'sellers', 'visits', 'registrations', 'sales', 'commissions', 'clients'];
+$tables = ['users', 'courses', 'registrations', 'clients'];
 
 foreach ($tables as $table) {
     try {

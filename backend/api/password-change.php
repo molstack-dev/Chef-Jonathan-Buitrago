@@ -46,9 +46,52 @@ if ($newPassword !== $confirmPassword) {
     exit;
 }
 
-if (strlen($newPassword) < 6) {
+// Validar fortaleza de contraseña
+function validatePassword($password) {
+    $errors = [];
+
+    if (strlen($password) < 8) {
+        $errors[] = 'La contraseña debe tener al menos 8 caracteres';
+    }
+
+    if (!preg_match('/[A-Z]/', $password)) {
+        $errors[] = 'La contraseña debe tener al menos una mayúscula';
+    }
+
+    if (!preg_match('/[!@#$%^&*(),.?":{}|<>]/', $password)) {
+        $errors[] = 'La contraseña debe tener al menos un carácter especial';
+    }
+
+    // Verificar secuencias numéricas (más de 2 números consecutivos)
+    if (preg_match_all('/\d+/', $password, $matches)) {
+        foreach ($matches[0] as $numSeq) {
+            $len = strlen($numSeq);
+            if ($len > 2) {
+                $isSequence = true;
+                for ($i = 0; $i < $len - 1; $i++) {
+                    $diff = intval($numSeq[$i + 1]) - intval($numSeq[$i]);
+                    if ($i === 0) {
+                        $expectedDiff = $diff;
+                    } elseif ($diff !== $expectedDiff || abs($diff) !== 1) {
+                        $isSequence = false;
+                        break;
+                    }
+                }
+                if ($isSequence && abs($expectedDiff) === 1) {
+                    $errors[] = 'La contraseña no puede contener secuencias numéricas (123, 456, 789)';
+                    break;
+                }
+            }
+        }
+    }
+
+    return $errors;
+}
+
+$passwordErrors = validatePassword($newPassword);
+if (count($passwordErrors) > 0) {
     http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'La contraseña debe tener al menos 6 caracteres']);
+    echo json_encode(['success' => false, 'message' => $passwordErrors[0]]);
     exit;
 }
 

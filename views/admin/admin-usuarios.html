@@ -24,10 +24,7 @@
                 <a href="admin.html" class="hover:text-purple-500 transition-colors">Panel Principal</a>
                 <a href="admin-inscripciones.html" class="hover:text-purple-500 transition-colors">Inscripciones</a>
                 <a href="admin-servicios.html" class="hover:text-purple-500 transition-colors">Servicios</a>
-                <a href="admin-salidas.html" class="hover:text-purple-500 transition-colors">Salidas</a>
-                <a href="admin-visitas.html" class="hover:text-purple-500 transition-colors">Visitas</a>
-                <a href="admin-vendedores.html" class="hover:text-purple-500 transition-colors">Vendedores</a>
-                <a href="../../index.html" class="hover:text-purple-500 transition-colors">Cerrar Sesión</a>
+                <a href="javascript:void(0)" onclick="logout()" class="hover:text-purple-500 transition-colors">Cerrar Sesión</a>
             </nav>
             <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="md:hidden text-white focus:outline-none p-2">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,10 +36,7 @@
             <a href="admin.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Panel Principal</a>
             <a href="admin-inscripciones.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Inscripciones</a>
             <a href="admin-servicios.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Servicios</a>
-            <a href="admin-salidas.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Salidas</a>
-            <a href="admin-visitas.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Visitas</a>
-            <a href="admin-vendedores.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Vendedores</a>
-            <a href="../../index.html" class="block py-3 px-4 hover:text-purple-500 transition-all">Cerrar Sesión</a>
+            <a href="javascript:void(0)" onclick="logout()" class="block py-3 px-4 hover:text-purple-500 transition-all">Cerrar Sesión</a>
         </div>
     </header>
 
@@ -54,23 +48,76 @@
             <!-- Historial de Usuarios y Formularios de Gestión -->
             <div class="mb-12">
                 <h4 class="text-2xl font-semibold mb-6 text-purple-400">Gestión de Usuarios</h4>
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
                     <!-- Formulario Crear Usuario -->
                     <div class="product-card p-6 rounded-lg">
                         <h5 class="text-lg font-semibold mb-4">Crear Usuario</h5>
                         <form id="create-user-form">
                             <input id="user-name" name="name" type="text" placeholder="Nombre" pattern="^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$" title="Solo letras y espacios" class="w-full mb-2 p-2 bg-gray-700 rounded" required>
-                            <input id="user-email" name="email" type="email" placeholder="Email" class="w-full mb-2 p-2 bg-gray-700 rounded" required>
+
+                            <input id="user-email" name="email" type="email" placeholder="Correo Electrónico" class="w-full mb-2 p-2 bg-gray-700 rounded" required>
+
+                            <input id="user-phone" name="phone" type="number" inputmode="numeric" class="w-full mb-2 p-2 bg-gray-700 rounded" placeholder="Número de Teléfono" required>
+
                             <select id="user-role" name="role" class="w-full mb-2 p-2 bg-gray-800 rounded border border-gray-600" required>
                                 <option value="user">Usuario</option>
-                                <option value="seller">Vendedor</option>
                                 <option value="admin">Administrador</option>
                             </select>
-                            <input id="user-password" name="password" type="password" placeholder="Contraseña" class="w-full mb-4 p-2 bg-gray-700 rounded" required>
+
+                            <select id="user-security-question" name="security_question" class="w-full mb-2 p-2 bg-gray-800 rounded border border-gray-600" required>
+                                <option value="">Selecciona una pregunta</option>
+                                <option value="¿Cuál es el nombre de tu primera mascota?">¿Cuál es el nombre de tu primera mascota?</option>
+                                <option value="¿Cuál es tu postre favorito?">¿Cuál es tu postre favorito?</option>
+                                <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
+                                <option value="¿Cuál es el nombre de tu mejor amigo/a?">¿Cuál es el nombre de tu mejor amigo/a?</option>
+                                <option value="¿Cuál fue tu primera canción favorita?">¿Cuál fue tu primera canción favorita?</option>
+                            </select>
+
+                            <input id="user-security-answer" name="security_answer" type="text" class="w-full mb-2 p-2 bg-gray-700 rounded" placeholder="Respuesta de Seguridad" required>
+
+                            <input id="user-password" name="password" type="password" placeholder="Contraseña" class="w-full mb-2 p-2 bg-gray-700 rounded" required>
+
+                            <input id="user-confirm-password" name="confirm_password" type="password" placeholder="Confirmar Contraseña" class="w-full mb-2 p-2 bg-gray-700 rounded" required>
+
+                            <div class="mb-4 text-sm text-gray-300">
+                                <label class="flex items-center gap-2">
+                                    <input type="checkbox" id="user-notify-email" class="rounded bg-gray-700 border-gray-600 text-amber-600" checked>
+                                    <span>Email</span>
+                                </label>
+                                <label class="flex items-center gap-2 mt-2">
+                                    <input type="checkbox" id="user-notify-whatsapp" class="rounded bg-gray-700 border-gray-600 text-amber-600">
+                                    <span>WhatsApp</span>
+                                </label>
+                            </div>
+
+                            
+
                             <button type="submit" class="w-full bg-purple-600 py-2 rounded hover:bg-purple-700">Crear</button>
+
+                            <script>
+                              (function(){
+                                var form = document.getElementById('create-user-form');
+                                if(!form) return;
+
+                                // Validación UI: confirmar contraseña
+                                form.addEventListener('submit', function(e){
+                                  var p1 = (document.getElementById('user-password') || {}).value;
+                                  var p2 = (document.getElementById('user-confirm-password') || {}).value;
+
+                                  if(p2 && p1 !== p2){
+                                    e.preventDefault();
+                                    if(typeof showToast === 'function') showToast('Las contraseñas no coinciden', 'error');
+                                    else alert('Las contraseñas no coinciden');
+                                    return;
+                                  }
+                                });
+                              })();
+                            </script>
+
                         </form>
                     </div>
+
                     
                     <!-- Historial de Usuarios con botones de modificar e inactivar -->
                     <div class="product-card p-6 lg:col-span-2">
@@ -115,9 +162,8 @@
                 </div>
                 <div>
                     <label class="block text-gray-300 text-sm mb-2">Rol</label>
-                    <select id="edit-user-role" class="w-full px-3 py-2 bg-gray-700 rounded text-white border border-gray-600 focus:border-amber-500">
+                    <select id="edit-user-role" class="w-full px-3 py-2 bg-gray-700 rounded text-white border border-gray-600">
                         <option value="user">Usuario</option>
-                        <option value="seller">Vendedor</option>
                         <option value="admin">Administrador</option>
                     </select>
                 </div>

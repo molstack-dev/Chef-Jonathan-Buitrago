@@ -58,8 +58,13 @@ try {
     }
 
     // Actualizar el perfil
-    $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ? WHERE id = ?");
-    $stmt->execute([$name, $email, $_SESSION['user_id']]);
+    $securityQuestion = isset($data['security_question']) ? trim($data['security_question']) : '';
+    $securityAnswer = isset($data['sequirity_answer']) ? trim($data['sequirity_answer']) : '';
+
+
+    $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ?, security_question = ?, sequirity_answer = ? WHERE id = ?");
+    $stmt->execute([$name, $email, $securityQuestion, $securityAnswer, $_SESSION['user_id']]);
+
 
     // Actualizar la sesión
     $_SESSION['user_name'] = $name;

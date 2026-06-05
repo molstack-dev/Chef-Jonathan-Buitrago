@@ -4,13 +4,53 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="content-language" content="es">
-        <title>Agendar Asesoría - Chef Jonathan Buitrago</title>
+        <title>Agendar Servicio - Chef Jonathan Buitrago</title>
         <script src="https://cdn.tailwindcss.com"></script>
         <link href="../../assets/style.css" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap" rel="stylesheet">
         <link rel="icon" type="image/png" href="../../img/icono.png">
     </head>
     <body>
+        <!-- Contenedor de notificaciones -->
+        <div id="toast-container" class="fixed top-24 right-4 z-50 flex flex-col gap-2"></div>
+
+        <!-- Modal de Inscripción -->
+        <div id="inscriptionModal" class="fixed inset-0 bg-black bg-opacity-60 hidden z-50 flex items-center justify-center">
+            <div class="bg-gray-800 p-8 rounded-xl max-w-md w-full mx-4">
+                <h3 id="inscriptionCourseName" class="text-2xl font-bold text-white mb-4"></h3>
+                <p id="inscriptionCoursePrice" class="text-amber-500 font-bold text-xl mb-6"></p>
+                <div class="bg-gray-700 p-4 rounded-lg mb-6">
+                    <p class="text-gray-300 text-sm mb-2">Método de pago:</p>
+                    <p class="text-white">💳 Nequi: 322 945 2346</p>
+                    <p class="text-white">📱 Transferencia bancaria</p>
+                    <p class="text-gray-400 text-xs mt-2">Envía el comprobante de pago por WhatsApp para confirmar tu inscripción</p>
+                </div>
+                <div class="flex space-x-3">
+                    <a id="whatsappInscription" href="#" target="_blank" class="flex-1 text-center py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700">
+                        Confirmar por WhatsApp
+                    </a>
+                    <button onclick="closeInscriptionModal()" class="px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal para detalles del curso -->
+        <div id="courseDetailsModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 overflow-auto">
+            <div class="min-h-screen px-4 py-12 flex items-center justify-center">
+                <div class="bg-gray-800 bg-opacity-95 p-8 rounded-xl max-w-3xl w-full relative">
+                    <button onclick="closeCourseDetails()" class="absolute top-4 right-4 text-gray-400 hover:text-white">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                    <h2 id="courseTitle" class="text-3xl font-bold mb-4 text-white"></h2>
+                    <div id="courseDetailsContent" class="text-gray-300 space-y-4"></div>
+                </div>
+            </div>
+        </div>
+
         <!-- Header -->
         <header class="shadow-lg rounded-lg backdrop-blur">
             <div class="container mx-auto px-6 py-5 flex justify-between items-center">
@@ -20,11 +60,14 @@
                 <nav class="hidden md:flex items-center space-x-10">
                     <a href="user.html" class="hover:text-purple-500 transition-colors">Panel Principal</a>
                     <a href="mis-cursos.html" class="hover:text-purple-500 transition-colors">Cursos</a>
-                    <a href="historial.html" class="hover:text-purple-500 transition-colors">Historial</a>
                     <a href="certificados.html" class="hover:text-purple-500 transition-colors">Certificados</a>
-                    <a href="perfil.html" class="w-10 h-10 rounded-full bg-purple-800 hover:bg-purple-500 flex items-center justify-center">U</a>
+                    <a href="agendar.html" class="hover:text-purple-500 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-cart2" viewBox="0 0 16 16"><path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l1.25 5h8.22l1.25-5zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg></a>
+                    <a href="perfil.html" class="w-10 h-8 rounded-full bg-purple-800 hover:bg-purple-500 flex items-center justify-center">U</a>
                 </nav>
                 <div class="flex md:hidden items-center space-x-3">
+                    <a href="agendar.html" class="text-white hover:text-purple-500 p-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-cart2" viewBox="0 0 16 16"><path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l1.25 5h8.22l1.25-5zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg>
+                    </a>
                     <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="text-white focus:outline-none p-1">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -36,7 +79,6 @@
             <div id="mobile-menu" class="hidden rounded-lg items-center md:hidden container mx-auto px-6">
                 <a href="user.html" class="block py-3 px-6 transition-all">Panel Principal</a>
                 <a href="mis-cursos.html" class="block py-3 px-6 transition-all">Cursos</a>
-                <a href="historial.html" class="block py-3 px-6 transition-all">Historial</a>
                 <a href="certificados.html" class="block py-3 px-6 transition-all">Certificados</a>
             </div>
         </header>
@@ -49,31 +91,122 @@
                     <!-- Contenido principal -->
                     <div class="lg:col-span-4">
                         <div class="product-card p-8 rounded-xl bg-gray-800 bg-opacity-90">
-                            <h4 class="text-2xl font-semibold mb-6 text-white">Agendar Asesoría</h4>
-                            
+                            <h4 class="text-2xl font-semibold mb-6 text-white">Agendar Servicio</h4>
+
+                            <!-- Selector de tipo de servicio -->
+                            <div class="mb-6">
+                                <div class="flex flex-wrap gap-4 justify-center">
+                                    <button type="button" class="service-type-btn px-6 py-3 bg-purple-600 text-white rounded-lg" data-type="asesoria">Asesorías</button>
+                                    <button type="button" class="service-type-btn px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600" data-type="curso">Cursos</button>
+                                    <button type="button" class="service-type-btn px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600" data-type="evento">Eventos</button>
+                                </div>
+                            </div>
+
                             <form id="advisory-form" class="space-y-6">
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <!-- Tipo de Asesoría -->
-                                    <div>
-                                        <label class="block text-gray-300 text-sm font-medium mb-2">Tipo de Asesoría</label>
-                                        <select id="advisory-type" class="w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none">
-                                            <option value="">Seleccionar tipo</option>
-                                            <option value="personal">Asesoría Personal</option>
-                                            <option value="negocio">Asesoría para Negocio</option>
-                                            <option value="evento">Asesoría para Evento</option>
-                                        </select>
+                                <!-- Campos para Asesorías -->
+                                <div id="fields-asesoria" class="service-fields space-y-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <!-- Tipo de Asesoría -->
+                                        <div>
+                                            <label class="block text-gray-300 text-sm font-medium mb-2">Tipo de Asesoría *</label>
+                                            <select id="advisory-subtype" class="w-full px-4 py-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none">
+                                                <option value="">Seleccionar tipo</option>
+                                                <option value="asesoria_personal">Personal</option>
+                                                <option value="asesoria_negocio">Negocio</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Asesoría disponible -->
+                                        <div>
+                                            <label class="block text-gray-300 text-sm font-medium mb-2">Asesoría *</label>
+                                            <select id="advisory-service" class="w-full px-4 py-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none">
+                                                <option value="">Seleccionar asesoría</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Modalidad -->
+                                        <div>
+                                            <label class="block text-gray-300 text-sm font-medium mb-2">Modalidad *</label>
+                                            <select id="advisory-mode" class="w-full px-4 py-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none">
+                                                <option value="">Seleccionar modalidad</option>
+                                                <option value="presencial">Presencial</option>
+                                                <option value="virtual">Virtual</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Teléfono (automático desde users.phone en backend) -->
+                                        <div class="hidden">
+                                            <label class="block text-gray-300 text-sm font-medium mb-2">Teléfono</label>
+                                            <input type="number" id="advisory-phone" inputmode="numeric" class="w-full px-4 py-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none" placeholder="Ej: 3229452346" min="0" step="1" disabled>
+                                        </div>
+
+
+                                        <!-- Número de personas (solo para Negocio) -->
+                                        <div id="asesoria-num-persons-container" class="hidden">
+                                            <label class="block text-gray-300 text-sm font-medium mb-2">Número de personas *</label>
+                                            <input type="number" id="advisory-asesoria-persons" class="w-full px-4 py-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none" placeholder="Ej: 5" min="1" max="50" value="1">
+                                        </div>
                                     </div>
-                                    
+                                </div>
+
+                                <!-- Campos para Cursos -->
+                                <div id="fields-curso" class="service-fields hidden space-y-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <!-- Seleccionar Curso -->
+                                        <div>
+                                            <label class="block text-gray-300 text-sm font-medium mb-2">Seleccionar Curso *</label>
+                                            <select id="advisory-course" class="w-full px-4 py-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none">
+                                                <option value="">Seleccionar curso</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Teléfono (automático desde users.phone en backend) -->
+                                        <div class="hidden">
+                                            <label class="block text-gray-300 text-sm font-medium mb-2">Teléfono</label>
+                                            <input type="number" id="advisory-course-phone" inputmode="numeric" class="w-full px-4 py-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none" placeholder="Ej: 3229452346" min="0" step="1" disabled>
+                                        </div>
+
+                                    </div>
+                                    <input type="hidden" id="advisory-course-persons" value="1">
+                                </div>
+
+                                <!-- Campos para Eventos -->
+                                <div id="fields-evento" class="service-fields hidden space-y-6">
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <!-- Número de personas -->
+                                        <div>
+                                            <label class="block text-gray-300 text-sm font-medium mb-2">Número de personas *</label>
+<input type="number" id="advisory-event-persons" inputmode="numeric" class="w-full px-4 py-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none" placeholder="Ej: 2" min="1" max="20" step="1">
+                                        </div>
+
+                                        <!-- Seleccionar Evento -->
+                                        <div>
+                                            <label class="block text-gray-300 text-sm font-medium mb-2">Seleccionar Evento *</label>
+                                            <select id="advisory-event" class="w-full px-4 py-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none">
+                                                <option value="">Seleccionar evento</option>
+                                            </select>
+                                        </div>
+
+                                        <!-- Teléfono -->
+                                        <div>
+                                            <label class="block text-gray-300 text-sm font-medium mb-2">Teléfono *</label>
+<input type="number" id="advisory-event-phone" inputmode="numeric" class="w-full px-4 py-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none" placeholder="Ej: 3001234567" min="0" step="1">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Campos comunes: Fecha y Hora (solo para Asesorías) -->
+                                <div id="common-fields-asesoria" class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <!-- Fecha -->
                                     <div>
-                                        <label class="block text-gray-300 text-sm font-medium mb-2">Fecha Deseada</label>
-                                        <input type="date" id="advisory-date" class="w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none">
+                                        <label class="block text-gray-300 text-sm font-medium mb-2">Fecha Deseada *</label>
+                                        <input type="date" id="advisory-date" class="w-full px-4 py-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none">
                                     </div>
-                                    
+
                                     <!-- Hora -->
                                     <div>
-                                        <label class="block text-gray-300 text-sm font-medium mb-2">Hora Preferida</label>
-                                        <select id="advisory-time" class="w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none">
+                                        <label class="block text-gray-300 text-sm font-medium mb-2">Hora Preferida *</label>
+                                        <select id="advisory-time" class="w-full px-4 py-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none">
                                             <option value="">Seleccionar hora</option>
                                             <option value="09:00">09:00 AM</option>
                                             <option value="10:00">10:00 AM</option>
@@ -83,78 +216,202 @@
                                             <option value="16:00">04:00 PM</option>
                                         </select>
                                     </div>
-                                    
-                                    <!-- Modalidad -->
+                                </div>
+
+                                <!-- Detalles (solo para Asesorías) -->
+                                <div id="details-field-asesoria">
+                                    <label class="block text-gray-300 text-sm font-medium mb-2">Detalles Adicionales</label>
+                                    <textarea id="advisory-details" rows="4" class="w-full px-4 py-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none" placeholder="Describe brevemente tus necesidades o consultas específicas"></textarea>
+                                </div>
+
+                                <!-- Campos comunes: Nombre y Email -->
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <!-- Nombre -->
                                     <div>
-                                        <label class="block text-gray-300 text-sm font-medium mb-2">Modalidad</label>
-                                        <select id="advisory-mode" class="w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none">
-                                            <option value="">Seleccionar modalidad</option>
-                                            <option value="presencial">Presencial</option>
-                                            <option value="virtual">Virtual</option>
-                                        </select>
+                                        <label class="block text-gray-300 text-sm font-medium mb-2">Nombre *</label>
+                                        <input type="text" id="advisory-name" class="w-full px-4 py-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none" placeholder="Tu nombre completo">
+                                    </div>
+
+                                    <!-- Email -->
+                                    <div>
+                                        <label class="block text-gray-300 text-sm font-medium mb-2">Email *</label>
+                                        <input type="email" id="advisory-email" class="w-full px-4 py-4 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none" placeholder="correo@ejemplo.com">
                                     </div>
                                 </div>
-                                
-                                <!-- Detalles -->
-                                <div>
-                                    <label class="block text-gray-300 text-sm font-medium mb-2">Detalles Adicionales</label>
-                                    <textarea id="advisory-details" rows="4" class="w-full px-4 py-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none" placeholder="Describe brevemente tus necesidades o consultas específicas"></textarea>
+
+                                <!-- Términos y condiciones (después de todos los campos) -->
+                                <div class="flex items-center space-x-3">
+                                    <input type="checkbox" id="terms-checkbox" class="w-4 h-4 rounded bg-gray-700 border-gray-600 text-amber-500 focus:ring-amber-500 focus:ring-offset-0">
+                                    <label for="terms-checkbox" class="text-gray-300 text-sm">Acepto los <a href="#" onclick="openTerminosModal(); return false;" class="text-amber-500 hover:underline">Términos y Condiciones</a> del servicio *</label>
                                 </div>
-                                
+
                                 <!-- Botón de envío -->
                                 <div class="flex justify-end">
-                                    <button type="submit" class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors">
-                                        Solicitar Asesoría
+<button type="submit" class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors">
+                                        Solicitar Servicio
                                     </button>
+                                    <script>
+                                      // Self-heal: si el sitio muestra el error "Servicio es Requerido" pero el select
+                                      // está vacío por preselección fallida, forzamos el servicio requerido desde URL.
+                                      (function(){
+                                        try{
+                                          const urlParams = new URLSearchParams(window.location.search);
+                                          const type = urlParams.get('type');
+                                          const service = urlParams.get('service');
+                                          if(!service) return;
+                                          const selectId = type === 'asesoria' ? 'advisory-service' : (type === 'curso' ? 'advisory-course' : 'advisory-event');
+                                          const select = document.getElementById(selectId);
+                                          if(!select) return;
+                                          // Si ya tiene valor, no tocar
+                                          if(select.value) return;
+                                          for(let i=0;i<select.options.length;i++){
+                                            if(select.options[i].value === service){
+                                              select.selectedIndex = i;
+                                              select.dispatchEvent(new Event('change', {bubbles:true}));
+                                              break;
+                                            }
+                                          }
+                                        }catch(e){}
+                                      })();
+                                    </script>
                                 </div>
                             </form>
-                            
-                            <!-- Mensaje de éxito (inicialmente oculto) -->
-                            <div id="success-message" class="hidden mt-4 p-4 bg-green-900 text-green-300 rounded-lg">
-                                Tu solicitud de asesoría ha sido enviada exitosamente. Te contactaremos pronto para confirmar los detalles.
-                            </div>
                         </div>
                         
-                        <!-- Próximas Asesorías -->
+                            <!-- Mensaje de éxito (inicialmente oculto) -->
+                            <div id="success-message" class="hidden mt-4 p-4 bg-green-900 text-green-300 rounded-lg">
+                                Tu solicitud de servicio ha sido enviada exitosamente. Te contactaremos pronto para confirmar los detalles.
+                        </div>
+
+                        <!-- Solicitudes -->
                         <div class="product-card p-8 rounded-xl bg-gray-800 bg-opacity-90 mt-8">
-                            <h4 class="text-2xl font-semibold mb-6 text-white">Próximas Asesorías</h4>
-                            
+                            <h4 class="text-2xl font-semibold mb-6 text-white">Solicitudes</h4>
+
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left">
                                     <thead>
                                         <tr class="border-b border-gray-700">
-                                            <th class="pb-3 text-gray-300">Fecha</th>
-                                            <th class="pb-3 text-gray-300">Hora</th>
-                                            <th class="pb-3 text-gray-300">Tipo</th>
-                                            <th class="pb-3 text-gray-300">Modalidad</th>
+                                            <th class="pb-3 text-gray-300">Tipo de Servicio</th>
+                                            <th class="pb-3 text-gray-300">Servicio</th>
+                                            <th class="pb-3 text-gray-300">Detalles</th>
                                             <th class="pb-3 text-gray-300">Estado</th>
+                                            <th class="pb-3 text-gray-300">Comprobante</th>
                                             <th class="pb-3 text-gray-300">Acciones</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr class="border-b border-gray-800">
-                                            <td class="py-4 text-gray-400">15/11/2025</td>
-                                            <td class="py-4 text-gray-400">10:00 AM</td>
-                                            <td class="py-4 text-white">Personal</td>
-                                            <td class="py-4 text-gray-400">Virtual</td>
-                                            <td class="py-4">
-                                                <span class="px-3 py-1 bg-amber-900 text-amber-300 rounded-full text-sm">Pendiente</span>
-                                            </td>
-                                            <td class="py-4">
-                                                <div class="flex space-x-2">
-                                                    <button class="text-amber-500 hover:text-amber-400 text-sm">Modificar</button>
-                                                    <button class="text-red-500 hover:text-red-400 text-sm">Cancelar</button>
-                                                </div>
-                                            </td>
-                                        </tr>
+                                    <tbody id="solicitudes-tbody">
+                                        <tr><td colspan="6" class="py-6 text-center text-gray-400">Cargando...</td></tr>
                                     </tbody>
                                 </table>
+                            </div>
+                        </div>
+
+                        <!-- Catálogo de Cursos -->
+                        <div class="product-card p-6 rounded-xl bg-gray-800 bg-opacity-90 mt-8">
+                            <h4 class="text-2xl font-semibold mb-6 text-white">Nuestros Cursos</h4>
+
+                            <!-- Filtros -->
+                            <div class="flex flex-wrap gap-4 justify-center mb-10">
+                                <button class="filter-btn active" data-filter="all">Todos</button>
+                                <button class="filter-btn" data-filter="cursos">Cursos</button>
+                                <button class="filter-btn" data-filter="asesorias">Asesorías</button>
+                                <button class="filter-btn" data-filter="eventos">Eventos</button>
+                            </div>
+                            
+                            <!-- Cursos (cargados dinámicamente) -->
+                            <div id="courses-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                                <div class="col-span-full text-center text-gray-400 py-8">Cargando cursos...</div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </section>
+
+        <!-- Modal de Términos y Condiciones -->
+        <div id="terminos-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+            <div class="bg-gray-800 p-8 rounded-xl max-w-lg mx-4 max-h-[80vh] overflow-y-auto">
+                <h3 class="text-xl font-semibold text-white mb-4">Términos y Condiciones</h3>
+                <div class="text-gray-300 text-sm space-y-4 text-left">
+                    <p>Al aceptar estos términos y condiciones, usted acepta lo siguiente:</p>
+
+                    <h4 class="text-lg font-semibold text-white">1. Servicios de Asesoría</h4>
+                    <p>Los servicios de asesoría proporcionados por Chef Jonathan Buitrago son de carácter personal y confidencial. La información compartida durante las sesiones será tratada con la máxima privacidad.</p>
+
+                    <h4 class="text-lg font-semibold text-white">2. Cursos y Talleres</h4>
+                    <p>Los cursos y talleres tienen una duración definida y precios establecidos. El pago debe realizarse antes del inicio del curso. No se realizan reembolsos una vez iniciado el programa.</p>
+
+                    <h4 class="text-lg font-semibold text-white">3. Eventos</h4>
+                    <p>Los eventos tienen cupos limitados. La inscripción se confirma con el comprobante de pago. Chef Jonathan Buitrago se reserva el derecho de cambiar fechas o cancelar eventos con reembolso completo.</p>
+
+                    <h4 class="text-lg font-semibold text-white">4. Pagos</h4>
+                    <p>Los pagos se realizan a través de Nequi o transferencia bancaria. El comprobante de pago debe adjuntarse en el formulario de inscripción para confirmar su lugar.</p>
+
+                    <h4 class="text-lg font-semibold text-white">5. Cancelaciones</h4>
+                    <p>Las cancelaciones deben realizarse con al menos 48 horas de anticipación. Cancelaciones tardías pueden resultar en la pérdida del pago o cargos adicionales.</p>
+
+                    <h4 class="text-lg font-semibold text-white">6. Propiedad Intelectual</h4>
+                    <p>Todo el material proporcionado durante los servicios (recetas, documentos, videos) es propiedad de Chef Jonathan Buitrago y no puede ser reproducido sin autorización.</p>
+
+                    <h4 class="text-lg font-semibold text-white">7. Limitación de Responsabilidad</h4>
+                    <p>Chef Jonathan Buitrago no será responsable por daños derivados del uso del sitio o servicios. Los servicios se proporcionan "tal como están".</p>
+
+                    <h4 class="text-lg font-semibold text-white">8. Contacto</h4>
+                    <p>WhatsApp: +57 322 945 2346 | Instagram: @chef_jonathan_buitrago</p>
+                </div>
+                <div class="flex justify-end mt-6">
+                    <button type="button" onclick="closeTerminosModal()" class="px-6 py-3 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors">Cerrar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Confirmación de Eliminación -->
+        <div id="delete-confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+            <div class="bg-gray-800 p-6 rounded-xl max-w-lg mx-4 shadow-2xl border border-gray-700 w-full">
+                <h3 class="text-xl font-semibold text-white mb-4 border-b border-gray-600 pb-3">Confirmar eliminación</h3>
+                <p id="delete-confirm-instruction" class="text-gray-300 mb-4">Escribe el correo del usuario para confirmar.</p>
+                <input id="delete-confirm-email" type="email" placeholder="correo@ejemplo.com" class="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 focus:border-amber-500 focus:outline-none mb-4" />
+                <div class="flex justify-end gap-3">
+                    <button type="button" onclick="closeDeleteConfirmation()" class="px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600">Cancelar</button>
+                    <button type="button" onclick="confirmDelete()" class="px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700">Eliminar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Detalles de Solicitud (Ver más / Ver Comprobante) -->
+        <div id="detalles-solicitud-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" onclick="if(event.target===this)closeDetallesModal()">
+            <div class="bg-gray-800 p-6 rounded-xl max-w-lg mx-4 shadow-2xl border border-gray-700 w-full max-h-[90vh] overflow-y-auto">
+                <h3 id="detalles-modal-title" class="text-xl font-semibold text-white mb-4 border-b border-gray-600 pb-3">Detalles de la Solicitud</h3>
+                <div id="detalles-solicitud-content" class="text-gray-300 space-y-2"></div>
+                <div class="flex justify-end mt-6">
+                    <button type="button" onclick="closeDetallesModal()" class="px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600">Cerrar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Pago Nequi (fuera del scroll) -->
+        <div id="payment-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+            <div class="bg-gray-800 p-8 rounded-xl max-w-md mx-4">
+                <h3 class="text-xl font-semibold text-white mb-4">Pago con Nequi</h3>
+                <div class="text-gray-300 mb-4">
+                    <p class="mb-2">Realiza tu pago al número:</p>
+                    <p class="text-2xl font-bold text-amber-500 mb-4">322 945 2346</p>
+                    <p class="text-sm text-gray-400 mb-2">Incluye el concepto: <span id="payment-reference" class="text-white"></span></p>
+                    <p class="text-sm text-gray-400 mb-4">Monto: <span id="payment-amount" class="text-amber-500 font-bold"></span></p>
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-gray-300 text-sm font-medium mb-2">Subir comprobante de pago</label>
+                    <input type="file" id="payment-receipt-input" accept="image/*" class="w-full text-gray-300 text-sm file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-white file:bg-amber-600 hover:file:bg-amber-700">
+                    <p class="text-gray-500 text-xs mt-1">Adjunta captura de pantalla de la transacción</p>
+                </div>
+
+                <div class="flex justify-end space-x-4">
+                    <button type="button" onclick="closePaymentModal()" class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600">Cancelar</button>
+                    <button type="button" onclick="submitPaymentReceipt()" class="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700">Enviar Comprobante</button>
+                </div>
+            </div>
+        </div>
 
         <!-- Footer -->
         <footer class="border-t border-white-700 py-4">
@@ -176,5 +433,6 @@
         </footer>
 
         <script src="../../assets/script.js"></script>
+        <script src="../../assets/agendar.js"></script>
     </body>
 </html>

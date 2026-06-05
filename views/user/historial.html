@@ -11,6 +11,9 @@
         <link rel="icon" type="image/png" href="../../img/icono.png">
     </head>
     <body>
+        <!-- Contenedor de notificaciones -->
+        <div id="toast-container" class="fixed top-24 right-4 z-50 flex flex-col gap-2"></div>
+
         <!-- Header -->
         <header class="shadow-lg rounded-lg backdrop-blur">
             <div class="container mx-auto px-6 py-5 flex justify-between items-center">
@@ -20,11 +23,14 @@
                 <nav class="hidden md:flex items-center space-x-10">
                     <a href="user.html" class="hover:text-purple-500 transition-colors">Panel Principal</a>
                     <a href="mis-cursos.html" class="hover:text-purple-500 transition-colors">Cursos</a>
-                    <a href="agendar.html" class="hover:text-purple-500 transition-colors">Agendar</a>
                     <a href="certificados.html" class="hover:text-purple-500 transition-colors">Certificados</a>
-                    <a href="perfil.html" class="w-10 h-10 rounded-full bg-purple-800 hover:bg-purple-500 flex items-center justify-center">U</a>
+                    <a href="agendar.html" class="hover:text-purple-500 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-cart2" viewBox="0 0 16 16"><path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l1.25 5h8.22l1.25-5zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg></a>
+                    <a href="perfil.html" class="w-10 h-8 rounded-full bg-purple-800 hover:bg-purple-500 flex items-center justify-center">U</a>
                 </nav>
                 <div class="flex md:hidden items-center space-x-3">
+                    <a href="agendar.html" class="text-white hover:text-purple-500 p-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-cart2" viewBox="0 0 16 16"><path d="M0 2.5A.5.5 0 0 1 .5 2H2a.5.5 0 0 1 .485.379L2.89 4H14.5a.5.5 0 0 1 .485.621l-1.5 6A.5.5 0 0 1 13 11H4a.5.5 0 0 1-.485-.379L1.61 3H.5a.5.5 0 0 1-.5-.5M3.14 5l1.25 5h8.22l1.25-5zM5 13a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0m9-1a1 1 0 1 0 0 2 1 1 0 0 0 0-2m-2 1a2 2 0 1 1 4 0 2 2 0 0 1-4 0"/></svg>
+                    </a>
                     <button id="mobile-menu-button" onclick="toggleMobileMenu()" class="text-white focus:outline-none p-1">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
@@ -36,7 +42,6 @@
             <div id="mobile-menu" class="hidden rounded-lg items-center md:hidden container mx-auto px-6">
                 <a href="user.html" class="block py-3 px-6 transition-all">Panel Principal</a>
                 <a href="mis-cursos.html" class="block py-3 px-6 transition-all">Cursos</a>
-                <a href="agendar.html" class="block py-3 px-6 transition-all">Agendar</a>
                 <a href="certificados.html" class="block py-3 px-6 transition-all">Certificados</a>
             </div>
         </header>
@@ -64,49 +69,8 @@
                                             <th class="pb-3 text-gray-300">Acciones</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        <tr class="border-b border-gray-800">
-                                            <td class="py-4 text-gray-400">15/03/2024</td>
-                                            <td class="py-4 text-gray-400">Curso</td>
-                                            <td class="py-4 text-white">Chocolatería Avanzada</td>
-                                            <td class="py-4 text-gray-400">$120.000</td>
-                                            <td class="py-4">
-                                                <span class="px-3 py-1 bg-green-900 text-green-300 rounded-full text-sm">Completado</span>
-                                            </td>
-                                            <td class="py-4">
-                                                <div class="flex space-x-2">
-                                                    <a href="#" class="text-amber-500 hover:text-amber-400 text-sm">Ver factura</a>
-                                                    <a href="#" class="text-amber-500 hover:text-amber-400 text-sm">Ver curso</a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr class="border-b border-gray-800">
-                                            <td class="py-4 text-gray-400">22/02/2024</td>
-                                            <td class="py-4 text-gray-400">Curso</td>
-                                            <td class="py-4 text-white">Pastelería de Vanguardia</td>
-                                            <td class="py-4 text-gray-400">$150.000</td>
-                                            <td class="py-4">
-                                                <span class="px-3 py-1 bg-green-900 text-green-300 rounded-full text-sm">Completado</span>
-                                            </td>
-                                            <td class="py-4">
-                                                <div class="flex space-x-2">
-                                                    <a href="#" class="text-amber-500 hover:text-amber-400 text-sm">Ver factura</a>
-                                                    <a href="#" class="text-amber-500 hover:text-amber-400 text-sm">Ver curso</a>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr class="border-b border-gray-800">
-                                            <td class="py-4 text-gray-400">10/01/2024</td>
-                                            <td class="py-4 text-gray-400">Asesoría</td>
-                                            <td class="py-4 text-white">Consultoría Personalizada</td>
-                                            <td class="py-4 text-gray-400">$80.000</td>
-                                            <td class="py-4">
-                                                <span class="px-3 py-1 bg-green-900 text-green-300 rounded-full text-sm">Completado</span>
-                                            </td>
-                                            <td class="py-4">
-                                                <a href="#" class="text-amber-500 hover:text-amber-400 text-sm">Ver factura</a>
-                                            </td>
-                                        </tr>
+                                    <tbody id="history-tbody">
+                                        
                                     </tbody>
                                 </table>
                             </div>
@@ -147,5 +111,217 @@
         </footer>
 
         <script src="../../assets/script.js"></script>
+        <script>
+        window.loadMyHistory = async function() {
+            var tbody = document.getElementById('history-tbody');
+            if (!tbody) return;
+
+            try {
+                var email = null;
+                if (typeof getCurrentUser === 'function') {
+                    var currentUser = getCurrentUser();
+                    if (currentUser && currentUser.email) {
+                        email = currentUser.email;
+                    }
+                }
+                if (!email) {
+                    email = localStorage.getItem('advisory_email');
+                }
+
+                var url = '/backend/api/my-history-get.php';
+
+                var response = await fetch(url, { credentials: 'include' });
+                var result = await response.json();
+
+                if (result.success && result.data.length > 0) {
+                    // Solo mostrar completados y cancelados (confirmed = aprobado, completed = curso completado)
+                    var history = result.data.filter(item => item.status === 'confirmed' || item.status === 'completed' || item.status === 'cancelled');
+
+                    if (history.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-gray-400">No hay historial de solicitudes.</td></tr>';
+                        return;
+                    }
+
+                    tbody.innerHTML = '';
+                    history.forEach(function(item) {
+                        var statusClass = item.status === 'confirmed' ? 'bg-blue-900 text-blue-300' : item.status === 'completed' ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300';
+                        var statusLabel = item.status === 'confirmed' ? 'Aprobado' : item.status === 'completed' ? 'Completado' : 'Cancelado';
+
+                        // Determinar tipo y nombre del servicio
+                        var serviceTypeLabel = 'N/A';
+                        var serviceName = 'N/A';
+                        var source = item.source || 'advisory';
+
+                        if (source === 'registration') {
+                            // Es una inscripción a curso
+                            serviceTypeLabel = 'Curso';
+                            serviceName = item.course_title || 'Curso';
+                        } else {
+                            // Es una asesoría
+                            if (item.service_type === 'asesoria') {
+                                serviceTypeLabel = 'Asesoría';
+                            } else if (item.service_type === 'curso') {
+                                serviceTypeLabel = 'Curso';
+                            } else if (item.service_type === 'evento') {
+                                serviceTypeLabel = 'Evento';
+                            }
+                            serviceName = item.advisory_service || item.event_name || 'N/A';
+                            serviceName = serviceName.replace(/_/g, ' ');
+                        }
+
+                        // Precio
+                        var priceStr = item.price && item.price > 0 ? '$' + Number(item.price).toLocaleString('es-CO') : 'N/A';
+
+                        // Fecha
+                        var dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('es-ES') : 'N/A';
+
+                        // Verificar si puede pedir reembolso (solo cursos, dentro de 7 días)
+                        var canRefund = false;
+                        var refundBtn = '';
+
+                        if (source === 'registration' || item.service_type === 'curso') {
+                            var createdAt = new Date(item.created_at);
+                            var daysSince = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
+                            if (daysSince <= 7 && item.status !== 'cancelled' && item.payment_status !== 'refund_requested') {
+                                canRefund = true;
+                            }
+                        }
+
+                        if (canRefund) {
+                            refundBtn = '<button type="button" onclick="requestRefund(' + item.id + ', \'' + source + '\')" class="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700">Solicitar Reembolso</button>';
+                        }
+
+                        var row = document.createElement('tr');
+                        row.className = 'border-b border-gray-700';
+                        row.innerHTML = '<td class="py-3 text-gray-400 text-sm">' + dateStr + '</td>' +
+                            '<td class="py-3 text-gray-400 text-sm">' + serviceTypeLabel + '</td>' +
+                            '<td class="py-3 text-white text-sm">' + serviceName + '</td>' +
+                            '<td class="py-3 text-gray-400 text-sm">' + priceStr + '</td>' +
+                            '<td class="py-3"><span class="px-2 py-1 ' + statusClass + ' rounded-full text-xs">' + statusLabel + '</span></td>' +
+                            '<td class="py-3"><div class="flex space-x-2">' + refundBtn + '<button type="button" class="ver-detalles-historial-btn px-3 py-1 bg-amber-600 text-white rounded text-xs hover:bg-amber-700" data-id="' + item.id + '" data-source="' + source + '">Ver más</button></div></td>';
+                        tbody.appendChild(row);
+                    });
+
+                    // Botones Ver más
+                    tbody.querySelectorAll('.ver-detalles-historial-btn').forEach(function(btn) {
+                        btn.addEventListener('click', function() {
+                            var id = this.getAttribute('data-id');
+                            var item = history.find(h => h.id == id);
+                            if (!item) return;
+
+                            var details = [];
+                            if (item.advisory_mode) details.push('Modalidad: ' + item.advisory_mode);
+                            if (item.date) details.push('Fecha: ' + new Date(item.date).toLocaleDateString('es-ES'));
+                            if (item.time) details.push('Hora: ' + item.time);
+                            if (item.num_persons > 1) details.push('Personas: ' + item.num_persons);
+                            if (item.notes) details.push('Notas: ' + item.notes);
+                            if (item.price) details.push('Precio: $' + Number(item.price).toLocaleString('es-CO'));
+
+                            var contentDiv = document.getElementById('detalles-solicitud-content');
+                            var titleEl = document.getElementById('detalles-modal-title');
+                            if (titleEl) titleEl.textContent = 'Detalles de la Solicitud';
+                            if (contentDiv) {
+                                contentDiv.innerHTML = details.map(function(line) {
+                                    return '<div class="py-2 border-b border-gray-700 last:border-0">' + line + '</div>';
+                                }).join('');
+                            }
+                            var modal = document.getElementById('detalles-solicitud-modal');
+                            if (modal) modal.classList.remove('hidden');
+                        });
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-gray-400">No hay historial de solicitudes.</td></tr>';
+                }
+            } catch (e) {
+                tbody.innerHTML = '<tr><td colspan="6" class="py-6 text-center text-red-300">Error al cargar historial.</td></tr>';
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMyHistory();
+        });
+
+        // Modal estilizado de confirmación para reembolso
+        function openRefundConfirmModal(refundId, refundType) {
+            const modal = document.getElementById('refund-confirm-modal');
+            const msg = document.getElementById('refund-confirm-message');
+            const confirmBtn = document.getElementById('refund-confirm-btn');
+            const cancelBtn = document.getElementById('refund-confirm-cancel');
+            const hiddenId = document.getElementById('refund-confirm-id');
+            const hiddenType = document.getElementById('refund-confirm-type');
+
+            if (!modal || !msg || !confirmBtn || !cancelBtn || !hiddenId || !hiddenType) {
+                // fallback (no ideal, pero evita ruptura)
+                return (window.__refundConfirmFallback && window.__refundConfirmFallback(refundId, refundType));
+            }
+
+            hiddenId.value = refundId;
+            hiddenType.value = refundType;
+            msg.textContent = '¿Seguro que deseas solicitar un reembolso para este curso?';
+
+            const doClose = () => modal.classList.add('hidden');
+            cancelBtn.onclick = doClose;
+            modal.onclick = (e) => { if (e.target === modal) doClose(); };
+
+            confirmBtn.onclick = async () => {
+                doClose();
+                await window.requestRefund(refundId, refundType, true);
+            };
+
+            modal.classList.remove('hidden');
+        }
+
+        window.requestRefund = async function(id, type, alreadyConfirmed = false) {
+            if (!alreadyConfirmed) return openRefundConfirmModal(id, type);
+
+            try {
+                var response = await fetch('/backend/api/refund-request.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ id: id, type: type })
+                });
+
+                var result = await response.json();
+
+                if (result.success) {
+                    showToast(result.message, 'success');
+                    loadMyHistory(); // Recargar historial
+                } else {
+                    showToast(result.message || 'Error al solicitar reembolso', 'error');
+                }
+            } catch (e) {
+                showToast('Error de conexión', 'error');
+            }
+        };
+        </script>
+
+        <!-- Modal Confirmación Reembolso (estilizado) -->
+        <div id="refund-confirm-modal" class="hidden fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+            <div class="bg-gray-800 p-6 rounded-xl max-w-lg mx-4 shadow-2xl border border-gray-700 w-full">
+                <h3 class="text-2xl font-bold text-white mb-4 border-b border-gray-600 pb-3">Confirmar reembolso</h3>
+                <p id="refund-confirm-message" class="text-gray-300 mb-6">¿Seguro que deseas solicitar un reembolso para este curso?</p>
+
+                <input type="hidden" id="refund-confirm-id" />
+                <input type="hidden" id="refund-confirm-type" />
+
+                <div class="flex justify-end gap-3">
+                    <button type="button" id="refund-confirm-cancel" class="px-5 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600">Cancelar</button>
+                    <button type="button" id="refund-confirm-btn" class="px-5 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700">Confirmar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal de Detalles -->
+        <div id="detalles-solicitud-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" onclick="if(event.target===this)closeDetallesModal()">
+            <div class="bg-gray-800 p-6 rounded-xl max-w-lg mx-4 shadow-2xl border border-gray-700 w-full max-h-[90vh] overflow-y-auto">
+                <h3 id="detalles-modal-title" class="text-xl font-semibold text-white mb-4 border-b border-gray-600 pb-3">Detalles de la Solicitud</h3>
+                <div id="detalles-solicitud-content" class="text-gray-300 space-y-2"></div>
+                <div class="flex justify-end mt-6">
+                    <button type="button" onclick="closeDetallesModal()" class="px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600">Cerrar</button>
+                </div>
+            </div>
+        </div>
     </body>
 </html>
+
