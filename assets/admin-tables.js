@@ -24,6 +24,33 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
+function setupUserEmailSearch() {
+    const input = document.getElementById('user-email-search');
+    const clearBtn = document.getElementById('user-email-search-clear');
+    const tbody = document.getElementById('users-tbody');
+
+    if (!input || !tbody || !clearBtn) return;
+
+    const normalize = (v) => String(v || '').trim().toLowerCase();
+
+    function renderFiltered(email) {
+        const value = normalize(email);
+        const rows = Array.from(tbody.querySelectorAll('tr[data-user-email]'));
+        const showAll = value === '';
+
+        rows.forEach((row) => {
+            const rowEmail = normalize(row.getAttribute('data-user-email'));
+            row.style.display = showAll || rowEmail.includes(value) ? '' : 'none';
+        });
+    }
+
+    input.addEventListener('input', () => renderFiltered(input.value));
+    clearBtn.addEventListener('click', () => {
+        input.value = '';
+        renderFiltered('');
+    });
+}
+
 async function loadUsers() {
     try {
 const response = await fetch('/backend/api/usuarios-get.php');
@@ -39,6 +66,7 @@ const response = await fetch('/backend/api/usuarios-get.php');
             result.data.forEach((user, index) => {
                 const row = document.createElement('tr');
                 row.className = 'border-b border-gray-800';
+                row.setAttribute('data-user-email', user.email || '');
                 row.innerHTML = `
                     <td class="py-3 text-gray-400 text-sm">${String(user.id).padStart(3, '0')}</td>
                     <td class="py-3 text-white text-sm">${user.name}</td>
@@ -49,6 +77,8 @@ const response = await fetch('/backend/api/usuarios-get.php');
                         <div class="flex space-x-1">
                             <button type="button" class="edit-btn px-2 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 text-xs" data-user-id="${user.id}">Modificar</button>
                             <button type="button" class="delete-btn px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs" data-user-id="${user.id}">Eliminar</button>
+
+
                         </div>
                     </td>
                 `;
@@ -415,6 +445,9 @@ function setupCreateUserForm() {
         const email = document.getElementById('user-email').value.trim();
         const role = document.getElementById('user-role').value;
         const password = document.getElementById('user-password').value;
+
+        console.log('[admin-tables] create-user submit', { name, email, role });
+
 
         if (!name || !email || !password) {
             showToast('Completa nombre, email y contraseña.', 'error');
@@ -1449,6 +1482,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const page = window.location.pathname;
 
     if (page.includes('admin-usuarios')) {
+        // Búsqueda en tabla (email)
+        setupUserEmailSearch();
+
         loadUsers();
         setupCreateUserForm();
         setupEditModal();

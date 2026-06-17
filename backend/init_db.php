@@ -7,22 +7,44 @@ try {
     // Desactivar checks de foreign keys para poder borrar
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
 
-    // RESET COMPLETO: borrar TODO y volver a sembrar con los datos del archivo.
-    // Nota: usamos TRUNCATE para limpiar tablas sin romper el esquema.
-    // (En MySQL, TRUNCATE suele ser más rápido que DELETE.)
-    // MariaDB no soporta TRUNCATE ... IF EXISTS en algunas versiones
-    $pdo->exec("TRUNCATE TABLE course_content");
-    $pdo->exec("TRUNCATE TABLE registrations");
-    $pdo->exec("TRUNCATE TABLE reservations");
-    $pdo->exec("TRUNCATE TABLE advisories");
-    $pdo->exec("TRUNCATE TABLE clients");
-    $pdo->exec("TRUNCATE TABLE courses");
-    $pdo->exec("TRUNCATE TABLE users");
-    $pdo->exec("TRUNCATE TABLE password_resets");
+    // RESET COMPLETO SIEMPRE: eliminar datos anteriores y dejar solo lo nuevo.
+    // Se intenta TRUNCATE por orden (con FK checks desactivados). Si algo falla, se hace DELETE.
+    $tablesToReset = ['course_content','registrations','reservations','advisories','clients','courses','users','password_resets','refunds'];
+    foreach ($tablesToReset as $tbl) {
+        try {
+            $pdo->exec("TRUNCATE TABLE {$tbl}");
+        } catch (Exception $e) {
+            try {
+                $pdo->exec("DELETE FROM {$tbl}");
+            } catch (Exception $ignore) {
+                // no romper init_db
+            }
+        }
+    }
+
+
 
 
     // Reactivar foreign keys
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
+
+    // Parche determinista: asegurar esquema de refunds (aunque la tabla ya exista)
+    // - admin_receipt siempre exista
+    // - refund_status siempre tenga pending/approved/rejected
+    try {
+        $refundCols = $pdo->query("SHOW COLUMNS FROM refunds")->fetchAll(PDO::FETCH_COLUMN);
+        if ($refundCols && !in_array('admin_receipt', $refundCols, true)) {
+            $pdo->exec("ALTER TABLE refunds ADD COLUMN admin_receipt TEXT NULL");
+        }
+        // Ajustar enum refund_status
+        $hasRefundStatus = $refundCols && in_array('refund_status', $refundCols, true);
+        if ($hasRefundStatus) {
+            $pdo->exec("ALTER TABLE refunds MODIFY COLUMN refund_status ENUM('pending','approved','rejected') DEFAULT 'pending'");
+        }
+    } catch (Exception $e) {
+        // si refunds aún no existe, lo ignoramos (se creará más abajo)
+    }
+
 
 
     // (Se reutiliza la validación al final del script, usando course_content)
@@ -57,16 +79,13 @@ try {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-    // Si la tabla existe pero no tiene columnas nuevas (p.ej. phone), agregarlas
-    $userCols = $pdo->query("SHOW COLUMNS FROM users")->fetchAll(PDO::FETCH_COLUMN);
-    if (!in_array('phone', $userCols)) {
-        // Crear columna phone permitiendo NULL; luego se puede normalizar si quieres
-        // Así evitamos errores por NOT NULL sin datos existentes.
-        $pdo->exec("ALTER TABLE users ADD COLUMN phone VARCHAR(20) NULL");
-    }
+    // NOTA: Evitamos ALTERS sobre users (especialmente phone) porque este script hace TRUNCATE
+    // y ya definimos el esquema completo arriba. Los ALTERS aquí pueden causar errores como
+    // "Duplicate column name 'phone'" en ejecuciones parciales.
 
-    // Agregar columnas de notificación si no existen (para actualizaciones)
+    // Agregar columnas de notificación si no existen (para compatibilidad)
     $userCols = $pdo->query("SHOW COLUMNS FROM users")->fetchAll(PDO::FETCH_COLUMN);
+
 
     if (!in_array('notify_email', $userCols)) {
         try { $pdo->exec("ALTER TABLE users ADD COLUMN notify_email BOOLEAN DEFAULT TRUE"); } catch (Exception $e) {}
@@ -106,13 +125,14 @@ try {
         course_id INT,
         course_price DECIMAL(10,2),
         status ENUM('pending', 'confirmed', 'completed') DEFAULT 'pending',
-        payment_status ENUM('pending', 'paid', 'rejected') DEFAULT 'pending',
+        payment_status ENUM('pending', 'paid', 'rejected', 'refund_requested', 'refunded') DEFAULT 'pending',
         payment_receipt TEXT,
         payment_date DATETIME,
         registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE SET NULL,
         FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
 
     // Corregir migraciones anteriores donde registrations.client_id referenciaba clients.id
     try {
@@ -145,12 +165,13 @@ try {
         status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
         price DECIMAL(10, 2),
         num_persons INT DEFAULT 1,
-        payment_status ENUM('pending', 'paid', 'rejected') DEFAULT 'pending',
+        payment_status ENUM('pending', 'paid', 'rejected', 'refund_requested', 'refunded') DEFAULT 'pending',
         payment_receipt TEXT,
         payment_date DATETIME,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
 
     // Agregar columnas nuevas si no existen (para actualizaciones)
     $cols = $pdo->query("SHOW COLUMNS FROM advisories")->fetchAll(PDO::FETCH_COLUMN);
@@ -170,8 +191,9 @@ try {
         try { $pdo->exec("ALTER TABLE advisories ADD COLUMN event_name VARCHAR(255)"); } catch (Exception $e) {}
     }
     if (!in_array('payment_status', $cols)) {
-        try { $pdo->exec("ALTER TABLE advisories ADD COLUMN payment_status ENUM('pending', 'paid', 'rejected') DEFAULT 'pending'"); } catch (Exception $e) {}
+        try { $pdo->exec("ALTER TABLE advisories ADD COLUMN payment_status ENUM('pending', 'paid', 'rejected', 'refund_requested', 'refunded') DEFAULT 'pending'"); } catch (Exception $e) {}
     }
+
     if (!in_array('payment_receipt', $cols)) {
         try { $pdo->exec("ALTER TABLE advisories ADD COLUMN payment_receipt TEXT"); } catch (Exception $e) {}
     }
@@ -191,8 +213,9 @@ try {
     // Agregar columnas de pago a registrations si no existen
     $regCols = $pdo->query("SHOW COLUMNS FROM registrations")->fetchAll(PDO::FETCH_COLUMN);
     if (!in_array('payment_status', $regCols)) {
-        try { $pdo->exec("ALTER TABLE registrations ADD COLUMN payment_status ENUM('pending', 'paid', 'rejected', 'refund_requested') DEFAULT 'pending'"); } catch (Exception $e) {}
+        try { $pdo->exec("ALTER TABLE registrations ADD COLUMN payment_status ENUM('pending', 'paid', 'rejected', 'refund_requested', 'refunded') DEFAULT 'pending'"); } catch (Exception $e) {}
     }
+
     if (!in_array('payment_receipt', $regCols)) {
         try { $pdo->exec("ALTER TABLE registrations ADD COLUMN payment_receipt TEXT"); } catch (Exception $e) {}
     }
@@ -225,8 +248,32 @@ try {
         FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
+    // Tabla exclusiva de reembolsos
+        $pdo->exec("CREATE TABLE IF NOT EXISTS refunds (
+
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        type ENUM('registration','advisory') NOT NULL,
+        refundable_id INT NOT NULL,
+        service_title VARCHAR(255),
+        service_name VARCHAR(255),
+        amount DECIMAL(10,2),
+        refund_status ENUM('pending','approved','rejected') DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        processed_at DATETIME NULL,
+        processed_by INT NULL,
+        rejection_reason TEXT NULL,
+        admin_receipt TEXT NULL,
+        INDEX idx_refund_status (refund_status),
+
+        INDEX idx_refund_user (user_id),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (processed_by) REFERENCES users(id) ON DELETE SET NULL
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
     // Crear tabla de contenido de cursos
     $pdo->exec("CREATE TABLE IF NOT EXISTS course_content (
+
         id INT AUTO_INCREMENT PRIMARY KEY,
         course_id INT NOT NULL,
         title VARCHAR(255) NOT NULL,
@@ -297,7 +344,7 @@ try {
                 'Domina las últimas tendencias de la pastelería mundial. Aprende sobre esferificación, espumas, gels, textures de chocolate y técnicas de emplatado profesional. Desarrollarás habilidades para innovar y crear postres que combinen estética y sabor de manera excepcional.',
                 150000,
                 '10 semanas',
-                'cursos',
+                'asesorias',
                 $img2
             ],
             [
@@ -309,24 +356,6 @@ try {
                 'cursos',
                 $img3
             ],
-            [
-                'Asesoría Personal',
-                'Resuelve tus dudas y recibe orientación personalizada.',
-                'Sesión一对一 contigo para resolver dudas específicas de pastelería, chocolate o negocios. Ideal para mejorar técnicas, corregir errores o planificar tu emprendimiento.',
-                80000,
-                '1 hora',
-                'asesorias',
-                null
-            ],
-            [
-                'Asesoría para Negocio',
-                'Impulsa tu emprendimiento gastronómico al siguiente nivel.',
-                'Consultoría especializada para quienes quieren iniciar o mejorar su negocio de pastelería/chocolate. Incluye análisis de costos,pricing, proveedores y estrategia comercial.',
-                150000,
-                '2 horas',
-                'asesorias',
-                null
-            ]
         ];
 
         $stmt = $pdo->prepare("INSERT INTO courses (title, description, description_detail, price, duration, category, image) VALUES (?, ?, ?, ?, ?, ?, ?)");

@@ -800,6 +800,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const notify_whatsapp = document.getElementById('register-notify-whatsapp').checked;
 
 
+            // Validar términos en runtime (evita bypass si otro script dispara el submit)
+            const terminosCheck = document.getElementById('register-terminos');
+            if (terminosCheck && !terminosCheck.checked) {
+                showAlert('Debes aceptar los Términos y Condiciones', 'error');
+                return;
+            }
+
             try {
 const response = await fetch('/backend/api/register.php', {
 
@@ -958,6 +965,73 @@ function toggleMobileMenu() {
         menu.classList.toggle('hidden');
     }
 }
+
+// --- Header icons tooltip (unificado) ---
+// Usa los mismos labels que aparecen en el header de `views/user/perfil.html`.
+// Se activa en hover para links del header y del mobile-menu.
+(function(){
+    try{
+        const tooltipStyleId = 'bb-header-tooltip-style';
+        if(!document.getElementById(tooltipStyleId)){
+            const st = document.createElement('style');
+            st.id = tooltipStyleId;
+            st.textContent = [
+                '.bb-tooltip{position:relative;}',
+
+                '.bb-tooltip::after{content:attr(data-tooltip);position:absolute;left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:10px;background:rgba(37, 35, 63, 0.95);color:#fff;padding:6px 10px;border-radius:8px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s ease;}',
+
+
+                '.bb-tooltip:hover::after{opacity:1;}',
+
+                '.bb-tooltip svg{display:block;}'
+            ].join('\n');
+            document.head.appendChild(st);
+        }
+
+        // Mapa por href (se compara terminación para que funcione con rutas relativas)
+        const map = [
+            { href: 'user.html', label: 'Panel' },
+            { href: 'mis-cursos.html', label: 'Cursos' },
+            { href: 'historial.html', label: 'Historial' },
+            { href: 'certificados.html', label: 'Certificados' },
+            { href: 'agendar.html', label: 'Compras' },
+            { href: 'perfil.html', label: 'Perfil' },
+            { href: 'javascript:void(0)', label: 'Cerrar sesión' },
+            { href: 'informacion.html', label: 'Información' },
+            { href: 'registro.html', label: 'Inicio de Sesión' },
+            { href: 'catalogo.html', label: 'Catálogo' },
+            { href: 'admin-usuarios.html', label: 'Usuarios' },
+            { href: 'admin-inscripciones.html', label: 'Inscripciones' },
+            { href: 'admin-servicios.html', label: 'Servicios' },
+            { href: 'admin-reembolsos.html', label: 'Reembolsos' },
+        ];
+
+        function applyTooltips(container){
+            if(!container) return;
+            const links = container.querySelectorAll('a[href]');
+            links.forEach(a=>{
+                const href = (a.getAttribute('href')||'').split('?')[0].split('#')[0].trim();
+                const m = map.find(x=>href.endsWith(x.href));
+                if(!m) return;
+                a.dataset.tooltip = m.label;
+                a.classList.add('bb-tooltip');
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', ()=>{
+            applyTooltips(document.querySelector('header nav'));
+            applyTooltips(document.getElementById('mobile-menu'));
+        });
+
+        // también intentar aplicar inmediatamente (por si el script corre tarde)
+        applyTooltips(document.querySelector('header nav'));
+        applyTooltips(document.getElementById('mobile-menu'));
+    }catch(e){
+        // no romper la app
+        console.error(e);
+    }
+})();
+
 
 // Función para mostrar alertas (usa toasts para consistencia)
 function showAlert(message, type = 'success') {
@@ -1214,7 +1288,7 @@ function toggleFAQ(button) {
     function attachFormHandlers(){
         // Create user
         const userForm = document.getElementById('create-user-form');
-        if(userForm && !userForm._bound){
+        if(userForm && !userForm._bound && !window.location.pathname.includes('/admin-usuarios')){
             userForm.addEventListener('submit', function(e){
                 e.preventDefault();
                 const name = document.getElementById('user-name') ? document.getElementById('user-name').value.trim() : '';

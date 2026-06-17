@@ -251,13 +251,7 @@ a {
 
 a:hover {
     font-style: italic;
-    transform: scale(1.05);
-    color: #ffffff;
     transition: all 0.8s ease;
-}
-
-a:hover::after {
-    width: 100%;
 }
 
 /* 
@@ -778,3 +772,14 @@ footer {
 }
 .animate-fade-in { animation: fadeIn 0.3s ease-out forwards; }
 .animate-fade-out { animation: fadeOut 0.3s ease-out forwards; }
+
+/* Estilos para el gorro de chef */
+.chef-icon {
+            fill: #000000; /* Cambia el color del gorro */
+            width: 100px;  /* Ajusta el tamaño */
+            height: 100px;
+            transition: fill 0.3s ease;
+        }
+.chef-icon:hover {
+    fill: #500092; /* Color al pasar el ratón */
+}

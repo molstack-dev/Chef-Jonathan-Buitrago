@@ -1,5 +1,5 @@
 <?php
-// refund-request.php - Solicitar reembolso de un curso
+// refund-request.php - Solicitar reembolso creando registro en tabla exclusiva refunds
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
@@ -12,130 +12,129 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+function respond(int $code, array $payload): void {
+    http_response_code($code);
+    echo json_encode($payload);
     exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    respond(405, ['success' => false, 'message' => 'Método no permitido']);
 }
 
 $data = json_decode(file_get_contents('php://input'), true);
-
 if (!$data || !isset($data['id']) || !isset($data['type'])) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
-    exit;
+    respond(400, ['success' => false, 'message' => 'Datos incompletos']);
 }
 
-$id = intval($data['id']);
-$type = trim($data['type']); // 'registration' o 'advisory'
-
-// Solo permitir solicitudes propias (usuario logueado)
 if (!isset($_SESSION['user_id'])) {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'Debe iniciar sesión']);
-    exit;
+    respond(401, ['success' => false, 'message' => 'Debe iniciar sesión']);
 }
 
-$userId = $_SESSION['user_id'];
+$type = trim((string)$data['type']);
+$id = (int)$data['id'];
+$userId = (int)$_SESSION['user_id'];
 
-// Verificar que el usuario puede solicitar reembolso
-// Solo cursos (service_type = 'curso') y dentro de 7 días
+if (!in_array($type, ['registration', 'advisory'], true)) {
+    respond(400, ['success' => false, 'message' => 'Tipo inválido']);
+}
 
 try {
+    $pdo->beginTransaction();
+
+    // Verificar elegibilidad y llenar datos de servicio
     if ($type === 'registration') {
-        // Verificar inscripción
-        $stmt = $pdo->prepare('
-            SELECT r.id, r.created_at, r.status, r.payment_status, c.title as course_title
-            FROM registrations r
-            JOIN courses c ON r.course_id = c.id
-            WHERE r.id = ? AND r.client_id = ?
-        ');
+        $stmt = $pdo->prepare(
+            "SELECT r.id, r.client_id, r.registration_date, r.status, r.payment_status, c.title, r.course_price
+             FROM registrations r
+             JOIN courses c ON r.course_id = c.id
+             WHERE r.id = ? AND r.client_id = ?
+             LIMIT 1 FOR UPDATE"
+        );
         $stmt->execute([$id, $userId]);
-        $record = $stmt->fetch();
+        $rec = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$record) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'Inscripción no encontrada']);
-            exit;
+        if (!$rec) {
+            $pdo->rollBack();
+            respond(404, ['success' => false, 'message' => 'Inscripción no encontrada']);
         }
 
-        // Verificar estado (solo confirmed o completed)
-        if (!in_array($record['status'], ['confirmed', 'completed'])) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'No se puede solicitar reembolso para este estado']);
-            exit;
+        if (!in_array($rec['status'], ['confirmed', 'completed'], true)) {
+            $pdo->rollBack();
+            respond(400, ['success' => false, 'message' => 'No se puede solicitar reembolso para este estado']);
         }
 
-        // Verificar 7 días
-        $createdAt = strtotime($record['created_at']);
-        $daysSince = (time() - $createdAt) / (60 * 60 * 24);
+        if ($rec['payment_status'] === 'refund_requested' || $rec['payment_status'] === 'refunded') {
+            $pdo->rollBack();
+            respond(400, ['success' => false, 'message' => 'Ya existe una solicitud de reembolso en curso']);
+        }
+
+        $daysSince = (time() - strtotime($rec['registration_date'])) / 86400;
         if ($daysSince > 7) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'El período de 7 días para reembolso ha expirado']);
-            exit;
+            $pdo->rollBack();
+            respond(400, ['success' => false, 'message' => 'El período de 7 días para reembolso ha expirado']);
         }
 
-        // Verificar que no ya tiene solicitud de reembolso pendiente
-        // (podríamos añadir una tabla refund_requests, por ahora solo cambiamos estado)
-        if ($record['payment_status'] === 'refund_requested') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Ya existe una solicitud de reembolso pendiente']);
-            exit;
-        }
+        $serviceTitle = $rec['title'] ?? 'Curso';
+        $amount = $rec['course_price'] ?? null;
 
-        // Actualizar estado a refund_requested
-        $stmt = $pdo->prepare('UPDATE registrations SET payment_status = ? WHERE id = ?');
-        $stmt->execute(['refund_requested', $id]);
-
-        echo json_encode(['success' => true, 'message' => 'Solicitud de reembolso enviada para: ' . $record['course_title']]);
-        exit;
-
-    } elseif ($type === 'advisory') {
-        // Verificar asesoría
-        $stmt = $pdo->prepare('
-            SELECT a.id, a.created_at, a.status, a.payment_status, a.service_type
-            FROM advisories a
-            WHERE a.id = ? AND a.user_id = ?
-        ');
+    } else {
+        // advisory
+        $stmt = $pdo->prepare(
+            "SELECT a.id, a.user_id, a.created_at, a.status, a.payment_status, a.service_type, a.advisory_service, a.price
+             FROM advisories a
+             WHERE a.id = ? AND a.user_id = ? AND a.service_type = 'curso'
+             LIMIT 1 FOR UPDATE"
+        );
         $stmt->execute([$id, $userId]);
-        $record = $stmt->fetch();
+        $rec = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$record) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'Asesoría no encontrada']);
-            exit;
+        if (!$rec) {
+            $pdo->rollBack();
+            respond(404, ['success' => false, 'message' => 'Asesoría no encontrada']);
         }
 
-        // Solo asesorías de tipo curso (service_type = 'curso')
-        if ($record['service_type'] !== 'curso') {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'Solo se permiten reembolsos para cursos']);
-            exit;
+        if ($rec['payment_status'] === 'refund_requested' || $rec['payment_status'] === 'refunded') {
+            $pdo->rollBack();
+            respond(400, ['success' => false, 'message' => 'Ya existe una solicitud de reembolso en curso']);
         }
 
-        // Verificar 7 días
-        $createdAt = strtotime($record['created_at']);
-        $daysSince = (time() - $createdAt) / (60 * 60 * 24);
+        $daysSince = (time() - strtotime($rec['created_at'])) / 86400;
         if ($daysSince > 7) {
-            http_response_code(400);
-            echo json_encode(['success' => false, 'message' => 'El período de 7 días para reembolso ha expirado']);
-            exit;
+            $pdo->rollBack();
+            respond(400, ['success' => false, 'message' => 'El período de 7 días para reembolso ha expirado']);
         }
 
-        // Actualizar estado
-        $stmt = $pdo->prepare('UPDATE advisories SET payment_status = ? WHERE id = ?');
-        $stmt->execute(['refund_requested', $id]);
-
-        echo json_encode(['success' => true, 'message' => 'Solicitud de reembolso enviada']);
-        exit;
+        $serviceTitle = $rec['advisory_service'] ? str_replace('_', ' ', $rec['advisory_service']) : 'Curso';
+        $amount = $rec['price'] ?? null;
     }
 
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Tipo inválido']);
-    exit;
+    // Idempotencia con refunds
+    $stmt = $pdo->prepare(
+        "SELECT id FROM refunds WHERE type = ? AND refundable_id = ? AND user_id = ? AND refund_status = 'pending' LIMIT 1"
+    );
+    $stmt->execute([$type, $id, $userId]);
+    if ($stmt->fetch()) {
+        $pdo->rollBack();
+        respond(400, ['success' => false, 'message' => 'Ya existe una solicitud de reembolso en curso']);
+    }
 
-} catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error interno']);
+    // Insert
+    $ins = $pdo->prepare(
+        "INSERT INTO refunds (user_id, type, refundable_id, service_title, service_name, amount, refund_status, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, 'pending', NOW())"
+    );
+    $ins->execute([$userId, $type, $id, $serviceTitle, null, $amount]);
+
+    $pdo->commit();
+
+    respond(200, ['success' => true, 'message' => 'Solicitud de reembolso enviada']);
+
+} catch (Exception $e) {
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    error_log('Error en refund-request.php: ' . $e->getMessage());
+    respond(500, ['success' => false, 'message' => 'No se pudo solicitar el reembolso']);
 }
-?>
+

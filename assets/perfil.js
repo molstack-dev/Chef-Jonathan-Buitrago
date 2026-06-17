@@ -17,8 +17,9 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('profile-email').value = data.email || '';
 
             // Llenar preferencias de notificación
-            document.getElementById('notify-email-checkbox').checked = data.notify_email !== false;
-            document.getElementById('notify-whatsapp-checkbox').checked = data.notify_whatsapp === true;
+            // Normalizar valores recibidos desde BD (pueden venir como 0/1, '0'/'1', true/false)
+            document.getElementById('notify-email-checkbox').checked = (data.notify_email == 1 || data.notify_email === true || data.notify_email === '1');
+            document.getElementById('notify-whatsapp-checkbox').checked = (data.notify_whatsapp == 1 || data.notify_whatsapp === true || data.notify_whatsapp === '1');
 
             return data;
         } catch (error) {
@@ -216,6 +217,9 @@ document.addEventListener('DOMContentLoaded', function() {
             const notify_whatsapp = document.getElementById('notify-whatsapp-checkbox').checked;
 
             try {
+                // Debug (visible en consola)
+                console.log('Guardando notificaciones:', { notify_email, notify_whatsapp });
+
                 const response = await fetch('../../backend/api/update-notifications.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -227,9 +231,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 });
 
                 const data = await response.json();
+                console.log('Respuesta update-notifications:', data);
 
                 if (data.success) {
                     showAlert('Preferencias de notificación guardadas exitosamente', 'success');
+
+                    // Refrescar UI localmente: como la BD ya se actualizó,
+                    // evitamos recargar (que podría sobrescribir por sesión/caché).
+                    currentUserData.notify_email = notify_email;
+                    currentUserData.notify_whatsapp = notify_whatsapp;
+
+                    document.getElementById('notify-email-checkbox').checked = !!notify_email;
+                    document.getElementById('notify-whatsapp-checkbox').checked = !!notify_whatsapp;
                 } else {
                     showAlert(data.message || 'Error al guardar preferencias', 'error');
                 }
@@ -289,10 +302,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            if (!confirm('¿Estás completamente seguro de que deseas eliminar tu cuenta permanentemente? Esta acción no se puede deshacer.')) {
-                return;
-            }
-
+            // Eliminar de una vez (sin ventana confirm adicional)
+            deleteConfirmationModal.classList.add('hidden');
             confirmDeleteBtn.disabled = true;
             confirmDeleteBtn.textContent = 'Eliminando...';
 
@@ -306,12 +317,15 @@ document.addEventListener('DOMContentLoaded', function() {
                     })
                 });
 
+
                 const data = await response.json();
 
                 if (data.success) {
                     showAlert('Tu cuenta ha sido eliminada exitosamente.', 'success');
                     setTimeout(() => {
-                        window.location.href = '../../index.html';
+        window.location.href = '../../index.html';
+                    // Cerrar sesión para limpiar sesión local
+                    try { if (typeof logout === 'function') logout(); } catch (e) {}
                     }, 2000);
                 } else {
                     showAlert(data.message || 'No se pudo eliminar la cuenta', 'error');

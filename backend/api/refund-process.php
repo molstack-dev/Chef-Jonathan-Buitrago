@@ -1,5 +1,5 @@
 <?php
-// refund-process.php - Procesar solicitudes de reembolso (aprobar/rechazar)
+// refund-process.php - Procesar reembolsos en tabla exclusiva refunds
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: POST');
@@ -12,92 +12,118 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
-if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    http_response_code(405);
-    echo json_encode(['success' => false, 'message' => 'Método no permitido']);
+function respond(int $code, array $payload): void {
+    http_response_code($code);
+    echo json_encode($payload);
     exit;
 }
 
-if (!isset($_SESSION['user_id']) || ($_SESSION['role'] ?? null) !== 'admin') {
-    http_response_code(401);
-    echo json_encode(['success' => false, 'message' => 'No autorizado']);
-    exit;
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    respond(405, ['success' => false, 'message' => 'Método no permitido']);
+}
+
+if (!isset($_SESSION['user_id'])) {
+    respond(401, ['success' => false, 'message' => 'No autenticado']);
+}
+
+// Admin
+if (($_SESSION['role'] ?? null) !== 'admin') {
+    $stmtRole = $pdo->prepare('SELECT role FROM users WHERE id = ? LIMIT 1');
+    $stmtRole->execute([(int)$_SESSION['user_id']]);
+    $row = $stmtRole->fetch(PDO::FETCH_ASSOC);
+    if (!$row || $row['role'] !== 'admin') {
+        respond(401, ['success' => false, 'message' => 'No autorizado']);
+    }
 }
 
 $data = json_decode(file_get_contents('php://input'), true);
-
-if (!$data || !isset($data['id']) || !isset($data['type']) || !isset($data['action'])) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Datos incompletos']);
-    exit;
+if (!$data || !isset($data['id']) || !isset($data['action']) || !isset($data['type'])) {
+    respond(400, ['success' => false, 'message' => 'Datos incompletos']);
 }
 
-$id = intval($data['id']);
-$type = trim($data['type']); // 'registration' o 'advisory'
-$action = trim($data['action']); // 'approve' o 'reject'
+$refundId = (int)$data['id'];
+$type = trim((string)$data['type']);
+$action = trim((string)$data['action']);
 
-if (!in_array($action, ['approve', 'reject'])) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Acción inválida']);
-    exit;
+if (!in_array($type, ['registration', 'advisory'], true)) {
+    respond(400, ['success' => false, 'message' => 'Tipo inválido']);
+}
+if (!in_array($action, ['approve', 'reject'], true)) {
+    respond(400, ['success' => false, 'message' => 'Acción inválida']);
 }
 
 try {
-    if ($type === 'registration') {
-        // Verificar que existe la solicitud
-        $stmt = $pdo->prepare('SELECT id, payment_status FROM registrations WHERE id = ? AND payment_status = ?');
-        $stmt->execute([$id, 'refund_requested']);
-        $record = $stmt->fetch();
+    $pdo->beginTransaction();
 
-        if (!$record) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'Solicitud no encontrada']);
-            exit;
-        }
+    // bloquear refund
+    $stmt = $pdo->prepare('SELECT * FROM refunds WHERE id = ? FOR UPDATE');
+    $stmt->execute([$refundId]);
+    $refund = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        // Aprobar: cambiar status a 'cancelled' y payment_status a 'rejected'
-        // Rechazar: volver a 'paid'
-        if ($action === 'approve') {
-            $stmt = $pdo->prepare('UPDATE registrations SET payment_status = ?, status = ? WHERE id = ?');
-            $stmt->execute(['rejected', 'cancelled', $id]);
-            $message = 'Reembolso aprobado';
-        } else {
-            $stmt = $pdo->prepare('UPDATE registrations SET payment_status = ? WHERE id = ?');
-            $stmt->execute(['paid', $id]);
-            $message = 'Reembolso rechazado';
-        }
-
-    } elseif ($type === 'advisory') {
-        // Verificar que existe la solicitud
-        $stmt = $pdo->prepare('SELECT id, payment_status FROM advisories WHERE id = ? AND payment_status = ?');
-        $stmt->execute([$id, 'refund_requested']);
-        $record = $stmt->fetch();
-
-        if (!$record) {
-            http_response_code(404);
-            echo json_encode(['success' => false, 'message' => 'Solicitud no encontrada']);
-            exit;
-        }
-
-        if ($action === 'approve') {
-            $stmt = $pdo->prepare('UPDATE advisories SET payment_status = ?, status = ? WHERE id = ?');
-            $stmt->execute(['rejected', 'cancelled', $id]);
-            $message = 'Reembolso aprobado';
-        } else {
-            $stmt = $pdo->prepare('UPDATE advisories SET payment_status = ? WHERE id = ?');
-            $stmt->execute(['paid', $id]);
-            $message = 'Reembolso rechazado';
-        }
-    } else {
-        http_response_code(400);
-        echo json_encode(['success' => false, 'message' => 'Tipo inválido']);
-        exit;
+    if (!$refund) {
+        $pdo->rollBack();
+        respond(404, ['success' => false, 'message' => 'Solicitud no encontrada']);
     }
 
-    echo json_encode(['success' => true, 'message' => $message]);
+    if ($refund['refund_status'] !== 'pending') {
+        $pdo->rollBack();
+        respond(400, ['success' => false, 'message' => 'La solicitud ya fue procesada']);
+    }
 
-} catch (PDOException $e) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error interno']);
+    if ($action === 'approve') {
+        // Admin puede enviar un comprobante (base64/texto) en admin_receipt
+        $adminReceipt = null;
+        if (isset($data['admin_receipt'])) {
+            $adminReceipt = trim((string)$data['admin_receipt']);
+            if ($adminReceipt === '') $adminReceipt = null;
+        }
+
+        $upd = $pdo->prepare("UPDATE refunds SET refund_status = 'approved', processed_at = NOW(), processed_by = ?, admin_receipt = ? WHERE id = ?");
+        $upd->execute([(int)$_SESSION['user_id'], $adminReceipt, $refundId]);
+
+        // Actualizar enrollment/payment real según type
+        if ($type === 'registration') {
+            $upd2 = $pdo->prepare("UPDATE registrations SET status = 'confirmed', payment_status = 'refunded' WHERE id = ?");
+            $upd2->execute([(int)$refund['refundable_id']]);
+        } else {
+            $upd2 = $pdo->prepare("UPDATE advisories SET status = 'cancelled', payment_status = 'refunded' WHERE id = ? AND service_type = 'curso'");
+            $upd2->execute([(int)$refund['refundable_id']]);
+        }
+
+        $pdo->commit();
+        respond(200, ['success' => true, 'message' => 'Reembolso aprobado']);
+    }
+
+    // reject
+    // Si admin envía un motivo, se guarda. Si no, se deja null.
+    $rejectionReason = null;
+    if (isset($data['rejection_reason'])) {
+        $rejectionReason = trim((string)$data['rejection_reason']);
+        if ($rejectionReason === '') $rejectionReason = null;
+    }
+
+    $upd = $pdo->prepare(
+        "UPDATE refunds SET refund_status = 'rejected', processed_at = NOW(), processed_by = ?, rejection_reason = ? WHERE id = ?"
+    );
+    $upd->execute([(int)$_SESSION['user_id'], $rejectionReason, $refundId]);
+
+    if ($type === 'registration') {
+        $upd2 = $pdo->prepare("UPDATE registrations SET payment_status = 'paid' WHERE id = ?");
+        $upd2->execute([(int)$refund['refundable_id']]);
+    } else {
+        $upd2 = $pdo->prepare("UPDATE advisories SET payment_status = 'paid' WHERE id = ? AND service_type='curso'");
+        $upd2->execute([(int)$refund['refundable_id']]);
+    }
+
+    $pdo->commit();
+    respond(200, ['success' => true, 'message' => 'Reembolso rechazado']);
+
+
+} catch (Exception $e) {
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    error_log('Error en refund-process.php: ' . $e->getMessage());
+    respond(500, ['success' => false, 'message' => 'Error interno']);
 }
-?>
+

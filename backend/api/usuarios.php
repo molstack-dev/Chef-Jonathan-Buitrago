@@ -32,9 +32,10 @@ if (!isset($data['action']) || $data['action'] !== 'delete_account') {
 }
 
 $userId = $_SESSION['user_id'];
-$email = $data['email'] ?? '';
+$email = $data['email'] ?? null;
 
-// Validar que el email coincida
+// Validar que el email coincida (si viene). Si el front no lo envía,
+// usamos la sesión como autorización para evitar fallos.
 $stmt = $pdo->prepare("SELECT email FROM users WHERE id = ?");
 $stmt->execute([$userId]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
@@ -45,11 +46,14 @@ if (!$user) {
     exit;
 }
 
-if (strtolower($email) !== strtolower($user['email'])) {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Email no coincide']);
-    exit;
+if ($email !== null && $email !== '') {
+    if (strtolower($email) !== strtolower($user['email'])) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Email no coincide']);
+        exit;
+    }
 }
+
 
 // Eliminar inscripciones
 $stmt = $pdo->prepare("DELETE FROM registrations WHERE client_id = ?");

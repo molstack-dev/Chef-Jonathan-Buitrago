@@ -24,7 +24,9 @@ if (!isset($_SESSION['user_id'])) {
 
 $data = json_decode(file_get_contents('php://input'), true);
 
-if (!$data || !isset($data['currentPassword']) || !isset($data['newPassword']) || !isset($data['confirmPassword'])) {
+// El front de perfil.js solo envía currentPassword y newPassword (no confirmPassword)
+// y valida el match del lado cliente.
+if (!$data || !isset($data['currentPassword']) || !isset($data['newPassword'])) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Todos los campos son requeridos']);
     exit;
@@ -32,19 +34,22 @@ if (!$data || !isset($data['currentPassword']) || !isset($data['newPassword']) |
 
 $currentPassword = $data['currentPassword'];
 $newPassword = $data['newPassword'];
-$confirmPassword = $data['confirmPassword'];
+$confirmPassword = isset($data['confirmPassword']) ? $data['confirmPassword'] : null;
 
-if (empty($currentPassword) || empty($newPassword) || empty($confirmPassword)) {
+
+// Cuando confirmPassword no viene desde el front (perfil.js), no debe bloquear el cambio.
+if (empty($currentPassword) || empty($newPassword)) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Los campos no pueden estar vacíos']);
     exit;
 }
 
-if ($newPassword !== $confirmPassword) {
+if ($confirmPassword !== null && $newPassword !== $confirmPassword) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Las contraseñas nuevas no coinciden']);
     exit;
 }
+
 
 // Validar fortaleza de contraseña
 function validatePassword($password) {

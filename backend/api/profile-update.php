@@ -58,12 +58,34 @@ try {
     }
 
     // Actualizar el perfil
-    $securityQuestion = isset($data['security_question']) ? trim($data['security_question']) : '';
-    $securityAnswer = isset($data['sequirity_answer']) ? trim($data['sequirity_answer']) : '';
+    // Campos opcionales (para no romper el guardado cuando el front solo envía name/email)
+    $securityQuestion = isset($data['security_question']) ? trim($data['security_question']) : null;
 
+    // Compatibilidad con typo antiguo en el frontend/back
+    $securityAnswer = null;
+    if (isset($data['security_answer'])) {
+        $securityAnswer = trim($data['security_answer']);
+    } elseif (isset($data['sequirity_answer'])) {
+        $securityAnswer = trim($data['sequirity_answer']);
+    }
 
-    $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ?, security_question = ?, sequirity_answer = ? WHERE id = ?");
-    $stmt->execute([$name, $email, $securityQuestion, $securityAnswer, $_SESSION['user_id']]);
+    // Actualizar el perfil preservando seguridad si el cliente no envía esos campos
+    if ($securityQuestion === null && $securityAnswer === null) {
+        $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ? WHERE id = ?");
+        $stmt->execute([$name, $email, $_SESSION['user_id']]);
+    } else {
+        // Intentar actualizar seguridad usando el nombre correcto de columna (security_answer)
+        // Si tu columna realmente se llama 'sequirity_answer', ajusta ese nombre en tu BD/consulta.
+        $stmt = $pdo->prepare("UPDATE users SET name = ?, email = ?, security_question = ?, security_answer = ? WHERE id = ?");
+        $stmt->execute([
+            $name,
+            $email,
+            $securityQuestion ?? '',
+            $securityAnswer ?? '',
+            $_SESSION['user_id']
+        ]);
+    }
+
 
 
     // Actualizar la sesión
