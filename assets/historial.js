@@ -85,18 +85,22 @@
         if (existingKeys.has(refundKey)) return;
 
         unified.push({
-          // compatibilidad con tu render existente:
+              // compatibilidad con tu render existente:
           id: r.id,
           source: r.type,
           type: r.type,
           status: 'refund_requested',
-          payment_status: r.refund_status, // pending
+          payment_status: r.refund_status, // pending/approved
           created_at: r.created_at,
           service_title: r.service_title,
           service_name: r.service_name,
           price: r.price,
-          admin_receipt: r.admin_receipt
+          // Asegurar que el campo admin_receipt llegue al renderer
+          admin_receipt: r.admin_receipt,
+          // y también mapearlo a una clave alternativa por compatibilidad
+          refund_admin_receipt: r.admin_receipt
         });
+
       });
 
       if (unified.length > 0) {
@@ -200,13 +204,27 @@
 
             if (refundApproved) {
               // Botón verde: abrir modal de comprobante como en agendar.html
+              // Nota: en tu merge el campo `admin_receipt` existe en algunos casos.
+              // En otros casos el valor parece venir en `item.admin_receipt` pero se ignora por el render previo.
               const receipt = item.admin_receipt || item.refund_admin_receipt || item.admin_receipt_base64 || item.adminReceipt || null;
-              console.log('[historial] receipt for refund', { id: item.id, receipt, itemAdminReceipt: item.admin_receipt });
+              console.log('[historial] receipt for refund', { id: item.id, receipt, itemAdminReceipt: item.admin_receipt, payment_status: item.payment_status });
+
+              // Construir src para <img> (soporta: data:image/...;base64, o base64 “pelado”).
+              let receiptSrc = receipt;
+              if (receiptSrc && typeof receiptSrc === 'string') {
+                receiptSrc = receiptSrc.trim();
+                if (receiptSrc && !receiptSrc.startsWith('data:')) {
+                  receiptSrc = 'data:image/jpeg;base64,' + receiptSrc;
+                }
+              }
+
               refundBtn =
                 '<button type="button" class="refund-receipt-btn px-3 py-1 text-white rounded text-xs transition-colors ' + btnClass + '" ' +
-                'data-receipt="' + (receipt ? String(receipt).replace(/"/g, '"') : '') + '" ' +
+                'data-receipt="' + (receiptSrc ? String(receiptSrc).replace(/"/g, '"') : '') + '" ' +
                 'onclick="window.handleRefundReceiptClick(this)"' +
                 '>Comprobante Reembolso</button>';
+
+
             } else {
               refundBtn =
                 '<button type="button" class="refund-toggle-btn px-3 py-1 text-white rounded text-xs transition-colors ' + btnClass + ' " ' +
@@ -336,13 +354,16 @@
   // Modal comprobante (para reembolsos aprobados)
   window.handleRefundReceiptClick = function(btn) {
     try {
-      const receipt = btn.getAttribute('data-receipt');
+      let receipt = btn.getAttribute('data-receipt');
       if (!receipt) {
-        // A veces el render no manda el receipt, intentamos leerlo desde data-attribute alternativo.
-        const alt = btn.getAttribute('data-refund-receipt');
-        if (!alt) return;
-        return; // no hay UI para fallback aquí
+        // fallback: puede venir en algún atributo alterno
+        receipt = btn.getAttribute('data-refund-receipt') || null;
       }
+      if (!receipt) {
+        showToast('No hay comprobante disponible para esta solicitud.', 'error');
+        return;
+      }
+
 
 
       const modal = document.getElementById('detalles-solicitud-modal');

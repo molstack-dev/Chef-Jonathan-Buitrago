@@ -1,5 +1,5 @@
 <?php
-// my-refunds-get.php - Devuelve los reembolsos pendientes del usuario actual (tabla refunds)
+// my-refunds-get.php - Devuelve reembolsos del usuario actual (tabla refunds)
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
 
@@ -32,9 +32,10 @@ try {
             rf.refundable_id,
             rf.admin_receipt AS admin_receipt
          FROM refunds rf
-         WHERE rf.user_id = ? AND rf.refund_status = 'pending'
+         WHERE rf.user_id = ? AND rf.refund_status IN ('pending','approved')
          ORDER BY rf.created_at DESC"
     );
+
     $stmt->execute([$userId]);
     $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -54,8 +55,9 @@ try {
     }
 
     respond(200, ['success' => true, 'data' => $data]);
-} catch (Exception $e) {
+} catch (Throwable $e) {
     error_log('Error en my-refunds-get.php: ' . $e->getMessage());
     respond(500, ['success' => false, 'message' => 'Error al obtener reembolsos']);
 }
 ?>
+
