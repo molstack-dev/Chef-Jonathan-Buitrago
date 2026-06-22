@@ -63,7 +63,11 @@ try {
             AND course_id = ?
             AND payment_status = "paid"
             AND status != "pending"
+        
+
         ');
+
+
         $stmt->execute([$_SESSION['user_id'], $course_id]);
         $is_enrolled = $stmt->fetch() !== false;
     }
@@ -75,8 +79,9 @@ try {
     }
 
     $stmt = $pdo->prepare('
-        SELECT cc.id, cc.title, cc.description, cc.content_type, cc.video_url, cc.preview_url, cc.duration, cc.order_index,
+        SELECT cc.id, cc.title, cc.description, cc.content_type, cc.video_url, cc.duration, cc.order_index,
                CASE WHEN cp.id IS NOT NULL THEN 1 ELSE 0 END AS completed
+
         FROM course_content cc
         LEFT JOIN content_progress cp ON cc.id = cp.content_id AND cp.user_id = ?
         WHERE cc.course_id = ? AND cc.is_active = 1
@@ -119,6 +124,7 @@ try {
 
 } catch (PDOException $e) {
     http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Error al obtener contenido']);
+    echo json_encode(['success' => false, 'message' => 'Error al obtener contenido', 'debug' => $e->getMessage()]);
 }
 ?>
+

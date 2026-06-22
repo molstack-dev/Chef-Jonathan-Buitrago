@@ -196,11 +196,14 @@ button {
 .faq-answer {
     max-height: 0;
     overflow: hidden;
-    transition: max-height 0.4s cubic-bezier(0.4,0,0.2,1);
-    will-change: max-height;
+    transition: max-height 0.3s ease-out;
     background: rgba(26, 32, 44, 0.7);
-    padding-top: 6px;
-    padding-bottom: 10%;
+    padding: 0 1.5rem;
+}
+
+.faq-answer.active {
+    max-height: 500px;
+    transition: max-height 0.5s ease-in;
 }
 
 .faq-question {

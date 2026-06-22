@@ -20,20 +20,10 @@ try {
     // Obtener asesorías del usuario
     // Nota: si existe un flujo que crea advisories también para 'curso', eso duplica las filas del historial
     // (porque las 'inscripciones' del curso ya aparecen desde registrations). Por eso filtramos advisories de tipo curso.
-    // FIX doble fila: si existe un refund pendiente para esta advisory, NO la mostramos en el historial base.
-    // Así, solo se mostrará la fila pendiente desde `my-refunds-get.php`.
     $stmt = $pdo->prepare("SELECT a.id, a.name, a.email, a.phone, a.service_type, a.advisory_type, a.advisory_service, a.advisory_mode, a.event_name, a.date, a.time, a.notes, a.status, a.price, a.num_persons, a.payment_status, a.payment_receipt, a.created_at, 'advisory' as source
         FROM advisories a
         WHERE a.user_id = ?
           AND (a.service_type IS NULL OR a.service_type <> 'curso')
-          AND NOT EXISTS (
-              SELECT 1
-              FROM refunds rf
-              WHERE rf.user_id = a.user_id
-                AND rf.type = 'advisory'
-                AND rf.refundable_id = a.id
-                AND rf.refund_status = 'pending'
-          )
         ORDER BY a.created_at DESC");
     $stmt->execute([$userId]);
     $advisories = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -52,7 +42,7 @@ try {
               WHERE rf.user_id = r.client_id
                 AND rf.type = 'registration'
                 AND rf.refundable_id = r.id
-                AND rf.refund_status = 'pending'
+                AND rf.refund_status IN ('pending','approved')
           )
         ORDER BY r.registration_date DESC");
     $stmt->execute([$userId]);

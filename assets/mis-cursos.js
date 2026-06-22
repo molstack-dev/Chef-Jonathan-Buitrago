@@ -19,12 +19,23 @@ async function loadMyCourses() {
                         title: reg.course_title
                     }, reg);
                 }
+
+                // Ya renderizados los cards, refrescar progreso real en background para cada curso
+                for (const reg of paidCourses) {
+                    refreshCourseProgress(reg.course_id);
+                }
+
+                // Actualizar contador total cursos inscritos (pagos aprobados)
+                const totalLabel = document.querySelector('.product-card p.text-gray-300 span.text-white');
+                if (totalLabel) totalLabel.textContent = String(paidCourses.length);
+
             } else {
                 container.innerHTML = '<p class="text-gray-400 text-center py-6">No tienes cursos con pago aprobado.</p>';
             }
         } else {
             container.innerHTML = '<p class="text-gray-400 text-center py-6">No tienes cursos inscritos.</p>';
         }
+
     } catch (error) {
         container.innerHTML = '<p class="text-red-400 text-center py-6">Error al cargar cursos</p>';
     }
@@ -38,7 +49,7 @@ async function loadCourseCard(container, course, registration) {
         ? registration.progress_percent
         : registration.status === 'completed'
             ? 100
-            : (registration.progress || 25);
+            : (registration.progress || 0);
 
     wrapper.innerHTML = `
         <div class="p-6 cursor-pointer hover:bg-gray-750 transition-colors" onclick="toggleCourseLessons(${course.id}, this)">
@@ -102,8 +113,9 @@ async function loadCourseLessons(courseId, contentDiv, forceReload = false) {
     lessonsContainer.innerHTML = '<p class="text-gray-400 text-center py-4">Cargando contenido...</p>';
 
     try {
-        const response = await fetch('/backend/api/course-content-get.php?course_id=' + courseId);
+        const response = await fetch('../../backend/api/course-content-get.php?course_id=' + courseId, { credentials: 'include' });
         const result = await response.json();
+
 
         if (result.success && result.content && result.content.length > 0) {
             const total = result.content.length;
@@ -114,10 +126,11 @@ async function loadCourseLessons(courseId, contentDiv, forceReload = false) {
             lessonsContainer.innerHTML = '';
             result.content.forEach((lesson) => {
                 const lessonEl = document.createElement('div');
-                lessonEl.className = 'bg-gray-700 p-4 rounded-lg';
+                lessonEl.className = 'bg-gray-700 p-4 rounded-lg relative'; // Agregar relative positioning
 
                 const videoId = extractYouTubeId(lesson.video_url);
-                const seenBadge = lesson.completed ? '<span class="ml-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/20 text-emerald-200 px-2 py-1 text-[11px] font-semibold">✔ Visto</span>' : '';
+                const seenBadge = lesson.completed ? '<span class="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-emerald-500/20 text-emerald-200 px-3 py-2 text-[10px] font-semibold mr-2 mb-2">✔</span>' : '';
+
 
                 lessonEl.innerHTML = `
                     <div class="flex items-start gap-3">
@@ -127,15 +140,14 @@ async function loadCourseLessons(courseId, contentDiv, forceReload = false) {
                         <div class="flex-1">
                             <div class="flex items-center gap-2">
                                 <h6 class="text-white font-medium">${lesson.order_index}. ${lesson.title}</h6>
-                                ${seenBadge}
                             </div>
                             <p class="text-gray-400 text-sm mt-1">${lesson.description || 'Sin descripción'}</p>
                             ${lesson.duration ? '<span class="text-gray-500 text-xs mt-1 inline-block">⏱ ' + lesson.duration + '</span>' : ''}
                         </div>
                         <button onclick="openSecurePlayer(${lesson.id}, ${courseId}, '${lesson.title.replace(/'/g, "\\'")}')" class="flex-shrink-0 bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded text-sm">
-                            ▶ Ver
+                            ▶
                         </button>
-                    </div>
+                    </div>${seenBadge}
                 `;
                 lessonsContainer.appendChild(lessonEl);
             });
@@ -148,19 +160,21 @@ async function loadCourseLessons(courseId, contentDiv, forceReload = false) {
 }
 
 async function refreshCourseProgress(courseId) {
-    const contentDiv = document.getElementById('course-lessons-' + courseId);
-    if (!contentDiv) return;
-
-    const response = await fetch('/backend/api/course-content-get.php?course_id=' + courseId);
+    // No depender de que el contenedor de lecciones exista/esté visible.
+    const response = await fetch('../../backend/api/course-content-get.php?course_id=' + courseId, { credentials: 'include' });
     const result = await response.json();
+
     if (result.success) {
         const progressPercent = result.progress_percent ?? 0;
         updateCourseProgress(courseId, progressPercent);
-        if (!contentDiv.classList.contains('hidden')) {
+
+        const contentDiv = document.getElementById('course-lessons-' + courseId);
+        if (contentDiv && !contentDiv.classList.contains('hidden')) {
             await loadCourseLessons(courseId, contentDiv, true);
         }
     }
 }
+
 
 function updateCourseProgress(courseId, progressPercent) {
     const label = document.getElementById(`progress-label-${courseId}`);

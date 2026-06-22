@@ -2,8 +2,6 @@
 (function() {
     let currentFilterType = 'all';
     let currentFilterStatus = 'all';
-    let allAdvisories = [];
-    let allInscriptions = [];
 
     function showToast(message, type = 'success') {
         const container = document.getElementById('toast-container');
@@ -21,25 +19,6 @@
         }, 3000);
     }
 
-    async function parseJsonResponse(response) {
-        const text = await response.text();
-        if (!text) {
-            return {
-                success: response.ok,
-                message: response.ok ? null : 'Respuesta vacía del servidor'
-            };
-        }
-
-        try {
-            return JSON.parse(text);
-        } catch (error) {
-            return {
-                success: response.ok,
-                message: text.trim() || (response.ok ? null : 'Respuesta JSON inválida')
-            };
-        }
-    }
-
     function getServiceTypeLabel(item) {
         if (item.service_type === 'asesoria') return 'Asesoría';
         if (item.service_type === 'curso') return 'Curso';
@@ -48,12 +27,11 @@
     }
 
     function getServiceDetails(item) {
-        var details = [];
+        const details = [];
         if (item.advisory_mode) details.push('Modalidad: ' + item.advisory_mode);
         if (item.date) details.push('Fecha: ' + new Date(item.date).toLocaleDateString('es-ES'));
         if (item.time) details.push('Hora: ' + item.time);
         if (item.num_persons && item.num_persons > 1) details.push('Personas: ' + item.num_persons);
-        // Nota: item.notes ya la agregamos aquí para que getServiceDetails incluya notas.
         if (item.notes) details.push('Notas: ' + item.notes);
         return details;
     }
@@ -61,24 +39,62 @@
     function buildFullDetailsStr(item) {
         const lines = [];
         const detailsArr = getServiceDetails(item);
-        // getServiceDetails incluye Notas (si existe)
         detailsArr.forEach(l => lines.push(l));
         if (item.email) lines.push('Email: ' + item.email);
         if (item.phone) lines.push('Teléfono: ' + item.phone);
         return lines.length ? lines.join('\n') : 'Sin datos adicionales';
     }
 
+    // Normalización parecida a la del historial del usuario:
+    // - si llega base64 "puro" (sin data:), lo convertimos.
+    // - si llega URL o data:, lo usamos tal cual.
+    function normalizeReceiptSrc(receiptRaw) {
+        let receipt = receiptRaw;
+        if (receipt && typeof receipt === 'string') {
+            receipt = receipt.trim();
+            if (receipt && !receipt.startsWith('data:')) {
+                const looksBase64 = /^[A-Za-z0-9+/\n\r=]+$/.test(receipt);
+                if (looksBase64) receipt = 'data:image/jpeg;base64,' + receipt;
+            }
+        }
+        return receipt || null;
+    }
+
+    window.downloadAdminReceipt = function() {
+        try {
+            const src = window.__admin_receipt_src;
+            if (!src) {
+                showToast('No hay comprobante disponible para descargar.', 'error');
+                return;
+            }
+            const a = document.createElement('a');
+            a.href = src;
+            a.download = 'comprobante_pago';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        } catch (e) {
+            showToast('Error al descargar el comprobante.', 'error');
+        }
+    };
+
+    window.closeReceiptModal = function() {
+        document.getElementById('receipt-modal')?.classList.add('hidden');
+    };
+
+    window.closeDetailsModal = function() {
+        document.getElementById('details-modal')?.classList.add('hidden');
+    };
+
     async function loadAdvisories() {
+        const tbody = document.getElementById('advisories-tbody');
+        if (!tbody) return;
+
         try {
             const response = await fetch('/backend/api/advisories-get.php', { credentials: 'include' });
             const result = await response.json();
-            const tbody = document.getElementById('advisories-tbody');
-            if (!tbody) return;
 
-            if (result.success && result.data.length > 0) {
-                allAdvisories = result.data;
-
-                // Solo mostrar pendientes
+            if (result.success && Array.isArray(result.data) && result.data.length > 0) {
                 let pending = result.data.filter(item => item.status === 'pending');
 
                 if (currentFilterType !== 'all') {
@@ -92,24 +108,21 @@
 
                 tbody.innerHTML = '';
                 pending.forEach(function(item) {
-                    var statusClass = 'bg-yellow-900 text-yellow-300';
-                    var statusLabel = 'Pendiente';
+                    const statusClass = 'bg-yellow-900 text-yellow-300';
+                    const statusLabel = 'Pendiente';
+                    const priceStr = item.price && item.price > 0 ? '$' + Number(item.price).toLocaleString('es-CO') : 'N/A';
 
-                    var priceStr = item.price && item.price > 0 ? '$' + Number(item.price).toLocaleString('es-CO') : 'N/A';
+                    let serviceName = item.advisory_service || item.event_name || 'N/A';
+                    serviceName = String(serviceName).replace(/_/g, ' ');
 
-                    var serviceName = item.advisory_service || item.event_name || 'N/A';
-                    serviceName = serviceName.replace(/_/g, ' ');
+                    const typeLabel = getServiceTypeLabel(item);
+                    const detailsStr = buildFullDetailsStr(item);
 
-                    var typeLabel = getServiceTypeLabel(item);
-
-                    var receiptBtn = item.payment_receipt ?
+                    const receiptBtn = item.payment_receipt ?
                         '<button type="button" class="view-receipt-btn px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs" data-receipt="' + item.payment_receipt + '">Ver Comprobante</button>' :
                         '<span class="text-gray-500 text-xs">Sin comprobante</span>';
 
-                    // NUEVO: detalles completos para "Ver más" en pendientes
-                    var detailsStr = buildFullDetailsStr(item);
-
-                    var row = document.createElement('tr');
+                    const row = document.createElement('tr');
                     row.className = 'border-b border-gray-800';
                     row.innerHTML = `
                         <td class="py-3 text-gray-400 text-sm">${String(item.id).padStart(3, '0')}</td>
@@ -137,27 +150,23 @@
                     tbody.appendChild(row);
                 });
             } else {
-                allAdvisories = [];
                 tbody.innerHTML = '<tr><td colspan="10" class="py-6 text-center text-gray-400">No hay solicitudes pendientes.</td></tr>';
             }
         } catch (error) {
-            const tbody = document.getElementById('advisories-tbody');
-            if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="10" class="py-6 text-center text-red-300">Error al cargar solicitudes.</td></tr>';
-            }
+            tbody.innerHTML = '<tr><td colspan="10" class="py-6 text-center text-red-300">Error al cargar solicitudes.</td></tr>';
         }
     }
 
     async function loadAdvisoryHistory() {
+        const tbody = document.getElementById('inscriptions-tbody');
+        if (!tbody) return;
+
         try {
             const response = await fetch('/backend/api/advisories-get.php', { credentials: 'include' });
             const result = await response.json();
-            const tbody = document.getElementById('inscriptions-tbody');
-            if (!tbody) return;
 
-            if (result.success && result.data.length > 0) {
-                // Solo mostrar completados y cancelados
-                let history = result.data.filter(item => item.status === 'confirmed' || item.status === 'completed' || item.status === 'cancelled');
+            if (result.success && Array.isArray(result.data) && result.data.length > 0) {
+                const history = result.data.filter(item => item.status === 'confirmed' || item.status === 'completed' || item.status === 'cancelled');
 
                 if (history.length === 0) {
                     tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-gray-400">No hay historial de solicitudes.</td></tr>';
@@ -166,20 +175,22 @@
 
                 tbody.innerHTML = '';
                 history.forEach(function(item) {
-                    var statusClass = item.status === 'confirmed' ? 'bg-blue-900 text-blue-300' : item.status === 'completed' ? 'bg-green-900 text-green-300' : 'bg-red-900 text-red-300';
-                    var statusLabel = item.status === 'confirmed' ? 'Aprobado' : item.status === 'completed' ? 'Completado' : 'Cancelado';
+                    const statusClass = item.status === 'confirmed' ? 'bg-blue-900 text-blue-300' :
+                        item.status === 'completed' ? 'bg-green-900 text-green-300' :
+                            'bg-red-900 text-red-300';
 
-                    var priceStr = item.price && item.price > 0 ? '$' + Number(item.price).toLocaleString('es-CO') : 'N/A';
+                    const statusLabel = item.status === 'confirmed' ? 'Aprobado' :
+                        item.status === 'completed' ? 'Completado' : 'Cancelado';
 
-                    var serviceName = item.advisory_service || item.event_name || 'N/A';
-                    serviceName = serviceName.replace(/_/g, ' ');
+                    const priceStr = item.price && item.price > 0 ? '$' + Number(item.price).toLocaleString('es-CO') : 'N/A';
 
-                    var typeLabel = getServiceTypeLabel(item);
+                    let serviceName = item.advisory_service || item.event_name || 'N/A';
+                    serviceName = String(serviceName).replace(/_/g, ' ');
 
-                    // NUEVO: detalles completos para "Ver detalles" en historial
-                    var detailsStr = buildFullDetailsStr(item);
+                    const typeLabel = getServiceTypeLabel(item);
+                    const detailsStr = buildFullDetailsStr(item);
 
-                    var row = document.createElement('tr');
+                    const row = document.createElement('tr');
                     row.className = 'border-b border-gray-800';
                     row.innerHTML = `
                         <td class="py-3 text-gray-400 text-sm">${String(item.id).padStart(3, '0')}</td>
@@ -204,36 +215,38 @@
                 tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-gray-400">No hay historial de solicitudes.</td></tr>';
             }
         } catch (error) {
-            const tbody = document.getElementById('inscriptions-tbody');
-            if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-red-300">Error al cargar historial.</td></tr>';
-            }
+            tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-red-300">Error al cargar historial.</td></tr>';
         }
     }
 
     async function loadInscriptions() {
+        const tbody = document.getElementById('inscriptions-tbody');
+        if (!tbody) return;
+
+
         try {
             const response = await fetch('/backend/api/inscripciones-get.php', { credentials: 'include' });
             const result = await response.json();
-            const tbody = document.getElementById('inscriptions-tbody');
-            if (!tbody) return;
 
             if (result.success && result.data && result.data.length > 0) {
-                allInscriptions = result.data;
                 tbody.innerHTML = '';
+
                 result.data.forEach(function(item) {
-                    var statusClass = item.payment_status === 'paid' ? 'bg-green-900 text-green-300' :
-                        item.payment_status === 'rejected' ? 'bg-red-900 text-red-300' : 'bg-yellow-900 text-yellow-300';
-                    var statusLabel = item.payment_status === 'paid' ? 'Pagado' :
+                    const statusClass = item.payment_status === 'paid' ? 'bg-green-900 text-green-300' :
+                        item.payment_status === 'rejected' ? 'bg-red-900 text-red-300' :
+                            'bg-yellow-900 text-yellow-300';
+
+                    const statusLabel = item.payment_status === 'paid' ? 'Pagado' :
                         item.payment_status === 'rejected' ? 'Rechazado' : 'Pendiente';
 
-                    var priceStr = item.course_price ? '$' + Number(item.course_price).toLocaleString('es-CO') : 'N/A';
-                    var courseName = item.course_name || item.course_title || 'N/A';
-                    var receiptBtn = item.payment_receipt ?
+                    const priceStr = item.course_price ? '$' + Number(item.course_price).toLocaleString('es-CO') : 'N/A';
+                    const courseName = item.course_name || item.course_title || 'N/A';
+
+                    const receiptBtn = item.payment_receipt ?
                         '<button type="button" class="view-inscription-receipt-btn px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs" data-receipt="' + item.payment_receipt + '">Ver Comprobante</button>' :
                         '<span class="px-2 py-1 ' + statusClass + ' rounded-full text-xs">' + statusLabel + '</span>';
 
-                    var row = document.createElement('tr');
+                    const row = document.createElement('tr');
                     row.className = 'border-b border-gray-800';
                     row.innerHTML = `
                         <td class="py-3 text-gray-400 text-sm">${String(item.id).padStart(3, '0')}</td>
@@ -249,24 +262,12 @@
                     tbody.appendChild(row);
                 });
             } else {
-                allInscriptions = [];
                 tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-gray-400">No hay inscripciones.</td></tr>';
             }
         } catch (error) {
-            const tbody = document.getElementById('inscriptions-tbody');
-            if (tbody) {
-                tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-red-300">Error al cargar inscripciones.</td></tr>';
-            }
+            tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-red-300">Error al cargar inscripciones.</td></tr>';
         }
     }
-
-    window.closeReceiptModal = function() {
-        document.getElementById('receipt-modal').classList.add('hidden');
-    };
-
-    window.closeDetailsModal = function() {
-        document.getElementById('details-modal').classList.add('hidden');
-    };
 
     function setupEventListeners() {
         const deleteConfirmModal = document.getElementById('delete-confirm-admin-modal');
@@ -277,11 +278,13 @@
             deleteCancelBtn.addEventListener('click', () => {
                 deleteConfirmModal.classList.add('hidden');
                 window.__deleteAdvisoryId = null;
+                window.__deleteAdvisoryType = null;
             });
 
             deleteConfirmBtn.addEventListener('click', async () => {
                 const id = window.__deleteAdvisoryId;
                 const type = window.__deleteAdvisoryType || 'advisory';
+
                 if (!id) {
                     deleteConfirmModal.classList.add('hidden');
                     return;
@@ -338,28 +341,63 @@
             loadAdvisories();
         });
 
+        // Pending (Solicitudes)
         document.getElementById('advisories-tbody')?.addEventListener('click', async function(e) {
             if (e.target.classList.contains('view-receipt-btn')) {
-                const receipt = e.target.getAttribute('data-receipt');
+                const receipt = normalizeReceiptSrc(e.target.getAttribute('data-receipt'));
+
                 const modal = document.getElementById('receipt-modal');
                 const content = document.getElementById('receipt-modal-content');
-                if (!modal || !content) return;
+                const title = document.getElementById('receipt-modal-title');
+                const downloadBtn = document.getElementById('download-receipt-btn');
+                if (!modal || !content || !title || !downloadBtn) return;
+
+                window.__admin_receipt_src = receipt;
+                if (title) title.textContent = 'Comprobante de Pago';
+
+                // Si venías de “Ver más”, asegúrate de que el botón de descarga quede en estado visible/habilitado
+                downloadBtn.style.display = '';
+                downloadBtn.classList.remove('hidden');
+                downloadBtn.disabled = false;
+
                 if (receipt) {
-                    content.innerHTML = '<img src="' + receipt + '" alt="Comprobante" class="max-h-[75vh] max-w-full w-auto object-contain rounded block mx-auto">';
+                    content.innerHTML =
+                        '<div class="flex justify-center w-full pt-0 pb-1">' +
+                        '<img id="admin-receipt-img" src="' +
+                        receipt +
+                        '" alt="Comprobante" class="max-h-[45vh] w-auto max-w-[420px] object-contain rounded" />' +
+                        '</div>';
+                    downloadBtn.classList.remove('hidden');
+                    downloadBtn.disabled = false;
                 } else {
                     content.innerHTML = '<div class="text-gray-300 text-sm">Sin comprobante</div>';
+                    downloadBtn.classList.add('hidden');
+                    downloadBtn.disabled = true;
                 }
+
                 modal.classList.remove('hidden');
                 return;
             }
 
+            // Ver más (texto, SIN descargar)
             if (e.target.classList.contains('view-details-btn')) {
-                const details = decodeURIComponent(e.target.getAttribute('data-details'));
-                const lines = details.split('\n');
-                document.getElementById('details-modal-content').innerHTML = lines.map(function(line) {
+                const details = decodeURIComponent(e.target.getAttribute('data-details') || '');
+                const lines = details.split('\n').filter(Boolean);
+
+                const el = document.getElementById('details-modal-content');
+                const modal = document.getElementById('details-modal');
+                if (!el || !modal) return;
+
+                // cerrar comprobante por seguridad
+                document.getElementById('receipt-modal')?.classList.add('hidden');
+
+                // “Ver más” debe mostrar SOLO texto (ocultar cualquier botón de descarga)\r\n                const downloadBtn = document.getElementById('download-receipt-btn');\r\n                if (downloadBtn) {\r\n                    downloadBtn.classList.add('hidden');\r\n                    downloadBtn.disabled = true;\r\n                    downloadBtn.style.display = 'none';\r\n                    downloadBtn.setAttribute('aria-hidden', 'true');\r\n                }
+
+
+                el.innerHTML = lines.map(function(line) {
                     return '<div class="py-1 border-b border-gray-700">' + line + '</div>';
                 }).join('');
-                document.getElementById('details-modal').classList.remove('hidden');
+                modal.classList.remove('hidden');
                 return;
             }
 
@@ -367,6 +405,7 @@
                 const id = e.target.getAttribute('data-id');
                 if (!id) return;
                 const paymentStatus = e.target.classList.contains('approve-payment-btn') ? 'paid' : 'rejected';
+
                 try {
                     const response = await fetch('/backend/api/advisory-payment.php', {
                         method: 'POST',
@@ -393,34 +432,60 @@
                 if (!id) return;
                 window.__deleteAdvisoryId = id;
                 window.__deleteAdvisoryType = 'advisory';
-                const modal = document.getElementById('delete-confirm-admin-modal');
-                if (modal) modal.classList.remove('hidden');
+                document.getElementById('delete-confirm-admin-modal')?.classList.remove('hidden');
                 return;
             }
         });
 
+        // Historial (advisories confirmed/completed/cancelled) + inscripciones
         document.getElementById('inscriptions-tbody')?.addEventListener('click', async function(e) {
+            // Ver Comprobante (imagen + botón descarga)
             if (e.target.classList.contains('view-receipt-btn') || e.target.classList.contains('view-inscription-receipt-btn')) {
-                const receipt = e.target.getAttribute('data-receipt');
+                const receipt = normalizeReceiptSrc(e.target.getAttribute('data-receipt'));
+
                 const modal = document.getElementById('receipt-modal');
                 const content = document.getElementById('receipt-modal-content');
-                if (!modal || !content) return;
+                const title = document.getElementById('receipt-modal-title');
+                const downloadBtn = document.getElementById('download-receipt-btn');
+                if (!modal || !content || !title || !downloadBtn) return;
+
+                window.__admin_receipt_src = receipt;
+                if (title) title.textContent = 'Comprobante de Pago';
 
                 if (receipt) {
-                    content.innerHTML = '<img src="' + receipt + '" alt="Comprobante" class="max-h-[75vh] max-w-full w-auto object-contain rounded block mx-auto">';
+                    // Igualar a historial.html: padding/altura y clases
+                    content.innerHTML =
+                        '<div class="flex justify-center w-full pt-0 pb-1">' +
+                        '<img id="admin-receipt-img" src="' +
+                        receipt +
+                        '" alt="Comprobante" class="max-h-[45vh] w-auto max-w-[420px] object-contain rounded" />' +
+                        '</div>';
+
+                    downloadBtn.classList.remove('hidden');
+                    downloadBtn.disabled = false;
                 } else {
                     content.innerHTML = '<div class="text-gray-300 text-sm">Sin comprobante</div>';
+                    downloadBtn.classList.add('hidden');
+                    downloadBtn.disabled = true;
                 }
+
+
                 modal.classList.remove('hidden');
                 return;
             }
 
+            // Ver detalles / Ver más: SOLO TEXTO (SIN descargar)
             if (e.target.classList.contains('view-details-btn')) {
                 const details = decodeURIComponent(e.target.getAttribute('data-details') || '');
                 const lines = details.split('\n').filter(Boolean);
+
                 const el = document.getElementById('details-modal-content');
                 const modal = document.getElementById('details-modal');
                 if (!el || !modal) return;
+
+                // asegurar que comprobante no quede abierto
+                document.getElementById('receipt-modal')?.classList.add('hidden');
+
                 el.innerHTML = lines.map(function(line) {
                     return '<div class="py-1 border-b border-gray-700">' + line + '</div>';
                 }).join('');
@@ -432,8 +497,9 @@
                 const id = e.target.getAttribute('data-id');
                 if (!id) return;
                 window.__deleteAdvisoryId = id;
-                const modal = document.getElementById('delete-confirm-admin-modal');
-                if (modal) modal.classList.remove('hidden');
+                window.__deleteAdvisoryType = 'advisory';
+                document.getElementById('delete-confirm-admin-modal')?.classList.remove('hidden');
+                return;
             }
         });
 

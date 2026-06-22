@@ -137,14 +137,22 @@ window.loadMyAdvisories = async function() {
             tbody.querySelectorAll('.ver-comprobante-btn').forEach(function(btn) {
                 btn.addEventListener('click', function() {
                     var receipt = this.getAttribute('data-receipt');
-                    var contentDiv = document.getElementById('detalles-solicitud-content');
-                    var titleEl = document.getElementById('detalles-modal-title');
+                    var contentDiv = document.getElementById('comprobante-solicitud-content');
+                    var titleEl = document.getElementById('comprobante-modal-title');
                     if (titleEl) titleEl.textContent = 'Comprobante de Pago';
                     if (contentDiv && receipt) {
-                        contentDiv.innerHTML = '<img src="' + receipt + '" alt="Comprobante" class="max-h-[75vh] max-w-full w-auto object-contain rounded block mx-auto">';
+                        contentDiv.innerHTML = '<div class="flex justify-center w-full pt-0 pb-1"><img src="' + receipt + '" alt="Comprobante" class="max-h-[45vh] w-auto max-w-[420px] object-contain rounded" /></div>';
                     }
-                    var modal = document.getElementById('detalles-solicitud-modal');
-                    if (modal) modal.classList.remove('hidden');
+                    var modal = document.getElementById('comprobante-solicitud-modal');
+                    if (modal) {
+                        // Habilitar el botón de descarga si existe
+                        var downloadBtn = document.getElementById('download-inscription-receipt-btn');
+                        if (downloadBtn) {
+                            downloadBtn.classList.remove('hidden');
+                            downloadBtn.disabled = false;
+                        }
+                        modal.classList.remove('hidden');
+                    }
                 });
             });
 
@@ -907,20 +915,23 @@ const response = await fetch('/backend/api/login.php', {
     }
 
    
-    // Funcionalidad de FAQ
+    // Funcionalidad de FAQ (acordeón)
+    // Compatible con páginas que tengan estructura button.faq-question + div.faq-answer.hidden
     const faqQuestions = document.querySelectorAll('.faq-question');
     faqQuestions.forEach(question => {
+        // Evita doble-binding en caso de recargas parciales
+        if (question._bbFaqBound) return;
+        question._bbFaqBound = true;
+
         question.addEventListener('click', function() {
-            const answer = this.nextElementSibling;
-            const icon = this.querySelector('svg');
-            
-            // Toggle visibility of answer
-            answer.classList.toggle('hidden');
-            
-            // Rotate icon
-            icon.classList.toggle('rotate-180');
+            if (typeof window.toggleFAQ === 'function') {
+                window.toggleFAQ(this);
+            }
         });
     });
+
+
+
 
     // Funcionalidad del modal de detalles del curso
     window.showCourseDetails = function(courseName, descriptionDetail) {
@@ -965,73 +976,6 @@ function toggleMobileMenu() {
         menu.classList.toggle('hidden');
     }
 }
-
-// --- Header icons tooltip (unificado) ---
-// Usa los mismos labels que aparecen en el header de `views/user/perfil.html`.
-// Se activa en hover para links del header y del mobile-menu.
-(function(){
-    try{
-        const tooltipStyleId = 'bb-header-tooltip-style';
-        if(!document.getElementById(tooltipStyleId)){
-            const st = document.createElement('style');
-            st.id = tooltipStyleId;
-            st.textContent = [
-                '.bb-tooltip{position:relative;}',
-
-                '.bb-tooltip::after{content:attr(data-tooltip);position:absolute;left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:10px;background:rgba(37, 35, 63, 0.95);color:#fff;padding:6px 10px;border-radius:8px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s ease;}',
-
-
-                '.bb-tooltip:hover::after{opacity:1;}',
-
-                '.bb-tooltip svg{display:block;}'
-            ].join('\n');
-            document.head.appendChild(st);
-        }
-
-        // Mapa por href (se compara terminación para que funcione con rutas relativas)
-        const map = [
-            { href: 'user.html', label: 'Panel' },
-            { href: 'mis-cursos.html', label: 'Cursos' },
-            { href: 'historial.html', label: 'Historial' },
-            { href: 'certificados.html', label: 'Certificados' },
-            { href: 'agendar.html', label: 'Compras' },
-            { href: 'perfil.html', label: 'Perfil' },
-            { href: 'javascript:void(0)', label: 'Cerrar sesión' },
-            { href: 'informacion.html', label: 'Información' },
-            { href: 'registro.html', label: 'Inicio de Sesión' },
-            { href: 'catalogo.html', label: 'Catálogo' },
-            { href: 'admin-usuarios.html', label: 'Usuarios' },
-            { href: 'admin-inscripciones.html', label: 'Inscripciones' },
-            { href: 'admin-servicios.html', label: 'Servicios' },
-            { href: 'admin-reembolsos.html', label: 'Reembolsos' },
-        ];
-
-        function applyTooltips(container){
-            if(!container) return;
-            const links = container.querySelectorAll('a[href]');
-            links.forEach(a=>{
-                const href = (a.getAttribute('href')||'').split('?')[0].split('#')[0].trim();
-                const m = map.find(x=>href.endsWith(x.href));
-                if(!m) return;
-                a.dataset.tooltip = m.label;
-                a.classList.add('bb-tooltip');
-            });
-        }
-
-        document.addEventListener('DOMContentLoaded', ()=>{
-            applyTooltips(document.querySelector('header nav'));
-            applyTooltips(document.getElementById('mobile-menu'));
-        });
-
-        // también intentar aplicar inmediatamente (por si el script corre tarde)
-        applyTooltips(document.querySelector('header nav'));
-        applyTooltips(document.getElementById('mobile-menu'));
-    }catch(e){
-        // no romper la app
-        console.error(e);
-    }
-})();
-
 
 // Función para mostrar alertas (usa toasts para consistencia)
 function showAlert(message, type = 'success') {
@@ -1107,35 +1051,229 @@ function redirectToDashboard() {
 
 // Función para toggle de FAQ
 function toggleFAQ(button) {
-    const answer = button.nextElementSibling;
-    const icon = button.querySelector('svg');
-    const isHidden = answer.classList.contains('hidden');
+    // Mantener compatibilidad con páginas viejas que usan onclick="toggleFAQ(this)".
+    // En `views/informacion.html` la estructura es: button.faq-question + div.faq-answer
 
-    // Close all other answers
-    const allAnswers = document.querySelectorAll('.faq-answer');
-    const allIcons = document.querySelectorAll('.faq-question svg');
+    const answer = button && button.nextElementSibling ? button.nextElementSibling : null;
+    const icon = button ? button.querySelector('svg') : null;
+    if (!answer) return;
 
-    allAnswers.forEach(ans => {
-        if (ans !== answer) {
-            ans.classList.add('hidden');
-        }
+    const willOpen = answer.classList.contains('hidden');
+
+    // Cerrar todas las demás respuestas
+    document.querySelectorAll('.faq-answer').forEach(ans => {
+        if (ans !== answer) ans.classList.add('hidden');
     });
 
-    allIcons.forEach(ic => {
-        if (ic !== icon) {
-            ic.classList.remove('rotate-180');
-        }
+    // Abrir/cerrar la actual
+    answer.classList.toggle('hidden');
+
+    // Actualizar aria-expanded
+    const allQuestions = document.querySelectorAll('.faq-question');
+    allQuestions.forEach(btn => {
+        btn.setAttribute('aria-expanded', (btn === button && willOpen) ? 'true' : 'false');
     });
 
-    // Toggle the clicked answer
-    if (isHidden) {
-        answer.classList.remove('hidden');
-        icon.classList.add('rotate-180');
-    } else {
-        answer.classList.add('hidden');
-        icon.classList.remove('rotate-180');
-    }
+    // Rotar el icono
+    document.querySelectorAll('.faq-question svg').forEach(ic => {
+        if (ic !== icon) ic.classList.remove('rotate-180');
+    });
+    if (icon) icon.classList.toggle('rotate-180');
 }
+
+
+// Funciones de paginación globales para tablas
+
+// Variables para la paginación global
+let globalCurrentPage = {};
+const recordsPerPage = 10;
+let globalTableData = {};
+
+// Función global de paginación para tablas
+window.initializeTablePagination = function(tableName, data, renderFunction) {
+  if (!globalCurrentPage[tableName]) {
+    globalCurrentPage[tableName] = 1;
+  }
+  
+  globalTableData[tableName] = data;
+  const totalPages = Math.ceil(data.length / recordsPerPage);
+  
+  // Asegurarse de que la página actual esté dentro de los límites
+  if (globalCurrentPage[tableName] > totalPages && totalPages > 0) {
+    globalCurrentPage[tableName] = totalPages;
+  }
+  if (globalCurrentPage[tableName] < 1) {
+    globalCurrentPage[tableName] = 1;
+  }
+  
+  // Calcular índices para la página actual
+  const startIndex = (globalCurrentPage[tableName] - 1) * recordsPerPage;
+  const endIndex = Math.min(startIndex + recordsPerPage, data.length);
+  const pageData = data.slice(startIndex, endIndex);
+
+  // Renderizar los datos de la página actual
+  renderFunction(pageData);
+
+  // Actualizar controles de paginación
+  updatePaginationControls(tableName, totalPages, globalCurrentPage[tableName]);
+};
+
+// Función para actualizar los controles de paginación
+function updatePaginationControls(tableName, totalPages, currentPage) {
+  const tableId = `${tableName}-tbody`;
+  const containerId = `${tableName}-pagination-controls`;
+  const pageInfoId = `${tableName}-pagination-info`;
+  const pageNumbersId = `${tableName}-page-numbers`;
+  const prevButtonId = `${tableName}-prev-page`;
+  const nextButtonId = `${tableName}-next-page`;
+  
+  const pageInfo = document.getElementById(pageInfoId);
+  const pageNumbers = document.getElementById(pageNumbersId);
+  const prevButton = document.getElementById(prevButtonId);
+  const nextButton = document.getElementById(nextButtonId);
+  
+  if (!pageInfo || !pageNumbers || !prevButton || !nextButton) return;
+  
+  // Actualizar información de paginación
+  if (totalPages > 0) {
+    pageInfo.textContent = `Mostrando ${((currentPage - 1) * recordsPerPage) + 1}-${Math.min(currentPage * recordsPerPage, globalTableData[tableName].length)} de ${globalTableData[tableName].length} registros`;
+  } else {
+    pageInfo.textContent = 'No hay registros para mostrar';
+  }
+  
+  // Actualizar botones de navegación
+  prevButton.disabled = currentPage <= 1;
+  nextButton.disabled = currentPage >= totalPages || totalPages === 0;
+  
+  // Generar números de página
+  let pageLinks = '';
+  const startPage = Math.max(1, currentPage - 2);
+  const endPage = Math.min(totalPages, currentPage + 2);
+  
+  for (let i = startPage; i <= endPage; i++) {
+    if (i === currentPage) {
+      pageLinks += `<span class="mx-1 px-4 py-2 bg-purple-600 text-white rounded inline-flex items-center justify-center" style="min-height: 40px; min-width: 40px;">${i}</span>`;
+    } else {
+      pageLinks += `<button class="mx-1 px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 inline-flex items-center justify-center" style="min-height: 40px; min-width: 40px;" onclick="changePage('${tableName}', ${i})">${i}</button>`;
+    }
+  }
+  
+  pageNumbers.innerHTML = pageLinks;
+}
+
+// Función para cambiar de página
+window.changePage = function(tableName, page) {
+  globalCurrentPage[tableName] = page;
+  const renderFunctionName = `render${tableName.charAt(0).toUpperCase() + tableName.slice(1)}Table`;
+  const renderFunction = window[renderFunctionName];
+  
+  if (typeof renderFunction === 'function') {
+    initializeTablePagination(tableName, globalTableData[tableName], renderFunction);
+  }
+};
+
+// Función para ir a la página siguiente
+window.nextPage = function(tableName) {
+  const totalPages = Math.ceil(globalTableData[tableName].length / recordsPerPage);
+  if (globalCurrentPage[tableName] < totalPages) {
+    changePage(tableName, globalCurrentPage[tableName] + 1);
+  }
+};
+
+// Función para ir a la página anterior
+window.prevPage = function(tableName) {
+  if (globalCurrentPage[tableName] > 1) {
+    changePage(tableName, globalCurrentPage[tableName] - 1);
+  }
+};
+
+// Función para inicializar controles de paginación en una tabla específica
+window.setupPaginationControls = function(tableName) {
+  const prevButtonId = `${tableName}-prev-page`;
+  const nextButtonId = `${tableName}-next-page`;
+  
+  const prevButton = document.getElementById(prevButtonId);
+  const nextButton = document.getElementById(nextButtonId);
+  
+  if (prevButton) {
+    prevButton.addEventListener('click', function() {
+      prevPage(tableName);
+    });
+  }
+  
+  if (nextButton) {
+    nextButton.addEventListener('click', function() {
+      nextPage(tableName);
+    });
+  }
+};
+
+// --- Header icons tooltip (unificado) ---
+// Usa los mismos labels que aparecen en el header de `views/user/perfil.html`.
+// Se activa en hover para links del header y del mobile-menu.
+(function(){
+    try{
+        const tooltipStyleId = 'bb-header-tooltip-style';
+        if(!document.getElementById(tooltipStyleId)){
+            const st = document.createElement('style');
+            st.id = tooltipStyleId;
+            st.textContent = [
+                '.bb-tooltip{position:relative;}',
+
+                '.bb-tooltip::after{content:attr(data-tooltip);position:absolute;left:50%;transform:translateX(-50%);bottom:100%;margin-bottom:10px;background:rgba(37, 35, 63, 0.95);color:#fff;padding:6px 10px;border-radius:8px;font-size:12px;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .15s ease;}',
+
+
+                '.bb-tooltip:hover::after{opacity:1;}',
+
+                '.bb-tooltip svg{display:block;}'
+            ].join('\n');
+            document.head.appendChild(st);
+        }
+
+        // Mapa por href (se compara terminación para que funcione con rutas relativas)
+        const map = [
+            { href: 'user.html', label: 'Panel' },
+            { href: 'mis-cursos.html', label: 'Cursos' },
+            { href: 'historial.html', label: 'Historial' },
+            { href: 'certificados.html', label: 'Certificados' },
+            { href: 'agendar.html', label: 'Compras' },
+            { href: 'perfil.html', label: 'Perfil' },
+            { href: 'javascript:void(0)', label: 'Cerrar sesión' },
+            { href: 'informacion.html', label: 'Información' },
+            { href: 'registro.html', label: 'Inicio de Sesión' },
+            { href: 'catalogo.html', label: 'Catálogo' },
+            { href: 'admin-usuarios.html', label: 'Usuarios' },
+            { href: 'admin-inscripciones.html', label: 'Inscripciones' },
+            { href: 'admin-servicios.html', label: 'Servicios' },
+            { href: 'admin-reembolsos.html', label: 'Reembolsos' },
+        ];
+
+        function applyTooltips(container){
+            if(!container) return;
+            const links = container.querySelectorAll('a[href]');
+            links.forEach(a=>{
+                const href = (a.getAttribute('href')||'').split('?')[0].split('#')[0].trim();
+                const m = map.find(x=>href.endsWith(x.href));
+                if(!m) return;
+                a.dataset.tooltip = m.label;
+                a.classList.add('bb-tooltip');
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', ()=>{
+            applyTooltips(document.querySelector('header nav'));
+            applyTooltips(document.getElementById('mobile-menu'));
+        });
+
+        // también intentar aplicar inmediatamente (por si el script corre tarde)
+        applyTooltips(document.querySelector('header nav'));
+        applyTooltips(document.getElementById('mobile-menu'));
+    }catch(e){
+        // no romper la app
+        console.error(e);
+    }
+})();
+
 
 // --- Dynamic table renderers for clients, sales and users ---
 (function(){

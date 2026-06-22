@@ -86,8 +86,28 @@ try {
             $upd2 = $pdo->prepare("UPDATE registrations SET status = 'confirmed', payment_status = 'refunded' WHERE id = ?");
             $upd2->execute([(int)$refund['refundable_id']]);
         } else {
+            // Para asesorías de tipo curso, actualizar también la tabla de registrations
             $upd2 = $pdo->prepare("UPDATE advisories SET status = 'cancelled', payment_status = 'refunded' WHERE id = ? AND service_type = 'curso'");
             $upd2->execute([(int)$refund['refundable_id']]);
+            
+            // Buscar y actualizar registros relacionados en la tabla registrations
+            // Primero obtener el user_id y el título del curso de la asesoría
+            $stmtAdv = $pdo->prepare("SELECT user_id, advisory_service FROM advisories WHERE id = ?");
+            $stmtAdv->execute([(int)$refund['refundable_id']]);
+            $advisory = $stmtAdv->fetch(PDO::FETCH_ASSOC);
+            
+            if ($advisory && $advisory['advisory_service']) {
+                // Buscar el course_id por el título del curso
+                $stmtCourse = $pdo->prepare("SELECT id FROM courses WHERE title = ? LIMIT 1");
+                $stmtCourse->execute([$advisory['advisory_service']]);
+                $course = $stmtCourse->fetch(PDO::FETCH_ASSOC);
+                
+                if ($course) {
+                    // Actualizar cualquier registro relacionado en registrations
+                    $updReg = $pdo->prepare("UPDATE registrations SET payment_status = 'refunded', status = 'cancelled' WHERE client_id = ? AND course_id = ?");
+                    $updReg->execute([(int)$advisory['user_id'], (int)$course['id']]);
+                }
+            }
         }
 
         $pdo->commit();
@@ -113,6 +133,25 @@ try {
     } else {
         $upd2 = $pdo->prepare("UPDATE advisories SET payment_status = 'paid' WHERE id = ? AND service_type='curso'");
         $upd2->execute([(int)$refund['refundable_id']]);
+        
+        // Tambien restaurar el estado en registrations si se rechaza el reembolso
+        // Primero obtener el user_id y el título del curso de la asesoría
+        $stmtAdv = $pdo->prepare("SELECT user_id, advisory_service FROM advisories WHERE id = ?");
+        $stmtAdv->execute([(int)$refund['refundable_id']]);
+        $advisory = $stmtAdv->fetch(PDO::FETCH_ASSOC);
+        
+        if ($advisory && $advisory['advisory_service']) {
+            // Buscar el course_id por el título del curso
+            $stmtCourse = $pdo->prepare("SELECT id FROM courses WHERE title = ? LIMIT 1");
+            $stmtCourse->execute([$advisory['advisory_service']]);
+            $course = $stmtCourse->fetch(PDO::FETCH_ASSOC);
+            
+            if ($course) {
+                // Restaurar el estado en registros relacionados
+                $updReg = $pdo->prepare("UPDATE registrations SET payment_status = 'paid', status = 'confirmed' WHERE client_id = ? AND course_id = ?");
+                $updReg->execute([(int)$advisory['user_id'], (int)$course['id']]);
+            }
+        }
     }
 
     $pdo->commit();
@@ -126,4 +165,4 @@ try {
     error_log('Error en refund-process.php: ' . $e->getMessage());
     respond(500, ['success' => false, 'message' => 'Error interno']);
 }
-
+?>

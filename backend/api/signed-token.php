@@ -112,8 +112,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
         if ($contentId) {
             $stmt = $pdo->prepare('
-                SELECT cc.id, cc.course_id, cc.title, cc.video_url, cc.preview_url,
+            SELECT cc.id, cc.course_id, cc.title, cc.video_url,
                        cc.duration, cc.order_index, c.title as course_title
+
                 FROM course_content cc
                 JOIN courses c ON cc.course_id = c.id
                 WHERE cc.id = ? AND cc.is_active = 1
@@ -170,14 +171,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
         $nextLesson = null;
     }
 
-    echo json_encode([
-        'success' => true,
-        'data' => [
-            'video_url' => $content['video_url'],
-            'title' => $content['title'],
-            'course_title' => $content['course_title'] ?? '',
-            'duration' => $content['duration'],
-            'preview_url' => $content['preview_url'],
+        echo json_encode([
+            'success' => true,
+            'data' => [
+                'video_url' => $content['video_url'],
+                'title' => $content['title'],
+                'course_title' => $content['course_title'] ?? '',
+                'duration' => $content['duration'],
+
             'token' => $signedToken,
             'expires_in' => TOKEN_EXPIRY_SECONDS,
             'video_id' => $videoId,

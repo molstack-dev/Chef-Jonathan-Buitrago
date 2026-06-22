@@ -82,15 +82,15 @@
             </div>
         </header>
 
-        <!-- Área de Agendar Asesoría -->
+        <!-- Área de Agendar Servicio -->
         <section class="pt-24 py-12 bg-gray-900 min-h-screen" style="background-image: url('../../img/chef_jonathan_buitrago_post_10_5_2019_12_28_342040858511489146865.jpg'); background-size: cover; background-position: center;">
             <div class="container mx-auto px-6 pt-12">
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div class="max-w-6xl mx-auto">
 
                     <!-- Contenido principal -->
                     <div class="lg:col-span-4">
                         <div class="product-card p-8 rounded-xl bg-gray-800 bg-opacity-90">
-                            <h4 class="text-2xl font-semibold mb-6 text-white">Agendar Servicio</h4>
+                            <h4 class="text-3xl font-bold text-center text-white mb-5 parisienne-font">Agendar Servicio</h4>
 
                             <!-- Selector de tipo de servicio -->
                             <div class="mb-6">
@@ -252,26 +252,26 @@
                                     <script>
                                       // Self-heal: si el sitio muestra el error "Servicio es Requerido" pero el select
                                       // está vacío por preselección fallida, forzamos el servicio requerido desde URL.
-                                      (function(){
+                                    (function(){
                                         try{
-                                          const urlParams = new URLSearchParams(window.location.search);
-                                          const type = urlParams.get('type');
-                                          const service = urlParams.get('service');
-                                          if(!service) return;
-                                          const selectId = type === 'asesoria' ? 'advisory-service' : (type === 'curso' ? 'advisory-course' : 'advisory-event');
-                                          const select = document.getElementById(selectId);
-                                          if(!select) return;
+                                            const urlParams = new URLSearchParams(window.location.search);
+                                            const type = urlParams.get('type');
+                                            const service = urlParams.get('service');
+                                            if(!service) return;
+                                            const selectId = type === 'asesoria' ? 'advisory-service' : (type === 'curso' ? 'advisory-course' : 'advisory-event');
+                                            const select = document.getElementById(selectId);
+                                            if(!select) return;
                                           // Si ya tiene valor, no tocar
-                                          if(select.value) return;
-                                          for(let i=0;i<select.options.length;i++){
+                                            if(select.value) return;
+                                            for(let i=0;i<select.options.length;i++){
                                             if(select.options[i].value === service){
-                                              select.selectedIndex = i;
-                                              select.dispatchEvent(new Event('change', {bubbles:true}));
-                                              break;
+                                                select.selectedIndex = i;
+                                                select.dispatchEvent(new Event('change', {bubbles:true}));
+                                                break;
                                             }
-                                          }
+                                        }
                                         }catch(e){}
-                                      })();
+                                    })();
                                     </script>
                                 </div>
                             </form>
@@ -284,7 +284,7 @@
 
                         <!-- Solicitudes -->
                         <div class="product-card p-8 rounded-xl bg-gray-800 bg-opacity-90 mt-8">
-                            <h4 class="text-2xl font-semibold mb-6 text-white">Solicitudes</h4>
+                            <h4 class="text-3xl font-bold text-center text-white mb-5 parisienne-font">Solicitudes</h4>
 
                             <div class="overflow-x-auto">
                                 <table class="w-full text-left">
@@ -307,7 +307,7 @@
 
                         <!-- Catálogo de Cursos -->
                         <div class="product-card p-6 rounded-xl bg-gray-800 bg-opacity-90 mt-8">
-                            <h4 class="text-2xl font-semibold mb-6 text-white">Nuestros Cursos</h4>
+                            <h4 class="text-3xl font-bold text-center text-white mb-5 parisienne-font">Catalogo</h4>
 
                             <!-- Filtros -->
                             <div class="flex flex-wrap gap-4 justify-center mb-10">
@@ -377,16 +377,35 @@
             </div>
         </div>
 
-        <!-- Modal de Detalles de Solicitud (Ver más / Ver Comprobante) -->
-        <div id="detalles-solicitud-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" onclick="if(event.target===this)closeDetallesModal()">
+        <!-- Modal de Detalles -->
+        <div id="detalles-solicitud-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50" onclick="if(event.target===this) closeDetallesModal()">
             <div class="bg-gray-800 p-6 rounded-xl max-w-lg mx-4 shadow-2xl border border-gray-700 w-full max-h-[90vh] overflow-y-auto">
                 <h3 id="detalles-modal-title" class="text-xl font-semibold text-white mb-4 border-b border-gray-600 pb-3">Detalles de la Solicitud</h3>
                 <div id="detalles-solicitud-content" class="text-gray-300 space-y-2"></div>
                 <div class="flex justify-end mt-6">
-                    <button type="button" onclick="closeDetallesModal()" class="px-4 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600">Cerrar</button>
+                    <button type="button" onclick="closeDetallesModal()" class="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600">Cerrar</button>
                 </div>
             </div>
         </div>
+
+        <!-- Modal Comprobante (estilo historial) -->
+        <div id="comprobante-solicitud-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-[101]" onclick="if(event.target===this)closeComprobanteModal()">
+            <div class="bg-gray-800 p-6 rounded-xl max-w-lg mx-4 shadow-2xl border border-gray-700 w-full max-h-[90vh] overflow-y-auto">
+                <h3 id="comprobante-modal-title" class="text-xl font-semibold text-white mb-4 border-b border-gray-600 pb-3">Comprobante de Pago</h3>
+                <div id="comprobante-solicitud-content" class="text-gray-300 space-y-2"></div>
+                <div class="flex justify-end mt-6 gap-3">
+                    <button type="button" id="download-inscription-receipt-btn" disabled class="hidden md:inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50" onclick="window.downloadInscriptionReceipt && window.downloadInscriptionReceipt()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-download" viewBox="0 0 16 16">
+                            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5"/>
+                            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708z"/>
+                        </svg>
+                    </button>
+                    <button type="button" onclick="closeComprobanteModal()" class="px-6 py-3 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors">Cerrar</button>
+                </div>
+            </div>
+        </div>
+
+
 
         <!-- Modal de Pago Nequi (fuera del scroll) -->
         <div id="payment-modal" class="hidden fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">

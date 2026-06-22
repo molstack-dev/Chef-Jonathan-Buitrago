@@ -3,6 +3,12 @@ window.agendarJsLoaded = true;
 (function() {
     'use strict';
 
+    // Asegurar que la función closeComprobanteModal esté disponible
+    window.closeComprobanteModal = function() {
+        var modal = document.getElementById('comprobante-solicitud-modal');
+        if (modal) modal.classList.add('hidden');
+    };
+
     document.addEventListener('DOMContentLoaded', function() {
         // Función para normalizar texto (misma que en loadCatalogData)
         function normalizeServiceValue(text) {
@@ -17,7 +23,7 @@ window.agendarJsLoaded = true;
                 asesorias: 'asesoria', asesoria: 'asesoria',
                 eventos: 'evento', evento: 'evento'
             };
-            // Buscar la categoría y precio raw del curso en el grid
+
             var cards = document.querySelectorAll('#courses-grid .product-card');
             for (var i = 0; i < cards.length; i++) {
                 if (normalizeServiceValue(cards[i].getAttribute('data-title')) === serviceValue) {
@@ -28,7 +34,7 @@ window.agendarJsLoaded = true;
                     return;
                 }
             }
-            // Fallback: ir a agendar normal
+
             window.location.href = 'agendar.html?service=' + encodeURIComponent(serviceValue) + '&price=' + encodeURIComponent(coursePrice);
         };
 
@@ -51,6 +57,60 @@ window.agendarJsLoaded = true;
         window.closeCourseDetails = function() {
             var modal = document.getElementById('courseDetailsModal');
             if (modal) modal.classList.add('hidden');
+        };
+
+        // ===== FUNCIONES MODAL DESCARGA COMPROBANTE (estilo historial) =====
+        window.downloadInscriptionReceipt = function () {
+            try {
+                const src = window.__inscription_receipt_src;
+                if (!src) {
+                    const notify = window.showToast || window.alert;
+                    notify('No hay comprobante disponible para descargar.', 'error');
+                    return;
+                }
+
+                const a = document.createElement('a');
+                a.href = src;
+                a.download = 'comprobante_inscripcion';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } catch (e) {
+                const notify = window.showToast || window.alert;
+                notify('Error al descargar el comprobante.', 'error');
+            }
+        };
+
+        window.handleInscriptionReceiptClick = function (btn) {
+            const receipt = btn && btn.getAttribute ? btn.getAttribute('data-receipt') : null;
+
+            const modal = document.getElementById('comprobante-solicitud-modal'); // Cambiado para usar el nuevo modal
+            const contentDiv = document.getElementById('comprobante-solicitud-content'); // Cambiado para usar el nuevo modal
+            const titleEl = document.getElementById('comprobante-modal-title'); // Cambiado para usar el nuevo modal
+            const downloadBtn = document.getElementById('download-inscription-receipt-btn'); // Ya estaba usando el botón correcto
+
+            if (!modal || !contentDiv || !titleEl || !downloadBtn) return;
+
+            titleEl.textContent = 'Comprobante de Pago';
+
+            window.__inscription_receipt_src = receipt || null;
+
+            if (receipt) {
+                downloadBtn.classList.remove('hidden');
+                downloadBtn.disabled = false;
+
+                // (sin plantilla 1:1) render simple para no afectar el modal de "Ver más"
+                contentDiv.innerHTML =
+                    '<div class="flex justify-center w-full pt-0 pb-1">' +
+                    '<img id="inscription-receipt-img" src="' + receipt + '" alt="Comprobante" class="max-h-[45vh] w-auto max-w-[420px] object-contain rounded" />' +
+                    '</div>';
+            } else {
+                downloadBtn.classList.add('hidden');
+                downloadBtn.disabled = true;
+                contentDiv.innerHTML = '<div class="text-gray-300 text-sm">Sin comprobante</div>';
+            }
+
+            modal.classList.remove('hidden');
         };
 
         // ===== HANDLER DEL FORMULARIO DE AGENDAR =====
@@ -76,12 +136,11 @@ window.agendarJsLoaded = true;
                     return;
                 }
 
-                // Recoger datos comunes
-                let name, email, phone, price, date, time, notes;
+                let name, email, price, date, time, notes;
 
-                // Campos comunes: nombre y email
                 name = document.getElementById('advisory-name')?.value || '';
                 email = document.getElementById('advisory-email')?.value || '';
+
                 let advisoryType = null, advisoryService = null, advisoryMode = null, eventName = null;
                 let numPersons = 1;
 
@@ -89,9 +148,7 @@ window.agendarJsLoaded = true;
                     advisoryType = document.getElementById('advisory-subtype')?.value || '';
                     advisoryService = document.getElementById('advisory-service')?.value || '';
                     advisoryMode = document.getElementById('advisory-mode')?.value || '';
-                    // teléfono se toma desde la BD (users.phone)
                     date = document.getElementById('advisory-date')?.value || '';
-
                     time = document.getElementById('advisory-time')?.value || '';
                     notes = document.getElementById('advisory-details')?.value || '';
 
@@ -103,41 +160,27 @@ window.agendarJsLoaded = true;
                     }
                 } else if (serviceType === 'curso') {
                     advisoryService = document.getElementById('advisory-course')?.value || '';
-                    phone = document.getElementById('advisory-course-phone')?.value || '';
-
-                    const selectedOption = document.getElementById('advisory-course')?.selectedOptions[0];
-                    price = selectedOption?.dataset?.price || 0;
+                    price = document.getElementById('advisory-course')?.selectedOptions[0]?.dataset?.price || 0;
 
                     date = '';
                     time = '';
                     notes = '';
                 } else if (serviceType === 'evento') {
-                    // OJO: en el backend se valida data['service'].
-                    // En nuestro flujo para EVENTOS, el servicio que se guarda en BD es el nombre del evento.
                     eventName = document.getElementById('advisory-event')?.value || '';
-                    phone = document.getElementById('advisory-event-phone')?.value || '';
                     numPersons = parseInt(document.getElementById('advisory-event-persons')?.value) || 1;
 
-                    const selectedOption = document.getElementById('advisory-event')?.selectedOptions[0];
-                    price = selectedOption?.dataset?.price || 0;
+                    price = document.getElementById('advisory-event')?.selectedOptions[0]?.dataset?.price || 0;
 
                     date = '';
                     time = '';
                     notes = '';
-
-                    // Asegurar que el campo "service" (payload.service) tenga valor
                     advisoryService = eventName;
                 }
 
-                // Validaciones básicas
-                // El teléfono NO se debe pedir desde el formulario: el backend lo toma automáticamente
-                // desde users.phone (cuando el usuario está logueado). Por eso, solo validamos
-                // la existencia del servicio; el teléfono se deja en null.
                 if (!advisoryService || advisoryService.trim() === '') {
                     notify('Servicio es Requerido', 'error');
                     return;
                 }
-
 
                 var currentUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
                 if (currentUser) {
@@ -145,11 +188,9 @@ window.agendarJsLoaded = true;
                     email = currentUser.email || email;
                 }
 
-                    // Guardar datos para el modal de pago
                 window.pendingFormData = {
                     name: name,
                     email: email,
-                    // phone se toma en backend desde users.phone
                     phone: null,
                     service: advisoryService,
                     price: price,
@@ -166,7 +207,6 @@ window.agendarJsLoaded = true;
 
                 window.pendingPrice = price;
 
-                // Abrir modal de pago
                 window.openPaymentModal({
                     reference: 'CHEF-' + Date.now(),
                     price: price
@@ -174,10 +214,9 @@ window.agendarJsLoaded = true;
             });
         }
 
-        // Configurar botones de tipo de servicio
+        // ===== Configurar botones de tipo de servicio =====
         const serviceTypeBtns = document.querySelectorAll('.service-type-btn');
         const serviceFields = document.querySelectorAll('.service-fields');
-        let currentServiceType = 'asesoria';
 
         // Leer parámetros de URL si existen (desde el catálogo)
         const urlParams = new URLSearchParams(window.location.search);
@@ -185,7 +224,6 @@ window.agendarJsLoaded = true;
         const preselectedService = urlParams.get('service');
         const urlPrice = urlParams.get('price');
 
-        // Función para preseleccionar servicio
         window.selectServiceByValue = function(selectId, value) {
             const select = document.getElementById(selectId);
             if (!select || !value) {
@@ -196,37 +234,105 @@ window.agendarJsLoaded = true;
             for (let i = 0; i < options.length; i++) {
                 if (options[i].value === value) {
                     select.selectedIndex = i;
-                    // Trigger change event para actualizar validaciones
                     const event = new Event('change', { bubbles: true });
                     select.dispatchEvent(event);
-                    console.log('Servicio preseleccionado:', value);
                     return true;
                 }
             }
-            console.warn('Valor no encontrado en select:', value, 'Opciones disponibles:', Array.from(options).map(o => o.value));
             return false;
         };
 
-        // Cargar datos del catálogo
+        function activateServiceType(type) {
+            const targetBtn = document.querySelector('.service-type-btn[data-type="' + type + '"]');
+            if (!targetBtn) return;
+
+            serviceTypeBtns.forEach(b => {
+                b.classList.remove('bg-purple-600');
+                b.classList.add('bg-gray-700');
+            });
+            targetBtn.classList.remove('bg-gray-700');
+            targetBtn.classList.add('bg-purple-600');
+
+            serviceFields.forEach(field => field.classList.add('hidden'));
+
+            const targetFields = document.getElementById('fields-' + type);
+            if (targetFields) targetFields.classList.remove('hidden');
+
+            const commonFields = document.getElementById('common-fields-asesoria');
+            const detailsField = document.getElementById('details-field-asesoria');
+
+            if (type === 'curso' || type === 'evento') {
+                if (commonFields) commonFields.classList.add('hidden');
+                if (detailsField) detailsField.classList.add('hidden');
+            } else {
+                if (commonFields) commonFields.classList.remove('hidden');
+                if (detailsField) detailsField.classList.remove('hidden');
+            }
+        }
+
+        // ===== HANDLER VER COMPROBANTE EN TABLA SOLICITUDES =====
+        function wireReceiptButtonsInSolicitudes() {
+            const tbody = document.getElementById('solicitudes-tbody');
+            if (!tbody) return;
+
+            // Manejar eventos de la tabla de solicitudes
+            tbody.addEventListener('click', function(e) {
+                // Botón "Ver Comprobante"
+                const receiptBtn = e.target && e.target.closest ? e.target.closest('.view-inscription-receipt-btn, .view-receipt-btn, .ver-comprobante-btn') : null;
+                if (receiptBtn) {
+                    const receipt = receiptBtn.getAttribute('data-receipt');
+                    if (!receipt) return;
+
+                    if (typeof window.handleInscriptionReceiptClick === 'function') {
+                        window.handleInscriptionReceiptClick(receiptBtn);
+                    }
+                    return;
+                }
+
+                // Botón "Ver más" (detalles)
+                const detailsBtn = e.target && e.target.closest ? e.target.closest('.ver-detalles-btn') : null;
+                if (detailsBtn) {
+                    const detalles = decodeURIComponent(detailsBtn.getAttribute('data-detalles'));
+                    const contentDiv = document.getElementById('detalles-solicitud-content');
+                    const titleEl = document.getElementById('detalles-modal-title');
+                    
+                    if (titleEl) titleEl.textContent = 'Detalles de la Solicitud';
+                    
+                    if (contentDiv) {
+                        const lines = detalles.split('\n');
+                        contentDiv.innerHTML = lines.map(function(line) {
+                            return '<div class="py-2 border-b border-gray-700 last:border-0">' + line + '</div>';
+                        }).join('');
+                    }
+                    
+                    const modal = document.getElementById('detalles-solicitud-modal');
+                    if (modal) {
+                        // Ocultar botón de descarga en el modal de detalles
+                        const downloadBtn = document.getElementById('download-inscription-receipt-btn');
+                        if (downloadBtn) {
+                            downloadBtn.classList.add('hidden');
+                            downloadBtn.disabled = true;
+                        }
+                        modal.classList.remove('hidden');
+                    }
+                    return;
+                }
+            });
+        }
+
+        // ===== Cargar datos del catálogo =====
         async function loadCatalogData() {
             try {
                 const response = await fetch('/backend/api/cursos-get.php');
-                if (!response.ok) {
-                    console.error('Error en respuesta:', response.status);
-                    return;
-                }
+                if (!response.ok) return;
                 const result = await response.json();
-                if (!result.success) {
-                    console.error('API returned success: false');
-                    return;
-                }
+                if (!result.success) return;
 
                 const courses = result.data;
                 const Asesorias = courses.filter(c => c.category === 'asesorias' || c.category === 'asesoria');
                 const Cursos = courses.filter(c => c.category === 'cursos' || c.category === 'curso');
                 const Eventos = courses.filter(c => c.category === 'eventos' || c.category === 'evento');
 
-                // Llenar select de asesor con data-price
                 const advisoryServiceSelect = document.getElementById('advisory-service');
                 if (advisoryServiceSelect) {
                     advisoryServiceSelect.innerHTML = '<option value="">Seleccionar asesoría</option>';
@@ -239,7 +345,6 @@ window.agendarJsLoaded = true;
                     });
                 }
 
-                // Llenar select de curso con data-price
                 const courseSelect = document.getElementById('advisory-course');
                 if (courseSelect) {
                     courseSelect.innerHTML = '<option value="">Seleccionar curso</option>';
@@ -252,7 +357,6 @@ window.agendarJsLoaded = true;
                     });
                 }
 
-                // Llenar select de evento con data-price
                 const eventSelect = document.getElementById('advisory-event');
                 if (eventSelect) {
                     eventSelect.innerHTML = '<option value="">Seleccionar evento</option>';
@@ -265,15 +369,14 @@ window.agendarJsLoaded = true;
                     });
                 }
 
-                // Preseleccionar servicio después de cargar
                 if (preselectedType && preselectedService) {
                     const selectId = preselectedType === 'asesoria' ? 'advisory-service' :
-                                    preselectedType === 'curso' ? 'advisory-course' : 'advisory-event';
+                        preselectedType === 'curso' ? 'advisory-course' : 'advisory-event';
+
                     if (window.selectServiceByValue) {
                         window.selectServiceByValue(selectId, preselectedService);
                     }
 
-                    // Si hay precio en URL, actualizar dataset.price de la opción seleccionada
                     if (urlPrice) {
                         const select = document.getElementById(selectId);
                         if (select && select.selectedIndex > 0) {
@@ -286,7 +389,7 @@ window.agendarJsLoaded = true;
             }
         }
 
-        // Cargar cursos en el grid de agendar.html
+        // ===== Cargar grid de cursos =====
         async function loadCoursesGrid() {
             try {
                 const response = await fetch('/backend/api/cursos-get.php');
@@ -303,7 +406,7 @@ window.agendarJsLoaded = true;
                     var priceStr = '$' + Number(course.price).toLocaleString('es-CO');
                     var imageHtml = '';
                     if (course.image) {
-                        imageHtml = '<img src="' + course.image + '" alt="' + course.title + '" class="h-auto w-auto object-cover rounded-lg mb-4 cursor-pointer" onclick="toggleCourseContent(' + course.id + ', this)">';
+                        imageHtml = '<img src="' + course.image + '" alt="' + course.title + '" class="h-auto w-auto object-cover rounded-lg mb-4 cursor-pointer" onclick="toggleCourseContent(' + course.id + ', this)" >';
                     }
 
                     var card = document.createElement('div');
@@ -315,34 +418,33 @@ window.agendarJsLoaded = true;
                     card.setAttribute('data-course-id', course.id);
 
                     var categoryColor = course.category === 'cursos' || course.category === 'curso' ? 'bg-purple-700' :
-                                       course.category === 'asesorias' || course.category === 'asesoria' ? 'bg-amber-600' :
-                                       course.category === 'eventos' || course.category === 'evento' ? 'bg-green-600' : 'bg-purple-700';
+                        course.category === 'asesorias' || course.category === 'asesoria' ? 'bg-amber-600' :
+                        course.category === 'eventos' || course.category === 'evento' ? 'bg-green-600' : 'bg-purple-700';
                     var categoryLabel = course.category === 'cursos' || course.category === 'curso' ? 'Curso' :
-                                       course.category === 'asesorias' || course.category === 'asesoria' ? 'Asesoría' :
-                                       course.category === 'eventos' || course.category === 'evento' ? 'Evento' : course.category;
+                        course.category === 'asesorias' || course.category === 'asesoria' ? 'Asesoría' :
+                        course.category === 'eventos' || course.category === 'evento' ? 'Evento' : course.category;
                     var durationStr = course.duration ? '<p class="text-gray-500 text-xs mb-2">Duración: ' + course.duration + '</p>' : '';
 
                     card.innerHTML = imageHtml + `
-                        <span class="inline-block px-2 py-1 text-xs font-semibold text-white ` + categoryColor + ` rounded mb-2">` + categoryLabel + `</span>
-                        <h3 class="text-lg font-semibold text-white mb-1 cursor-pointer hover:text-amber-400" onclick="toggleCourseContent(` + course.id + `, this)">` + course.title + `</h3>
-                        ` + durationStr + `
-                        <p class="text-gray-400 text-sm mb-3">` + course.description + `</p>
+                        <span class="inline-block px-2 py-1 text-xs font-semibold text-white ${categoryColor} rounded mb-2">${categoryLabel}</span>
+                        <h3 class="text-lg font-semibold text-white mb-1 cursor-pointer hover:text-amber-400" onclick="toggleCourseContent(${course.id}, this)">${course.title}</h3>
+                        ${durationStr}
+                        <p class="text-gray-400 text-sm mb-3">${course.description}</p>
                         <div class="flex justify-between items-center">
-                            <span class="text-amber-500 font-bold">` + priceStr + `</span>
+                            <span class="text-amber-500 font-bold">${priceStr}</span>
                             <div class="flex gap-2">
-                                <button class="btn-ver-detalles px-3 py-1 bg-purple-700 text-white rounded text-sm hover:bg-purple-600 transition-colors" onclick="event.stopPropagation(); showCourseDetails('` + course.title.replace(/'/g, "\\'") + `', '` + (course.description_detail || course.description || '').replace(/'/g, "\\'") + `')">Ver detalles</button>
+                                <button class="btn-ver-detalles px-3 py-1 bg-purple-700 text-white rounded text-sm hover:bg-purple-600 transition-colors" onclick="event.stopPropagation(); showCourseDetails('${course.title.replace(/'/g, "\\'")}', '${(course.description_detail || course.description || '').replace(/'/g, "\\'")}')">Ver detalles</button>
                             </div>
                         </div>
                         <div class="mt-3">
                             <button class="inscribirse-btn w-full px-3 py-2 bg-amber-600 text-white rounded text-sm hover:bg-amber-700 transition-colors">Inscribirse</button>
                         </div>
-                        <!-- Acordeón de lecciones del curso -->
-                        <div id="course-content-` + course.id + `" class="hidden mt-4 border-t border-gray-700 pt-4"></div>
+                        <div id="course-content-${course.id}" class="hidden mt-4 border-t border-gray-700 pt-4"></div>
                     `;
+
                     grid.appendChild(card);
                 });
 
-                // Configurar filtros después de cargar los cursos
                 setupCatalogFilters();
             } catch (e) {
                 console.error('Error loading courses grid:', e);
@@ -354,19 +456,16 @@ window.agendarJsLoaded = true;
             const contentDiv = document.getElementById('course-content-' + courseId);
             if (!contentDiv) return;
 
-            // Si ya está visible, ocultarlo
             if (!contentDiv.classList.contains('hidden')) {
                 contentDiv.classList.add('hidden');
                 return;
             }
 
-            // Si ya tiene contenido cargado, solo mostrar
             if (contentDiv.innerHTML.trim() !== '') {
                 contentDiv.classList.remove('hidden');
                 return;
             }
 
-            // Cargar contenido del curso desde la API
             try {
                 contentDiv.innerHTML = '<div class="text-gray-400 text-sm py-2">Cargando contenido...</div>';
                 contentDiv.classList.remove('hidden');
@@ -379,7 +478,6 @@ window.agendarJsLoaded = true;
                     return;
                 }
 
-                // Renderizar las lecciones
                 let lessonsHtml = '<div class="space-y-2">';
                 result.content.forEach(function(lesson, index) {
                     var durationStr = lesson.duration ? lesson.duration : '';
@@ -389,13 +487,13 @@ window.agendarJsLoaded = true;
                     lessonsHtml += `
                         <div class="bg-gray-700 rounded-lg p-3 flex items-center justify-between">
                             <div class="flex items-center gap-3">
-                                <span class="flex items-center justify-center w-8 h-8 bg-purple-600 rounded-full text-white text-sm font-bold">` + (index + 1) + `</span>
+                                <span class="flex items-center justify-center w-8 h-8 bg-purple-600 rounded-full text-white text-sm font-bold">${index + 1}</span>
                                 <div>
-                                    <p class="text-white text-sm font-medium">` + lesson.title + `</p>
-                                    ` + (durationStr ? '<p class="text-gray-400 text-xs">' + durationStr + '</p>' : '') + `
+                                    <p class="text-white text-sm font-medium">${lesson.title}</p>
+                                    ${durationStr ? '<p class="text-gray-400 text-xs">' + durationStr + '</p>' : ''}
                                 </div>
                             </div>
-                            ` + (isYoutube ? '<a href="' + videoUrl + '" target="_blank" class="text-red-500 hover:text-red-400"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm4.97 5.545L7.5 9.063V5.937l5.567 3.608z"/></svg></a>' : '') + `
+                            ${isYoutube ? '<a href="' + videoUrl + '" target="_blank" class="text-red-500 hover:text-red-400"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm4.97 5.545L7.5 9.063V5.937l5.567 3.608z"/></svg></a>' : ''}
                         </div>
                     `;
                 });
@@ -435,18 +533,15 @@ window.agendarJsLoaded = true;
         var coursesGrid = document.getElementById('courses-grid');
         if (coursesGrid) {
             coursesGrid.addEventListener('click', function(e) {
-                // Ignorar clics en elementos que togglean contenido
                 if (e.target.classList.contains('btn-ver-detalles')) {
                     e.stopPropagation();
                     var card = e.target.closest('.product-card');
                     if (card && typeof showCourseDetails === 'function') {
-                        showCourseDetails(
-                            card.getAttribute('data-title'),
-                            card.getAttribute('data-detail')
-                        );
+                        showCourseDetails(card.getAttribute('data-title'), card.getAttribute('data-detail'));
                     }
                     return;
                 }
+
                 if (e.target.classList.contains('inscribirse-btn')) {
                     var card = e.target.closest('.product-card');
                     if (card) {
@@ -457,62 +552,30 @@ window.agendarJsLoaded = true;
                         var typeMap = {cursos: 'curso', curso: 'curso', asesorias: 'asesoria', asesoria: 'asesoria', eventos: 'evento', evento: 'evento'};
                         var type = typeMap[category] || 'curso';
 
-                        // Activar el tipo de servicio correcto
                         activateServiceType(type);
 
-                        // Preseleccionar el servicio
                         setTimeout(function() {
                             var selectId = type === 'asesoria' ? 'advisory-service' : type === 'curso' ? 'advisory-course' : 'advisory-event';
                             if (window.selectServiceByValue) {
                                 window.selectServiceByValue(selectId, serviceValue);
                             }
 
-                            // Actualizar el precio del servicio seleccionado
                             var select = document.getElementById(selectId);
                             if (select && select.selectedIndex > 0) {
                                 select.options[select.selectedIndex].dataset.price = price;
                             }
 
-                            // Scroll a los campos del formulario
                             var formElement = document.getElementById('advisory-form');
-                            if (formElement) {
-                                formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                            }
+                            if (formElement) formElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
                         }, 100);
                     }
                 }
             });
         }
 
-        // Configurar botones de tipo de servicio
-        function activateServiceType(type) {
-            const targetBtn = document.querySelector('.service-type-btn[data-type="' + type + '"]');
-            if (!targetBtn) return;
-
-            serviceTypeBtns.forEach(b => {
-                b.classList.remove('bg-purple-600');
-                b.classList.add('bg-gray-700');
-            });
-            targetBtn.classList.remove('bg-gray-700');
-            targetBtn.classList.add('bg-purple-600');
-
-            serviceFields.forEach(field => {
-                field.classList.add('hidden');
-            });
-            const targetFields = document.getElementById('fields-' + type);
-            if (targetFields) {
-                targetFields.classList.remove('hidden');
-            }
-
-            const commonFields = document.getElementById('common-fields-asesoria');
-            const detailsField = document.getElementById('details-field-asesoria');
-            if (type === 'curso' || type === 'evento') {
-                if (commonFields) commonFields.classList.add('hidden');
-                if (detailsField) detailsField.classList.add('hidden');
-            } else {
-                if (commonFields) commonFields.classList.remove('hidden');
-                if (detailsField) detailsField.classList.remove('hidden');
-            }
+        // Activar el tipo correcto desde URL
+        if (preselectedType) {
+            activateServiceType(preselectedType);
         }
 
         // Listener para mostrar/ocultar número de personas según tipo de asesoría
@@ -532,58 +595,26 @@ window.agendarJsLoaded = true;
             });
         }
 
-        // Activar el tipo correcto desde URL antes de cargar datos
-        if (preselectedType) {
-            activateServiceType(preselectedType);
-        }
+        // Cargar datos y configurar
+        loadCatalogData().catch(console.error);
+        loadCoursesGrid().catch(console.error);
 
-        // Cargar datos y preseleccionar
-        loadCatalogData().then(function() {
-            // Preseleccionar servicio después de cargar datos
-            if (preselectedType && preselectedService) {
-                const selectId = preselectedType === 'asesoria' ? 'advisory-service' :
-                                 preselectedType === 'curso' ? 'advisory-course' : 'advisory-event';
-                
-                setTimeout(function() {
-                    if (window.selectServiceByValue) {
-                        if (!window.selectServiceByValue(selectId, preselectedService)) {
-                            console.warn('No se pudo preseleccionar servicio:', preselectedService);
-                        }
-                    }
-                    
-                    // Si hay precio en URL, guardarlo en la opción seleccionada
-                    if (urlPrice) {
-                        const select = document.getElementById(selectId);
-                        if (select && select.selectedIndex > 0) {
-                            select.options[select.selectedIndex].dataset.price = urlPrice;
-                        }
-                    }
-                }, 100);
-            }
-        }).catch(function(e) {
-            console.error('Error cargando datos del catálogo:', e);
-        });
-
-        // Cargar grid de cursos y servicio adelante
-        loadCoursesGrid().catch(function(e) {
-            console.error('Error cargando grid de cursos:', e);
-        });
-        
         if (typeof loadMyAdvisories === 'function') {
-            loadMyAdvisories().catch(function(e) {
-                console.error('Error cargando solicitudes:', e);
-            });
+            loadMyAdvisories().catch(console.error);
         }
+
+        // Conectar botón "Ver Comprobante" si existe
+        wireReceiptButtonsInSolicitudes();
 
         serviceTypeBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', function() {
                 activateServiceType(btn.getAttribute('data-type'));
             });
         });
 
-            // ===== FUNCIONES DE MODAL DE PAGO NEQUI =====
-            window.currentPaymentData = null;
-            window.pendingPrice = urlPrice || null;
+        // ===== FUNCIONES MODAL DE PAGO NEQUI =====
+        window.currentPaymentData = null;
+        window.pendingPrice = urlPrice || null;
 
         window.openPaymentModal = function(serviceData) {
             window.currentPaymentData = serviceData;
@@ -592,18 +623,14 @@ window.agendarJsLoaded = true;
             const amountSpan = document.getElementById('payment-amount');
 
             if (refSpan) refSpan.textContent = serviceData.reference || 'PAGO-' + Date.now();
-            // Usar el precio directamente si ya viene formateado, si no, formatearlo
+
             var priceValue = serviceData.price;
-            // Si no hay precio en serviceData pero tenemos pendingPrice (de URL), usarlo
-            if (!priceValue && window.pendingPrice) {
-                priceValue = window.pendingPrice;
-            }
+            if (!priceValue && window.pendingPrice) priceValue = window.pendingPrice;
+
             if (amountSpan) {
-                // Si el precio ya tiene formato peso (contiene $), usarlo directo
                 if (typeof priceValue === 'string' && priceValue.includes('$')) {
                     amountSpan.textContent = priceValue;
                 } else {
-                    // Convertir a número y formatear
                     var priceNum = parseFloat(priceValue) || 0;
                     amountSpan.textContent = '$' + priceNum.toLocaleString('es-CO');
                 }
@@ -612,7 +639,6 @@ window.agendarJsLoaded = true;
             if (modal) modal.classList.remove('hidden');
         };
 
-        // ===== FUNCIONES DE MODAL DE TÉRMINOS Y CONDICIONES =====
         window.openTerminosModal = function() {
             const modal = document.getElementById('terminos-modal');
             if (modal) modal.classList.remove('hidden');
@@ -626,9 +652,10 @@ window.agendarJsLoaded = true;
         window.closePaymentModal = function() {
             const modal = document.getElementById('payment-modal');
             if (modal) modal.classList.add('hidden');
-            // Limpiar input de archivo
+
             const input = document.getElementById('payment-receipt-input');
             if (input) input.value = '';
+
             window.currentPaymentData = null;
             window.pendingFormData = null;
         };
@@ -643,7 +670,6 @@ window.agendarJsLoaded = true;
 
             const file = input.files[0];
 
-            // Validar que es una imagen
             if (!file.type.startsWith('image/')) {
                 const notify = window.showToast || window.alert;
                 notify('Por favor sube una imagen del comprobante', 'error');
@@ -656,16 +682,13 @@ window.agendarJsLoaded = true;
             reader.onload = function(e) {
                 const base64 = e.target.result;
                 const formData = window.pendingFormData;
-
                 if (!formData) {
                     notify('Error: Datos del formulario no disponibles', 'error');
                     return;
                 }
 
-                // Siempre guardar la solicitud en advisories, incluso si es curso o evento
                 var currentUser = typeof getCurrentUser === 'function' ? getCurrentUser() : null;
                 var payload = {
-                    // phone lo obtiene el backend desde users.phone
                     phone: null,
                     service: formData.service,
                     price: formData.price,
@@ -679,42 +702,37 @@ window.agendarJsLoaded = true;
                     advisoryMode: formData.advisoryMode,
                     eventName: formData.eventName
                 };
+
                 if (!currentUser) {
                     payload.name = formData.name;
                     payload.email = formData.email;
                 }
 
-                var createPromise = fetch('/backend/api/advisory-registration.php', {
+                fetch('/backend/api/advisory-registration.php', {
                     method: 'POST',
                     credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload)
-                });
-
-                createPromise
-                .then(function(response) { return response.json(); })
+                })
+                .then(resp => resp.json())
                 .then(function(result) {
-                    // Resultado esperado: { success:true, data:{id: ...} }
                     if (!result || !result.success) {
                         notify(result?.message || 'Error al registrar solicitud', 'error');
-                        return;
+                        return Promise.reject(new Error('create failed'));
                     }
 
-                    var registrationId = result.data && result.data.id ? result.data.id : null;
+                    const registrationId = result.data && result.data.id ? result.data.id : null;
                     if (!registrationId) {
                         notify('ID de registro no disponible', 'error');
-                        return;
+                        return Promise.reject(new Error('missing id'));
                     }
-
-                    // Segundo: subir el comprobante a advisories
-                    var payload = { id: registrationId, payment_receipt: base64 };
 
                     return fetch('/backend/api/advisory-receipt.php', {
                         method: 'PUT',
                         credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    }).then(function(response) { return response.json(); });
+                        body: JSON.stringify({ id: registrationId, payment_receipt: base64 })
+                    }).then(resp => resp.json());
                 })
                 .then(function(result) {
                     if (result && result.success) {
@@ -723,9 +741,9 @@ window.agendarJsLoaded = true;
                         input.value = '';
                         window.pendingFormData = null;
 
-                        // Resetear formulario y UI
                         const advisoryForm = document.getElementById('advisory-form');
                         if (advisoryForm) advisoryForm.reset();
+
                         const successMessage = document.getElementById('success-message');
                         if (successMessage) {
                             successMessage.classList.remove('hidden');
@@ -734,22 +752,21 @@ window.agendarJsLoaded = true;
                             }, 5000);
                         }
 
-                        // Recargar tabla de servicios después de 2 segundos
                         setTimeout(function() {
-                            if (typeof loadMyAdvisories === 'function') {
-                                loadMyAdvisories();
-                            }
+                            if (typeof loadMyAdvisories === 'function') loadMyAdvisories();
                         }, 2000);
                     } else if (result) {
                         notify(result.message || 'Error al enviar comprobante', 'error');
                     }
                 })
-                .catch(function(error) {
-                    console.error('Error:', error);
-                    notify('Error al enviar la solicitud', 'error');
+                .catch(function(err) {
+                    // ya se notificó arriba en la mayoría de casos
+                    console.error('Error:', err);
                 });
             };
+
             reader.readAsDataURL(file);
         };
     });
 })();
+

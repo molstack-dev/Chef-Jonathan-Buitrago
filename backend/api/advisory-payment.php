@@ -77,7 +77,7 @@ try {
     //    (El admin aprueba en advisories; el usuario ve cursos desde registrations.)
     if ($payment_status === 'paid') {
         try {
-            $stmt = $pdo->prepare('SELECT service_type, advisory_service, event_name, price, user_id FROM advisories WHERE id = ?');
+            $stmt = $pdo->prepare('SELECT service_type, advisory_service, event_name, price, user_id, created_at FROM advisories WHERE id = ?');
             $stmt->execute([$id]);
             $adv = $stmt->fetch(PDO::FETCH_ASSOC);
 

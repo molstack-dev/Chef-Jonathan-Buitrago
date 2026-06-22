@@ -16,9 +16,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action']) && $_GET['act
     try {
         // Si hay sesión activa
         if (isset($_SESSION['user_id'])) {
-$stmt = $pdo->prepare("SELECT id, name, email, phone, role, password, security_question, security_answer FROM users WHERE id = ?");
+$stmt = $pdo->prepare("SELECT id, name, email, phone, role, password, security_question, security_answer, notify_email, notify_whatsapp FROM users WHERE id = ?");
             $stmt->execute([$_SESSION['user_id']]);
             $user = $stmt->fetch(PDO::FETCH_ASSOC);
+
             
             if ($user) {
                 echo json_encode($user);
