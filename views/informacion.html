@@ -190,7 +190,7 @@
                         </div>
 
                         <div class="overflow-hidden faq-item" role="listitem">
-                            <button class="faq-question w-full flex justify-between items-center text-left" aria-expanded="false" type="button">
+                            <button class="faq-question w-full flex justify-between items-center text-left" aria-expanded="false" type="button" onclick="toggleFAQ(this)">
                                 <h4 class="text-xl font-semibold text-white">¿Por cuánto tiempo tengo acceso a los cursos?</h4>
                                 <svg class="w-5 h-5 text-purple-500 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
@@ -299,8 +299,38 @@
     </footer>
 
         <script src="../assets/script.js"></script>
-        <script async src="//www.instagram.com/embed.js"></script>                    
+        <script async src="//www.instagram.com/embed.js"></script>
+    
+        <script>
+            // Fallback por si toggleFAQ no está disponible (o falla por otro script).
+            // Espera la estructura: button.faq-question + div.faq-answer.hidden
+            if (typeof window.toggleFAQ !== 'function') {
+                window.toggleFAQ = function(button) {
+                    const answer = button && button.nextElementSibling ? button.nextElementSibling : null;
+                    const icon = button ? button.querySelector('svg') : null;
+                    if (!answer) return;
 
-        
+                    const isHidden = answer.classList.contains('hidden');
+
+                    document.querySelectorAll('.faq-answer').forEach(ans => {
+                        if (ans !== answer) ans.classList.add('hidden');
+                    });
+
+                    // cerrar otros iconos
+                    document.querySelectorAll('.faq-question svg').forEach(ic => {
+                        if (ic !== icon) ic.classList.remove('rotate-180');
+                    });
+
+                    if (isHidden) {
+                        answer.classList.remove('hidden');
+                        if (icon) icon.classList.add('rotate-180');
+                    } else {
+                        answer.classList.add('hidden');
+                        if (icon) icon.classList.remove('rotate-180');
+                    }
+                };
+            }
+        </script>
+    
     </body>
 </html>
