@@ -35,7 +35,7 @@ $type = trim((string)$data['type']);
 $refundId = (int)$data['id'];
 $userId = (int)$_SESSION['user_id'];
 
-if (!in_array($type, ['registration', 'advisory'], true)) {
+if (!in_array($type, ['registration', 'advisory_course', 'advisory_asesoria', 'advisory_evento'], true)) {
     respond(400, ['success' => false, 'message' => 'Tipo inválido']);
 }
 
@@ -70,7 +70,8 @@ try {
         $upd2 = $pdo->prepare("UPDATE registrations SET payment_status = 'paid' WHERE id = ?");
         $upd2->execute([(int)$refund['refundable_id']]);
     } else {
-        $upd2 = $pdo->prepare("UPDATE advisories SET payment_status = 'paid' WHERE id = ? AND service_type='curso'");
+        // Para todos los tipos de advisory
+        $upd2 = $pdo->prepare("UPDATE advisories SET payment_status = 'paid' WHERE id = ?");
         $upd2->execute([(int)$refund['refundable_id']]);
     }
 

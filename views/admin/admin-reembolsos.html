@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -12,10 +11,8 @@
     <link rel="icon" type="image/png" href="../../img/icono.png">
 </head>
 <body class="bg-gray-900 text-white">
-    <!-- Contenedor de notificaciones -->
     <div id="toast-container" class="fixed top-24 right-4 z-50 flex flex-col gap-2"></div>
 
-    <!-- Header -->
     <header class="shadow-lg rounded-lg backdrop-blur">
         <div class="container mx-auto px-6 py-5 flex justify-between items-center">
             <h1 class="text-2xl parisienne-font bg-gradient-to-r from-purple-900 to-purple-600 bg-clip-text">
@@ -30,42 +27,24 @@
                 <a href="javascript:void(0)" onclick="logout()" class="hover:text-purple-500 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="currentColor" class="bi bi-box-arrow-left" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M6 12.5a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v2a.5.5 0 0 1-1 0v-2A1.5 1.5 0 0 1 6.5 2h8A1.5 1.5 0 0 1 16 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 5 12.5v-2a.5.5 0 0 1 1 0z"/><path fill-rule="evenodd" d="M.146 8.354a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L1.707 7.5H10.5a.5.5 0 0 1 0 1H1.707l2.147 2.146a.5.5 0 0 1-.708.708z"/></svg></a>
             </nav>
             <div class="flex md:hidden items-center space-x-3">
-                <a href="admin.html" class="text-white hover:text-purple-500 p-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="currentColor" class="bi bi-house" viewBox="0 0 16 16"><path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/></svg>
-                </a>
-                <a href="admin-usuarios.html" class="text-white hover:text-purple-500 p-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="currentColor" class="bi bi-house" viewBox="0 0 16 16"><path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/></svg>
-                </a>
-                <a href="admin-inscripciones.html" class="text-white hover:text-purple-500 p-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="currentColor" class="bi bi-book" viewBox="0 0 16 16"><path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783"/></svg>
-                </a>
-                <a href="admin-servicios.html" class="text-white hover:text-purple-500 p-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="currentColor" class="bi bi-clock-history" viewBox="0 0 16 16"><path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022zm2.004.45a7 7 0 0 0-.985-.299l.219-.976q.576.129 1.126.342zm1.37.71a7 7 0 0 0-.439-.27l.493-.87a8 8 0 0 1 .979.654l-.615.789a7 7 0 0 0-.418-.302zm1.834 1.79a7 7 0 0 0-.653-.796l.724-.69q.406.429.747.91zm.744 1.352a7 7 0 0 0-.214-.468l.893-.45a8 8 0 0 1 .45 1.088l-.95.313a7 7 0 0 0-.179-.483m.53 2.507a7 7 0 0 0-.1-1.025l.985-.17q.1.58.116 1.17zm-.131 1.538q.05-.254.081-.51l.993.123a8 8 0 0 1-.23 1.155l-.964-.267q.069-.247.12-.501m-.952 2.379q.276-.436.486-.908l.914.405q-.24.54-.555 1.038zm-.964 1.205q.183-.183.35-.378l.758.653a8 8 0 0 1-.401.432z"/><path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0z"/><path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5"/></svg>
-                </a>
-                <a href="admin-reembolsos.html" class="text-white hover:text-purple-500 p-1">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="currentColor" class="bi bi-mortarboard" viewBox="0 0 16 16"><path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917zM8 8.46 1.758 5.965 8 3.052l6.242 2.913z"/><path d="M4.176 9.032a.5.5 0 0 0-.656.327l-.5 1.7a.5.5 0 0 0 .294.605l4.5 1.8a.5.5 0 0 0 .372 0l4.5-1.8a.5.5 0 0 0 .294-.605l-.5-1.7a.5.5 0 0 0-.656-.327L8 10.466zm-.068 1.873.22-.748 3.496 1.311a.5.5 0 0 0 .352 0l3.496-1.311.22.748L8 12.46z"/></svg>
-                </a>
-                <a href="javascript:void(0)" onclick="logout()" class="hover:text-purple-500 transition-colors">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="currentColor" class="bi bi-box-arrow-left" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M6 12.5a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v2a.5.5 0 0 1-1 0v-2A1.5 1.5 0 0 1 6.5 2h8A1.5 1.5 0 0 1 16 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 5 12.5v-2a.5.5 0 0 1 1 0z"/><path fill-rule="evenodd" d="M.146 8.354a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L1.707 7.5H10.5a.5.5 0 0 1 0 1H1.707l2.147 2.146a.5.5 0 0 1-.708.708z"/></svg>
-                </a>
-            </div>
-        </div
-        >
+                <a href="admin.html" class="text-white hover:text-purple-500 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="currentColor" class="bi bi-house" viewBox="0 0 16 16"><path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/></svg></a>
+                <a href="admin-usuarios.html" class="text-white hover:text-purple-500 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="currentColor" class="bi bi-house" viewBox="0 0 16 16"><path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L2 8.207V13.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V8.207l.646.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM13 7.207V13.5a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5V7.207l5-5z"/></svg></a>
+                <a href="admin-inscripciones.html" class="text-white hover:text-purple-500 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="currentColor" class="bi bi-book" viewBox="0 0 16 16"><path d="M1 2.828c.885-.37 2.154-.769 3.388-.893 1.33-.134 2.458.063 3.112.752v9.746c-.935-.53-2.12-.603-3.213-.493-1.18.12-2.37.461-3.287.811zm7.5-.141c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388.893v9.923c-.918-.35-2.107-.692-3.287-.81-1.094-.111-2.278-.039-3.213.492zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.105A.5.5 0 0 0 0 2.5v11a.5.5 0 0 0 .707.455c.882-.4 2.303-.881 3.68-1.02 1.409-.142 2.59.087 3.223.877a.5.5 0 0 0 .78 0c.633-.79 1.814-1.019 3.222-.877 1.378.139 2.8.62 3.681 1.02A.5.5 0 0 0 16 13.5v-11a.5.5 0 0 0-.293-.455c-.952-.433-2.48-.952-3.994-1.105C10.413.809 8.985.936 8 1.783"/></svg></a>
+                <a href="admin-servicios.html" class="text-white hover:text-purple-500 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="currentColor" class="bi bi-clock-history" viewBox="0 0 16 16"><path d="M8.515 1.019A7 7 0 0 0 8 1V0a8 8 0 0 1 .589.022zm2.004.45a7 7 0 0 0-.985-.299l.219-.976q.576.129 1.126.342zm1.37.71a7 7 0 0 0-.439-.27l.493-.87a8 8 0 0 1 .979.654l-.615.789a7 7 0 0 0-.418-.302zm1.834 1.79a7 7 0 0 0-.653-.796l.724-.69q.406.429.747.91zm.744 1.352a7 7 0 0 0-.214-.468l.893-.45a8 8 0 0 1 .45 1.088l-.95.313a7 7 0 0 0-.179-.483m.53 2.507a7 7 0 0 0-.1-1.025l.985-.17q.1.58.116 1.17zm-.131 1.538q.05-.254.081-.51l.993.123a8 8 0 0 1-.23 1.155l-.964-.267q.069-.247.12-.501m-.952 2.379q.276-.436.486-.908l.914.405q-.24.54-.555 1.038zm-.964 1.205q.183-.183.35-.378l.758.653a8 8 0 0 1-.401.432z"/><path d="M8 1a7 7 0 1 0 4.95 11.95l.707.707A8.001 8.001 0 1 1 8 0z"/><path d="M7.5 3a.5.5 0 0 1 .5.5v5.21l3.248 1.856a.5.5 0 0 1-.496.868l-3.5-2A.5.5 0 0 1 7 9V3.5a.5.5 0 0 1 .5-.5"/></svg></a>
+                <a href="admin-reembolsos.html" class="text-white hover:text-purple-500 p-1"><svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="currentColor" class="bi bi-mortarboard" viewBox="0 0 16 16"><path d="M8.211 2.047a.5.5 0 0 0-.422 0l-7.5 3.5a.5.5 0 0 0 .025.917l7.5 3a.5.5 0 0 0 .372 0L14 7.14V13a1 1 0 0 0-1 1v2h3v-2a1 1 0 0 0-1-1V6.739l.686-.275a.5.5 0 0 0 .025-.917zM8 8.46 1.758 5.965 8 3.052l6.242 2.913z"/><path d="M4.176 9.032a.5.5 0 0 0-.656.327l-.5 1.7a.5.5 0 0 0 .294.605l4.5 1.8a.5.5 0 0 0 .372 0l4.5-1.8a.5.5 0 0 0 .294-.605l-.5-1.7a.5.5 0 0 0-.656-.327L8 10.466zm-.068 1.873.22-.748 3.496 1.311a.5.5 0 0 0 .352 0l3.496-1.311.22.748L8 12.46z"/></svg></a>
+                <a href="javascript:void(0)" onclick="logout()" class="hover:text-purple-500 transition-colors"><svg xmlns="http://www.w3.org/2000/svg" width="21" height="21" fill="currentColor" class="bi bi-box-arrow-left" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M6 12.5a.5.5 0 0 0 .5.5h8a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-8a.5.5 0 0 0-.5.5v2a.5.5 0 0 1-1 0v-2A1.5 1.5 0 0 1 6.5 2h8A1.5 1.5 0 0 1 16 3.5v9a1.5 1.5 0 0 1-1.5 1.5h-8A1.5 1.5 0 0 1 5 12.5v-2a.5.5 0 0 1 1 0z"/><path fill-rule="evenodd" d="M.146 8.354a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L1.707 7.5H10.5a.5.5 0 0 1 0 1H1.707l2.147 2.146a.5.5 0 0 1-.708.708z"/></svg></a>
+</div>
     </header>
 
     <section class="pt-36 py-24 bg-gray-900 min-h-screen">
-
         <div class="container mx-auto px-6">
-            <h3 class="text-4xl font-bold text-center mb-16 text-white">Gestión de Reembolsos</h3>
+            <h3 class="text-4xl font-bold text-center mb-16 text-white">Gesti&oacute;n de Reembolsos</h3>
 
             <div class="product-card p-8 rounded-xl">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
                     <h4 class="text-2xl font-semibold text-purple-400">Solicitudes Pendientes</h4>
-                    <button onclick="return false" class="mt-2 sm:mt-0 bg-gray-700 py-2 px-4 rounded text-sm">
-                        Actualizar Lista
-                    </button>
+                    <button onclick="return false" class="mt-2 sm:mt-0 bg-gray-700 py-2 px-4 rounded text-sm">Actualizar Lista</button>
                 </div>
-
                 <div class="overflow-x-auto">
                     <table class="w-full text-left">
                         <thead>
@@ -84,68 +63,50 @@
                         </tbody>
                     </table>
                 </div>
-
                 <div id="no-refunds" class="hidden text-center py-12">
-                    <svg class="w-16 h-16 mx-auto text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                    </svg>
+                    <svg class="w-16 h-16 mx-auto text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     <p class="text-gray-400 text-lg">No hay solicitudes de reembolso pendientes</p>
-
                 </div>
-            </div>
 
-            <!-- Leyenda -->
             <div class="mt-8 product-card p-6 rounded-xl">
                 <h5 class="text-lg font-semibold text-white mb-4">Leyenda de Estados</h5>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div class="flex items-center space-x-2">
-                        <span class="px-2 py-1 bg-yellow-900 text-yellow-300 rounded-full text-xs">Pendiente</span>
-                        <span class="text-gray-400">Solicitud esperando ser procesada</span>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <span class="px-2 py-1 bg-green-900 text-green-300 rounded-full text-xs">Aprobado</span>
-                        <span class="text-gray-400">Reembolso aprobado, enrollment cancelado</span>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <span class="px-2 py-1 bg-red-900 text-red-300 rounded-full text-xs">Rechazado</span>
-                        <span class="text-gray-400">Reembolso rechazado, pago confirmado</span>
-                    </div>
-                </div>
+                    <div class="flex items-center space-x-2"><span class="px-2 py-1 bg-yellow-900 text-yellow-300 rounded-full text-xs">Pendiente</span><span class="text-gray-400">Solicitud esperando ser procesada</span></div>
+                    <div class="flex items-center space-x-2"><span class="px-2 py-1 bg-green-900 text-green-300 rounded-full text-xs">Aprobado</span><span class="text-gray-400">Reembolso aprobado, enrollment cancelado</span></div>
+                    <div class="flex items-center space-x-2"><span class="px-2 py-1 bg-red-900 text-red-300 rounded-full text-xs">Rechazado</span><span class="text-gray-400">Reembolso rechazado, pago confirmado</span></div>
             </div>
-        </div>
     </section>
 
-    <!-- Modal Confirmación -->
     <div id="refund-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div class="bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
-            <h3 id="modal-title" class="text-xl font-semibold text-white mb-3">Confirmar Acción</h3>
+            <h3 id="modal-title" class="text-xl font-semibold text-white mb-3">Confirmar Acci&oacute;n</h3>
             <p id="modal-message" class="text-gray-300 mb-6"></p>
             <input type="hidden" id="refund-id">
             <input type="hidden" id="refund-type">
             <input type="hidden" id="refund-action">
 
-            <!-- Solo se usa si approve => subir comprobante -->
             <div id="refund-receipt-upload" class="hidden mb-4">
-                <label class="block text-sm text-gray-300 mb-2" for="refund-admin-receipt">Comprobante del reembolso</label>
+                <label class="block text-sm text-gray-300 mb-2" for="refund-admin-receipt">Comprobante del reembolso (imagen o PDF)</label>
                 <input id="refund-admin-receipt" type="file" accept="image/*,application/pdf" class="w-full text-sm" />
+            </div>
+
+            <div id="refund-rejection-reason-wrap" class="hidden mb-4">
+                <label class="block text-sm text-gray-300 mb-2" for="refund-rejection-reason">Motivo del rechazo</label>
+                <textarea id="refund-rejection-reason" rows="3" class="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm resize-none" placeholder="Indica el motivo por el cual se rechaza el reembolso..."></textarea>
             </div>
 
             <div class="flex justify-end space-x-3">
                 <button type="button" onclick="closeRefundModal()" class="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700">Cancelar</button>
                 <button type="button" id="confirm-refund-btn" class="px-4 py-2 bg-amber-600 text-white rounded hover:bg-amber-700">Confirmar</button>
             </div>
-        </div>
     </div>
 
-    <!-- Footer -->
     <footer class="border-t border-white-700 py-4">
         <div class="w-full mx-auto max-w-screen-xl p-2 flex flex-col sm:flex-row items-center justify-between">
-            <span class="text-xs text-gray-400">
-                © 2025 <a href="../../index.html" class="text-white parisienne-font hover:text-purple-500">Chef Jonathan Buitrago</a>. Todos los derechos reservados.
-            </span>
+            <span class="text-xs text-gray-400">&copy; 2025 <a href="../../index.html" class="text-white parisienne-font hover:text-purple-500">Chef Jonathan Buitrago</a>. Todos los derechos reservados.</span>
             <ul class="flex space-x-4 items-center mt-2 sm:mt-0 text-xs">
-                <li><a href="https://www.instagram.com/chef_jonathan_buitrago?igsh=cGp1NmY4cmh0ZnA5" target="_blank" class="btn-instagram"><svg class="w-5 h-5" viewBox="0 0 24 24"><defs><linearGradient id="instagram-gradient" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#FED373;stop-opacity:1" /><stop offset="15%" style="stop-color:#F15245;stop-opacity:1" /><stop offset="40%" style="stop-color:#D92E7F;stop-opacity:1" /><stop offset="75%" style="stop-color:#9B36B7;stop-opacity:1" /><stop offset="100%" style="stop-color:#515BD4;stop-opacity:1" /></linearGradient></defs><path class="instagram-gradient" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.584-.069 4.85c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.584-.012-4.85-.07c-3.252-.148-4.771-1.691-4.919-4.919-.058-1.265-.069-1.645-.069-4.85s.011-3.584.069-4.85c.149-3.225 1.664-4.771 4.919-4.919 1.266-.057 1.644-.07 4.85-.07zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072s3.667-.014 4.947-.072c4.358-.2 6.78-2.618 6.98-6.98.059-1.281.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.2-4.358-2.618-6.78-6.98-6.98-1.281-.059-1.689-.073-4.948-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.79 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.441 1.441 1.441 1.441-.645 1.441-1.441-.645-1.44-1.441-1.44z"/></svg></a></li>
-                <li><a href="https://www.facebook.com/jonathan.buitrago.5851?locale=es_LA" target="_blank" class="btn-facebook transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 320 512"><path d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z"/></svg></a></li>
+                <li><a href="https://www.instagram.com/chef_jonathan_buitrago" target="_blank" class="btn-instagram"><svg class="w-5 h-5" viewBox="0 0 24 24"><defs><linearGradient id="instagram-gradient" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" style="stop-color:#FED373" /><stop offset="15%" style="stop-color:#F15245" /><stop offset="40%" style="stop-color:#D92E7F" /><stop offset="75%" style="stop-color:#9B36B7" /><stop offset="100%" style="stop-color:#515BD4" /></linearGradient></defs><path class="instagram-gradient" d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.85s-.011 3.584-.069 4.85c-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07s-3.584-.012-4.85-.07c-3.252-.148-4.771-1.691-4.919-4.919-.058-1.265-.069-1.645-.069-4.85s.011-3.584.069-4.85c.149-3.225 1.664-4.771 4.919-4.919 1.266-.057 1.644-.07 4.85-.07zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948s.014 3.667.072 4.947c.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072s3.667-.014 4.947-.072c4.358-.2 6.78-2.618 6.98-6.98.059-1.281.073-1.689.073-4.948s-.014-3.667-.072-4.947c-.2-4.358-2.618-6.78-6.98-6.98-1.281-.059-1.689-.073-4.948-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.162 6.162 6.162 6.162-2.759 6.162-6.162-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4s1.791-4 4-4 4 1.79 4 4-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.441 1.441 1.441 1.441-.645 1.441-1.441-.645-1.44-1.441-1.44z"/></svg></a></li>
+                <li><a href="https://www.facebook.com/jonathan.buitrago.5851" target="_blank" class="btn-facebook transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 320 512"><path d="M80 299.3V512H196V299.3h86.5l18-97.8H196V166.9c0-51.7 20.3-71.5 72.7-71.5c16.3 0 29.4 .4 37 1.2V7.9C291.4 4 256.4 0 236.2 0C129.3 0 80 50.5 80 159.4v42.1H14v97.8H80z"/></svg></a></li>
                 <li><a href="https://wa.me/573229452346" target="_blank" class="btn-whatsapp transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.480-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg></a></li>
                 <li><a href="https://www.youtube.com/@chefjonathanbuitrago" target="_blank" class="btn-youtube transition-colors"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 576 512"><path d="M549.655 124.083c-6.281-23.65-24.787-42.276-48.284-48.597C458.781 64 288 64 288 64s-170.781 0-213.371 11.486c-23.497 6.321-42.003 24.947-48.284 48.597C16 166.672 16 256 16 256s0 89.328 10.345 131.917c6.281 23.65 24.787 42.276 48.284 48.597C117.219 448 288 448 288 448s170.781 0 213.371-11.486c23.497-6.321 42.003-24.947 48.284-48.597C560 345.328 560 256 560 256s0-89.328-10.345-131.917zM232 334.059V177.941L345 256l-113 78.059z"/></svg></a></li>
             </ul>
@@ -154,80 +115,59 @@
 
     <script src="../../assets/script.js"></script>
     <script>
-    // Notificaciones toast
-    function showToast(message, type = 'success') {
-        const container = document.getElementById('toast-container');
+    function showToast(message, type) {
+        var container = document.getElementById('toast-container');
         if (!container) return;
-
-        const toast = document.createElement('div');
-        toast.className = `px-4 py-3 rounded-lg shadow-lg text-white text-sm animate-fade-in ${
-            type === 'success' ? 'bg-green-600' :
-            type === 'error' ? 'bg-red-600' :
-            'bg-amber-600'
-        }`;
-
+        var toast = document.createElement('div');
+        toast.className = 'px-4 py-3 rounded-lg shadow-lg text-white text-sm animate-fade-in ' + (type === 'error' ? 'bg-red-600' : 'bg-green-600');
         toast.textContent = message;
         container.appendChild(toast);
-
-        setTimeout(() => {
+        setTimeout(function() {
             toast.classList.remove('animate-fade-in');
             toast.classList.add('animate-fade-out');
-            setTimeout(() => toast.remove(), 300);
+            setTimeout(function() { toast.remove(); }, 300);
         }, 3000);
     }
 
     async function loadRefunds() {
-        const tbody = document.getElementById('refunds-tbody');
-        const noRefunds = document.getElementById('no-refunds');
+        var tbody = document.getElementById('refunds-tbody');
+        var noRefunds = document.getElementById('no-refunds');
         if (!tbody) return;
-
         tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-gray-400">Cargando...</td></tr>';
         if (noRefunds) noRefunds.classList.add('hidden');
-
         try {
-            const response = await fetch('/backend/api/refunds-get.php', { credentials: 'include' });
-            const result = await response.json();
-
+            var response = await fetch('/backend/api/refunds-get.php', { credentials: 'include' });
+            var result = await response.json();
             if (!result.success) {
                 tbody.innerHTML = '<tr><td colspan="7" class="py-6 text-center text-red-300">' + (result.message || 'Error al cargar') + '</td></tr>';
                 if (noRefunds) noRefunds.classList.remove('hidden');
                 return;
             }
-
-            const data = Array.isArray(result.data) ? result.data : [];
+            var data = Array.isArray(result.data) ? result.data : [];
             if (data.length === 0) {
                 tbody.innerHTML = '';
                 if (noRefunds) noRefunds.classList.remove('hidden');
                 return;
             }
-
             tbody.innerHTML = '';
-
-            data.forEach((item) => {
-                const createdAt = item.created_at ? new Date(item.created_at).toLocaleDateString('es-ES') : 'N/A';
-                const priceStr = item.price != null && item.price !== '' ? '$' + Number(item.price).toLocaleString('es-CO') : 'N/A';
-
-                const client = item.client_name || 'N/A';
-                const email = item.client_email || 'N/A';
-                const service = item.service_title || item.service_name || 'N/A';
-
-                const row = document.createElement('tr');
+            data.forEach(function(item) {
+                var createdAt = item.created_at ? new Date(item.created_at).toLocaleDateString('es-ES') : 'N/A';
+                var priceStr = (item.price != null && item.price !== '') ? '$' + Number(item.price).toLocaleString('es-CO') : 'N/A';
+                var client = item.client_name || 'N/A';
+                var email = item.client_email || 'N/A';
+                var service = item.service_title || item.service_name || 'N/A';
+                var row = document.createElement('tr');
                 row.className = 'border-b border-gray-800';
-                row.innerHTML = `
-                    <td class="py-3 text-gray-400 text-sm">${String(item.id).padStart(3, '0')}</td>
-                    <td class="py-3 text-white text-sm">${client}</td>
-                    <td class="py-3 text-gray-400 text-sm">${email}</td>
-                    <td class="py-3 text-gray-400 text-sm">${service}</td>
-                    <td class="py-3 text-gray-400 text-sm">${createdAt}</td>
-                    <td class="py-3 text-gray-400 text-sm">${priceStr}</td>
-                    <td class="py-3">
-                        <div class="flex flex-col space-y-2">
-                            <button type="button" class="approve-refund-btn px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs" data-id="${item.id}" data-type="${item.type}" data-action="approve">Aprobar</button>
-                            <button type="button" class="reject-refund-btn px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs" data-id="${item.id}" data-type="${item.type}" data-action="reject">Rechazar</button>
-                        </div>
-                    </td>
-                `;
-
+                row.innerHTML = '<td class="py-3 text-gray-400 text-sm">' + String(item.id).padStart(3, '0') + '</td>' +
+                    '<td class="py-3 text-white text-sm">' + client + '</td>' +
+                    '<td class="py-3 text-gray-400 text-sm">' + email + '</td>' +
+                    '<td class="py-3 text-gray-400 text-sm">' + service + '</td>' +
+                    '<td class="py-3 text-gray-400 text-sm">' + createdAt + '</td>' +
+                    '<td class="py-3 text-gray-400 text-sm">' + priceStr + '</td>' +
+                    '<td class="py-3"><div class="flex flex-col space-y-2">' +
+                    '<button type="button" class="approve-refund-btn px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs" data-id="' + item.id + '" data-type="' + item.type + '" data-action="approve">Aprobar</button>' +
+                    '<button type="button" class="reject-refund-btn px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs" data-id="' + item.id + '" data-type="' + item.type + '" data-action="reject">Rechazar</button>' +
+                    '</div></td>';
                 tbody.appendChild(row);
             });
         } catch (error) {
@@ -236,50 +176,52 @@
         }
     }
 
-    document.addEventListener('click', (e) => {
-        const btnApprove = e.target.closest('.approve-refund-btn');
-        const btnReject = e.target.closest('.reject-refund-btn');
+    document.addEventListener('click', function(e) {
+        var btnApprove = e.target.closest('.approve-refund-btn');
+        var btnReject = e.target.closest('.reject-refund-btn');
         if (!btnApprove && !btnReject) return;
-
-        const btn = btnApprove || btnReject;
-        const id = btn.getAttribute('data-id');
-        const type = btn.getAttribute('data-type');
-        const action = btn.getAttribute('data-action');
+        var btn = btnApprove || btnReject;
+        var id = btn.getAttribute('data-id');
+        var type = btn.getAttribute('data-type');
+        var action = btn.getAttribute('data-action');
         if (!id || !type || !action) return;
-
         openRefundModal(id, type, action);
     });
 
-
-    // Abrir modal de confirmación
     function openRefundModal(id, type, action) {
-        const modal = document.getElementById('refund-modal');
-        const title = document.getElementById('modal-title');
-        const message = document.getElementById('modal-message');
-        const confirmBtn = document.getElementById('confirm-refund-btn');
-        const receiptUpload = document.getElementById('refund-receipt-upload');
-        const receiptInput = document.getElementById('refund-admin-receipt');
-
         document.getElementById('refund-id').value = id;
         document.getElementById('refund-type').value = type;
         document.getElementById('refund-action').value = action;
 
-        const actionLabel = action === 'approve' ? 'aprobar' : 'rechazar';
-        const colorClass = action === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700';
+        var modal = document.getElementById('refund-modal');
+        var title = document.getElementById('modal-title');
+        var message = document.getElementById('modal-message');
+        var confirmBtn = document.getElementById('confirm-refund-btn');
+        var receiptUpload = document.getElementById('refund-receipt-upload');
+        var receiptInput = document.getElementById('refund-admin-receipt');
+        var rejectionWrap = document.getElementById('refund-rejection-reason-wrap');
+        var rejectionInput = document.getElementById('refund-rejection-reason');
 
-        title.textContent = action === 'approve' ? 'Aprobar Reembolso' : 'Rechazar Reembolso';
-        message.textContent = `¿Estás seguro de ${actionLabel} esta solicitud de reembolso? Esta acción ${action === 'approve' ? 'cancelará la inscripción y rechazará el pago' : 'mantendrá el pago activo'}.`;
+        var actionLabel = (action === 'approve') ? 'aprobar' : 'rechazar';
+        var colorClass = (action === 'approve') ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700';
 
-        // Mostrar selector de comprobante solo para approve
+        title.textContent = (action === 'approve') ? 'Aprobar Reembolso' : 'Rechazar Reembolso';
+        message.textContent = '¿Estás seguro de ' + actionLabel + ' esta solicitud de reembolso?';
+
         if (receiptUpload) {
             if (action === 'approve') receiptUpload.classList.remove('hidden');
             else receiptUpload.classList.add('hidden');
         }
         if (receiptInput) receiptInput.value = '';
 
-        confirmBtn.className = `px-4 py-2 ${colorClass} text-white rounded hover:opacity-90`;
-        confirmBtn.textContent = action === 'approve' ? 'Aprobar' : 'Rechazar';
+        if (rejectionWrap) {
+            if (action === 'reject') rejectionWrap.classList.remove('hidden');
+            else rejectionWrap.classList.add('hidden');
+        }
+        if (rejectionInput) rejectionInput.value = '';
 
+        confirmBtn.className = 'px-4 py-2 ' + colorClass + ' text-white rounded hover:opacity-90';
+        confirmBtn.textContent = (action === 'approve') ? 'Aprobar' : 'Rechazar';
         modal.classList.remove('hidden');
     }
 
@@ -287,39 +229,40 @@
         document.getElementById('refund-modal').classList.add('hidden');
     }
 
-    // Confirmar acción
-    document.getElementById('confirm-refund-btn').addEventListener('click', async () => {
-        const id = document.getElementById('refund-id').value;
-        const type = document.getElementById('refund-type').value;
-        const action = document.getElementById('refund-action').value;
+    document.getElementById('confirm-refund-btn').addEventListener('click', async function() {
+        var id = document.getElementById('refund-id').value;
+        var type = document.getElementById('refund-type').value;
+        var action = document.getElementById('refund-action').value;
+        var admin_receipt = null;
+        var rejection_reason = null;
 
-        // Si es approve, leemos el archivo y lo mandamos como base64
-        let admin_receipt = null;
         try {
-            const uploadWrap = document.getElementById('refund-receipt-upload');
-            const fileInput = document.getElementById('refund-admin-receipt');
-            if (action === 'approve' && uploadWrap && !uploadWrap.classList.contains('hidden') && fileInput && fileInput.files && fileInput.files[0]) {
-                const file = fileInput.files[0];
-                admin_receipt = await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
+            var fileInput = document.getElementById('refund-admin-receipt');
+            if (action === 'approve' && fileInput && fileInput.files && fileInput.files[0]) {
+                var file = fileInput.files[0];
+                admin_receipt = await new Promise(function(resolve, reject) {
+                    var reader = new FileReader();
+                    reader.onload = function() { resolve(reader.result); };
                     reader.onerror = reject;
                     reader.readAsDataURL(file);
                 });
             }
-        } catch (e) {
-            admin_receipt = null;
-        }
+        } catch (e) { admin_receipt = null; }
 
         try {
-            const response = await fetch('/backend/api/refund-process.php', {
+            var rejectionInput = document.getElementById('refund-rejection-reason');
+            if (action === 'reject' && rejectionInput) {
+                rejection_reason = rejectionInput.value.trim() || null;
+            }
+        } catch (e) { rejection_reason = null; }
+
+        try {
+            var response = await fetch('/backend/api/refund-process.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ id, type, action, admin_receipt })
+                body: JSON.stringify({ id: id, type: type, action: action, admin_receipt: admin_receipt, rejection_reason: rejection_reason })
             });
-
-            const result = await response.json();
-
+            var result = await response.json();
             if (result.success) {
                 showToast(result.message);
                 closeRefundModal();
@@ -332,14 +275,12 @@
         }
     });
 
-    // Cerrar modal al hacer click fuera
-    document.getElementById('refund-modal').addEventListener('click', (e) => {
+    document.getElementById('refund-modal').addEventListener('click', function(e) {
         if (e.target === document.getElementById('refund-modal')) {
             closeRefundModal();
         }
     });
 
-    // Inicializar
     loadRefunds();
     </script>
 </body>

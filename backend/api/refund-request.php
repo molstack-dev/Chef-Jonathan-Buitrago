@@ -35,7 +35,7 @@ $type = trim((string)$data['type']);
 $id = (int)$data['id'];
 $userId = (int)$_SESSION['user_id'];
 
-if (!in_array($type, ['registration', 'advisory'], true)) {
+if (!in_array($type, ['registration', 'advisory_course', 'advisory_asesoria', 'advisory_evento'], true)) {
     respond(400, ['success' => false, 'message' => 'Tipo inválido']);
 }
 
@@ -56,6 +56,7 @@ try {
 
         if (!$rec) {
             $pdo->rollBack();
+            error_log('[refund-request] not-found registration: id=' . $id . ' userId=' . $userId);
             respond(404, ['success' => false, 'message' => 'Inscripción no encontrada']);
         }
 
@@ -72,40 +73,63 @@ try {
         $daysSince = (time() - strtotime($rec['registration_date'])) / 86400;
         if ($daysSince > 7) {
             $pdo->rollBack();
+            error_log('[refund-request] expired registration refund: id=' . $id . ' daysSince=' . $daysSince);
             respond(400, ['success' => false, 'message' => 'El período de 7 días para reembolso ha expirado']);
         }
 
         $serviceTitle = $rec['title'] ?? 'Curso';
         $amount = $rec['course_price'] ?? null;
 
-    } else {
-        // advisory
+    } elseif (in_array($type, ['advisory_course', 'advisory_asesoria', 'advisory_evento'], true)) {
+        // Extraer service_type del tipo
+        $serviceTypeMap = [
+            'advisory_course' => 'curso',
+            'advisory_asesoria' => 'asesoria',
+            'advisory_evento' => 'evento'
+        ];
+        $serviceType = $serviceTypeMap[$type];
+
+        // advisory (curso, asesoría, evento)
         $stmt = $pdo->prepare(
-            "SELECT a.id, a.user_id, a.created_at, a.status, a.payment_status, a.service_type, a.advisory_service, a.price
+            "SELECT a.id, a.user_id, a.created_at, a.status, a.payment_status, a.service_type, a.advisory_service, a.event_name, a.price
              FROM advisories a
-             WHERE a.id = ? AND a.user_id = ? AND a.service_type = 'curso'
+             WHERE a.id = ? AND a.user_id = ? AND a.service_type = ?
              LIMIT 1 FOR UPDATE"
         );
-        $stmt->execute([$id, $userId]);
+        $stmt->execute([$id, $userId, $serviceType]);
         $rec = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$rec) {
             $pdo->rollBack();
-            respond(404, ['success' => false, 'message' => 'Asesoría no encontrada']);
+            error_log('[refund-request] not-found advisory: type=' . $type . ' serviceType=' . $serviceType . ' id=' . $id . ' userId=' . $userId);
+            respond(404, ['success' => false, 'message' => ucfirst($serviceType) . ' no encontrada']);
+        }
+
+        if (!in_array($rec['status'], ['confirmed', 'completed'], true)) {
+            $pdo->rollBack();
+            error_log('[refund-request] advisory bad status: type=' . $type . ' id=' . $id . ' userId=' . $userId . ' status=' . (string)$rec['status']);
+            respond(400, ['success' => false, 'message' => 'No se puede solicitar reembolso para este estado']);
         }
 
         if ($rec['payment_status'] === 'refund_requested' || $rec['payment_status'] === 'refunded') {
             $pdo->rollBack();
+            error_log('[refund-request] advisory refund in progress: type=' . $type . ' id=' . $id . ' userId=' . $userId . ' payment_status=' . (string)$rec['payment_status']);
             respond(400, ['success' => false, 'message' => 'Ya existe una solicitud de reembolso en curso']);
         }
 
         $daysSince = (time() - strtotime($rec['created_at'])) / 86400;
         if ($daysSince > 7) {
             $pdo->rollBack();
+            error_log('[refund-request] expired advisory refund: type=' . $type . ' serviceType=' . $serviceType . ' id=' . $id . ' userId=' . $userId . ' daysSince=' . $daysSince);
             respond(400, ['success' => false, 'message' => 'El período de 7 días para reembolso ha expirado']);
         }
 
-        $serviceTitle = $rec['advisory_service'] ? str_replace('_', ' ', $rec['advisory_service']) : 'Curso';
+        // Usar event_name para eventos, advisory_service para otros
+        if ($serviceType === 'evento') {
+            $serviceTitle = $rec['event_name'] ? str_replace('_', ' ', $rec['event_name']) : 'Evento';
+        } else {
+            $serviceTitle = $rec['advisory_service'] ? str_replace('_', ' ', $rec['advisory_service']) : ucfirst($serviceType);
+        }
         $amount = $rec['price'] ?? null;
     }
 
@@ -134,7 +158,14 @@ try {
     if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();
     }
-    error_log('Error en refund-request.php: ' . $e->getMessage());
-    respond(500, ['success' => false, 'message' => 'No se pudo solicitar el reembolso']);
+    error_log('[refund-request] Exception: ' . $e->getMessage() . ' | type=' . ($type ?? 'null') . ' id=' . ($id ?? 'null') . ' userId=' . ($userId ?? 'null'));
+    respond(500, [
+        'success' => false,
+        'message' => 'No se pudo solicitar el reembolso',
+        'debug' => $e->getMessage(),
+        'type' => $type ?? null,
+        'id' => $id ?? null,
+        'rawData' => $data ?? null
+    ]);
 }
 

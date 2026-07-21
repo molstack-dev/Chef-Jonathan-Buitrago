@@ -34,10 +34,16 @@
     }, 3000);
   }
 
-  async function loadMyHistory() {
-    // Nota: este historial NO debe mezclar refunds procesados en una sola fila,
-    // pero mantenemos el flujo actual. Corregimos el botón del comprobante para usar refundsData cuando esté aprobado.
+  function getServiceTypeLabelFromType(type) {
+    const t = (type || '').toString();
+    if (t === 'advisory_evento') return 'Evento';
+    if (t === 'advisory_asesoria') return 'Asesoría';
+    if (t === 'advisory_course') return 'Curso';
+    if (t === 'registration') return 'Curso';
+    return null;
+  }
 
+  async function loadMyHistory() {
     const tbody = document.getElementById('history-tbody');
     if (!tbody) return;
 
@@ -63,66 +69,30 @@
       const historyData = (historyResult && historyResult.success && Array.isArray(historyResult.data)) ? historyResult.data : [];
       const refundsData = (refundsResult && refundsResult.success && Array.isArray(refundsResult.data)) ? refundsResult.data : [];
 
-      // Creamos un mapa de reembolsos aprobados para asociarlos con los registros del historial
-      const approvedRefundsMap = new Map();
-      
-      refundsData.forEach(r => {
-        if (r.refund_status === 'approved') {
-          // Creamos una clave para identificar el registro original
-          // Usamos solo el tipo, título del servicio y precio para la coincidencia
-          // ya que las fechas pueden variar entre las tablas
-          const rType = (r.type || '').toString();
-          const rService = (r.service_title || r.service_name || '').toString();
-          const rPrice = (r.price ?? '').toString();
-          const refundKey = `${rType}:${rService}:${rPrice}`;
-          
-          approvedRefundsMap.set(refundKey, r);
-        }
-      });
-
-      // Construir un historial unificado (refunds pendientes)
+      // Construir un historial unificado
       const unified = [];
+      
+      // Primero agregar los datos del historial base (advisories + registrations sin refund)
       historyData.forEach(item => {
-        // Creamos clave para el elemento actual
-        const hType = (item.source || item.type || '').toString();
-        const hService = (item.course_title || item.service_title || item.service_name || '').toString();
-        const hPrice = (item.price ?? '').toString();
-        const itemKey = `${hType}:${hService}:${hPrice}`;
-        
-        // Verificamos si hay un reembolso aprobado para este elemento
-        const approvedRefund = approvedRefundsMap.get(itemKey);
-        
-        if (approvedRefund) {
-          // Actualizamos el estado del elemento original para reflejar el reembolso aprobado
-          item.status = 'refund_approved';
-          item.payment_status = approvedRefund.refund_status;
-          item.admin_receipt = approvedRefund.admin_receipt;
-          item.refund_admin_receipt = approvedRefund.admin_receipt;
-        }
-        
         unified.push(item);
       });
 
-      // Agregar también los reembolsos aprobados como entradas separadas
-      // para que se muestren en el historial
+      // Agregar reembolsos aprobados como entradas separadas
+      // y reembolsos pendientes
       refundsData.forEach(r => {
         if (r.refund_status === 'approved') {
-          // Verificar si ya existe en el historial para evitar duplicados
-          const hType = (r.type || '').toString();
-          const hService = (r.service_title || r.service_name || '').toString();
-          const hPrice = (r.price ?? '').toString();
-          const itemKey = `${hType}:${hService}:${hPrice}`;
-          
           const existsInHistory = historyData.some(h => {
-            const hType = (h.source || h.type || '').toString();
-            const hService = (h.course_title || h.service_title || h.service_name || '').toString();
-            const hPrice = (h.price ?? '').toString();
-            const hItemKey = `${hType}:${hService}:${hPrice}`;
-            return hItemKey === itemKey;
+            const hId = h.id;
+            const hSource = h.source || '';
+            const rType = r.type || '';
+            // Coincidir por id y relación source/type
+            if (hSource === 'registration' && rType === 'registration') {
+              return String(h.id) === String(r.refundable_id);
+            }
+            return false;
           });
           
           if (!existsInHistory) {
-            // Agregar el reembolso aprobado como entrada separada
             unified.push({
               id: r.id,
               source: r.type,
@@ -137,17 +107,8 @@
               refund_admin_receipt: r.admin_receipt
             });
           }
-        }
-      });
-
-      // Procesar reembolsos pendientes
-      refundsData.forEach(r => {
-        if (r.refund_status !== 'approved') { // Solo procesamos reembolsos pendientes aquí
-          // En lugar de usar la lógica de deduplicación estricta, vamos a permitir 
-          // que los reembolsos pendientes se muestren como entradas separadas
-          // Solo evitamos duplicados exactos de reembolsos pendientes
-          
-          // Verificar si este reembolso pendiente ya está en la lista unified
+        } else {
+          // Reembolsos pendientes
           const existingRefundIndex = unified.findIndex(u => 
             u.source === r.type && 
             u.id === r.id && 
@@ -156,19 +117,16 @@
           
           if (existingRefundIndex === -1) {
             unified.push({
-                  // compatibilidad con tu render existente:
               id: r.id,
               source: r.type,
               type: r.type,
               status: 'refund_requested',
-              payment_status: r.refund_status, // pending/approved
+              payment_status: r.refund_status,
               created_at: r.created_at,
               service_title: r.service_title,
               service_name: r.service_name,
               price: r.price,
-              // Asegurar que el campo admin_receipt llegue al renderer
               admin_receipt: r.admin_receipt,
-              // y también mapearlo a una clave alternativa por compatibilidad
               refund_admin_receipt: r.admin_receipt
             });
           }
@@ -224,24 +182,29 @@
                     ? 'Pendiente'
                     : 'Cancelado';
 
-
           // Determine type and name
           let serviceTypeLabel = 'N/A';
           let serviceName = 'N/A';
           const source = item.source || 'advisory';
 
-          // Ajuste: si viene desde tabla refunds, el source puede no ser 'registration/advisory'
-          // Usamos service_title/service_name como fallback.
-          if (source === 'registration') {
+          // Para items de refunds (source = type como 'advisory_evento', 'advisory_asesoria', 'registration')
+          const refundType = (item.type || '').toString();
+          
+          if (source === 'registration' || refundType === 'registration') {
             serviceTypeLabel = 'Curso';
             serviceName = item.course_title || item.service_title || item.service_name || 'Curso';
           } else {
+            // Inferir tipo desde service_type o desde type
+            if (item.service_type === 'evento' || refundType === 'advisory_evento') {
+              serviceTypeLabel = 'Evento';
+            } else if (item.service_type === 'asesoria' || refundType === 'advisory_asesoria') {
+              serviceTypeLabel = 'Asesoría';
+            } else if (item.service_type === 'curso' || refundType === 'advisory_course') {
+              serviceTypeLabel = 'Curso';
+            }
 
-            if (item.service_type === 'asesoria') serviceTypeLabel = 'Asesoría';
-            else if (item.service_type === 'curso') serviceTypeLabel = 'Curso';
-            else if (item.service_type === 'evento') serviceTypeLabel = 'Evento';
-
-            serviceName = item.advisory_service || item.event_name || 'N/A';
+            // Priorizar nombre del servicio
+            serviceName = item.advisory_service || item.event_name || item.service_title || item.service_name || 'N/A';
             serviceName = String(serviceName).replace(/_/g, ' ');
           }
 
@@ -249,97 +212,96 @@
           const dateStr = item.created_at ? new Date(item.created_at).toLocaleDateString('es-ES') : 'N/A';
 
           // Can refund?
-          let canRefund = false;
           let refundBtn = '';
 
-          // Si es un reembolso directo (de la tabla refunds), mostrar botón correspondiente
+          // Si es un reembolso pendiente directo (de la tabla refunds)
           if (item.status === 'refund_requested') {
-            // Mostrar botón de estado de reembolso pendiente
-            const isPending = true;
-            const btnState = 'cancel'; // Permitir cancelar solicitud de reembolso
-            const refundApproved = false; // No aprobado aún
             const btnText = 'Cancelar Reembolso';
             const btnClass = 'bg-gray-700 hover:bg-gray-600';
+            const btnState = 'cancel';
+
+            // Determinar el tipo correcto para el refund
+            let refundType = item.type || source;
+            // Si source es 'advisory' y tenemos service_type, usarlo
+            if (source === 'advisory' && item.service_type) {
+              if (item.service_type === 'asesoria') {
+                refundType = 'advisory_asesoria';
+              } else if (item.service_type === 'evento') {
+                refundType = 'advisory_evento';
+              } else if (item.service_type === 'curso') {
+                refundType = 'advisory_course';
+              }
+            }
 
             refundBtn =
-              '<button type="button" class="refund-toggle-btn px-3 py-1 text-white rounded text-xs transition-colors ' + btnClass + ' " ' +
-              'data-refund-id="' + item.id + '" data-refund-type="' + (item.type || source) + '" data-state="' + btnState + '" onclick="window.handleRefundToggle(this)">' +
+              '<button type="button" class="refund-toggle-btn px-3 py-1 text-white rounded text-xs transition-colors ' + btnClass + '" ' +
+              'data-refund-id="' + item.id + '" data-refund-type="' + refundType + '" data-state="' + btnState + '" onclick="window.handleRefundToggle(this)">' +
               btnText + '</button>';
-              
-            canRefund = true; // Indicar que ya hay un reembolso pendiente
-          } else if (source === 'registration' || item.service_type === 'curso') {
+          }
+          
+          // Si no se generó botón, verificar si se puede solicitar reembolso
+          if (!refundBtn) {
             const createdAt = new Date(item.created_at);
             const daysSince = (Date.now() - createdAt.getTime()) / (1000 * 60 * 60 * 24);
-            if (daysSince <= 7 && item.status !== 'cancelled' && item.payment_status !== 'refund_requested') {
-              canRefund = true;
-            }
-          }
-          
-          // Detectar reembolso pendiente para permitir cancelación
-          // Algunos flows usan `payment_status='pending'` (refunds tabla) y otros `refund_requested`.
-          const refundPending = item.payment_status === 'refund_requested' || item.payment_status === 'pending';
-
-          
-          if (source === 'registration' || item.service_type === 'curso') {
-            // Si ya hay reembolso pending, mostramos botón de cancelar solicitud
-            if (refundPending && item.status !== 'cancelled' && !canRefund) { // Evitar duplicados
-              canRefund = true;
-            }
-          }
-
-
-          if (canRefund && !refundBtn) { // Solo si no es un reembolso directo
-            // Si el admin aprobó, el refund comprobante vive en refundsData solo para refund_status='approved'.
-            // En el historial base (my-history-get) ese item suele venir sin admin_receipt.
-            // Para evitar depender de merge/deduplicación, cuando está aprobado intentamos leer admin_receipt
-            // y si no existe mostramos el modal con el fallback en el mismo objeto.
-
-            // refundPending se basa en payment_status === 'refund_requested'
-            const isPending = refundPending;
-
-            const btnState = isPending ? 'cancel' : 'active';
-            const refundApproved = (item.status === 'refund_approved' || item.payment_status === 'refunded' || item.refund_status === 'approved' || (item.refund_status && item.refund_status.includes('approved')));
-            const btnText = refundApproved ? 'Comprobante Reembolso' : (isPending ? 'Cancelar Reembolso' : 'Solicitar Reembolso');
-
-
-            // Si está aprobado: mostrar botón verde y abrir comprobante como en agendar.html
-            const btnClass = refundApproved
-              ? 'bg-green-600 hover:bg-green-700'
-              : (isPending ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-600 hover:bg-red-700');
-
-            if (refundApproved) {
-              // Botón verde: abrir modal de comprobante como en agendar.html
-              // Nota: en tu merge el campo `admin_receipt` existe en algunos casos.
-              // En otros casos el valor parece venir en `item.admin_receipt` pero se ignora por el render previo.
-              const receipt = item.admin_receipt || item.refund_admin_receipt || item.admin_receipt_base64 || item.adminReceipt || null;
-
-              // Construir src para <img> (soporta: data:image/...;base64, o base64 "pelado").
-              let receiptSrc = receipt;
-              if (receiptSrc && typeof receiptSrc === 'string') {
-                receiptSrc = receiptSrc.trim();
-                if (receiptSrc && !receiptSrc.startsWith('data:')) {
-                  receiptSrc = 'data:image/jpeg;base64,' + receiptSrc;
+            
+            const statusOk = source === 'registration' 
+              ? (item.status === 'confirmed' || item.status === 'completed')
+              : (item.status === 'confirmed' || item.status === 'completed' || (item.status === 'pending' && item.price > 0));
+            
+            const isRefundable = (source === 'registration' || item.service_type === 'curso' || item.service_type === 'asesoria' || item.service_type === 'evento') &&
+                                daysSince <= 7 && 
+                                statusOk &&
+                                item.payment_status !== 'refund_requested' &&
+                                item.payment_status !== 'refunded';
+            
+            const refundPending = item.payment_status === 'refund_requested' || item.payment_status === 'pending';
+            
+            if (isRefundable || refundPending) {
+              const isPending = refundPending;
+              const btnState = isPending ? 'cancel' : 'active';
+              const refundApproved = (item.status === 'refund_approved' || item.payment_status === 'refunded' || item.refund_status === 'approved');
+              
+              if (refundApproved) {
+                const receipt = item.admin_receipt || item.refund_admin_receipt || item.admin_receipt_base64 || null;
+                let receiptSrc = receipt;
+                if (receiptSrc && typeof receiptSrc === 'string') {
+                  receiptSrc = receiptSrc.trim();
+                  if (receiptSrc && !receiptSrc.startsWith('data:')) {
+                    receiptSrc = 'data:image/jpeg;base64,' + receiptSrc;
+                  }
                 }
+                
+                refundBtn =
+                  '<button type="button" class="refund-receipt-btn px-3 py-1 text-white rounded text-xs transition-colors bg-green-600 hover:bg-green-700" ' +
+                  'data-receipt="' + (receiptSrc ? String(receiptSrc).replace(/"/g, '"') : '') + '" ' +
+                  'onclick="window.handleRefundReceiptClick(this)"' +
+                  '>Comprobante Reembolso</button>';
+              } else {
+                const btnText = isPending ? 'Cancelar Reembolso' : 'Solicitar Reembolso';
+                const btnClass = isPending ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-600 hover:bg-red-700';
+
+                let refundType = null;
+                if (source === 'registration') {
+                  refundType = 'registration';
+                } else {
+                  const st = (item.service_type || '').toString();
+                  if (st === 'evento') refundType = 'advisory_evento';
+                  else if (st === 'asesoria') refundType = 'advisory_asesoria';
+                  else if (st === 'curso' || st === 'advisory_course') refundType = 'advisory_course';
+                  else {
+                    const serviceLower = (serviceName || '').toString().toLowerCase();
+                    if (serviceLower.includes('evento')) refundType = 'advisory_evento';
+                    else refundType = 'advisory_asesoria';
+                  }
+                }
+
+                refundBtn =
+                  '<button type="button" class="refund-toggle-btn px-3 py-1 text-white rounded text-xs transition-colors ' + btnClass + '" ' +
+                  'data-refund-id="' + item.id + '" data-refund-type="' + refundType + '" data-state="' + btnState + '" onclick="window.handleRefundToggle(this)">' +
+                  btnText + '</button>';
               }
-
-              refundBtn =
-                '<button type="button" class="refund-receipt-btn px-3 py-1 text-white rounded text-xs transition-colors ' + btnClass + '" ' +
-                'data-receipt="' + (receiptSrc ? String(receiptSrc).replace(/"/g, '"') : '') + '" ' +
-                'onclick="window.handleRefundReceiptClick(this)"' +
-                '>Comprobante Reembolso</button>';
-
-
-            } else {
-              refundBtn =
-                '<button type="button" class="refund-toggle-btn px-3 py-1 text-white rounded text-xs transition-colors ' + btnClass + ' " ' +
-                'data-refund-id="' + item.id + '" data-refund-type="' + (source === 'registration' ? 'registration' : 'advisory') + '" data-state="' + btnState + '" onclick="window.handleRefundToggle(this)">' +
-                btnText + '</button>';
             }
-
           }
-
-
-
 
           const row = document.createElement('tr');
           row.className = 'border-b border-gray-700';
@@ -355,7 +317,6 @@
             'data-id="' + item.id + '" data-source="' + source + '">Ver más</button>' +
             '</div></td>';
 
-
           tbody.appendChild(row);
         });
 
@@ -363,7 +324,7 @@
         tbody.querySelectorAll('.ver-detalles-historial-btn').forEach(function (btn) {
           btn.addEventListener('click', function () {
             const id = this.getAttribute('data-id');
-            const item = allHistoryData.find(h => String(h.id) === String(id)); // Buscar en todos los datos, no solo en la página actual
+            const item = allHistoryData.find(h => String(h.id) === String(id));
             if (!item) return;
 
             const details = [];
@@ -410,18 +371,15 @@
     
     if (!pageInfo || !pageNumbers || !prevButton || !nextButton) return;
     
-    // Actualizar información de paginación
     if (totalPages > 0) {
       pageInfo.textContent = `Mostrando ${((currentPage - 1) * recordsPerPage) + 1}-${Math.min(currentPage * recordsPerPage, allHistoryData.length)} de ${allHistoryData.length} registros`;
     } else {
       pageInfo.textContent = 'No hay registros para mostrar';
     }
     
-    // Actualizar botones de navegación
     prevButton.disabled = currentPage <= 1;
     nextButton.disabled = currentPage >= totalPages || totalPages === 0;
     
-    // Generar números de página
     let pageLinks = '';
     const startPage = Math.max(1, currentPage - 2);
     const endPage = Math.min(totalPages, currentPage + 2);
@@ -437,13 +395,11 @@
     pageNumbers.innerHTML = pageLinks;
   }
   
-  // Función para cambiar de página
   function changePage(page) {
     currentPage = page;
     loadMyHistory();
   }
   
-  // Función para ir a la página siguiente
   function nextPage() {
     const totalPages = Math.ceil(allHistoryData.length / recordsPerPage);
     if (currentPage < totalPages) {
@@ -451,16 +407,13 @@
     }
   }
   
-  // Función para ir a la página anterior
   function prevPage() {
     if (currentPage > 1) {
       changePage(currentPage - 1);
     }
   }
   
-  // Inicializar los controles de paginación cuando se cargue el DOM
   document.addEventListener('DOMContentLoaded', function () {
-    // Agregar event listeners a los botones de paginación
     const prevButton = document.getElementById('history-prev-page');
     const nextButton = document.getElementById('history-next-page');
     
@@ -476,7 +429,6 @@
       });
     }
     
-    // Cargar el historial (primera página)
     loadMyHistory();
   });
 
@@ -491,7 +443,6 @@
 
     if (!modal || !msg || !confirmBtn || !cancelBtn || !hiddenId || !hiddenType) return;
 
-    // Asegurar que el botón de descarga esté oculto en este modal
     if (downloadBtn) {
       downloadBtn.classList.add('hidden');
       downloadBtn.disabled = true;
@@ -501,11 +452,17 @@
     hiddenType.value = refundType;
 
     const isCancel = mode === 'cancel';
+    
+    // Mensaje contextual según tipo
+    let tipoTexto = 'este servicio';
+    if (refundType === 'registration' || refundType === 'advisory_course') tipoTexto = 'este curso';
+    else if (refundType === 'advisory_asesoria') tipoTexto = 'esta asesoría';
+    else if (refundType === 'advisory_evento') tipoTexto = 'este evento';
+    
     msg.textContent = isCancel
-      ? '¿Seguro que deseas cancelar la solicitud de reembolso para este curso?'
-      : '¿Seguro que deseas solicitar un reembolso para este curso?';
+      ? '¿Seguro que deseas cancelar la solicitud de reembolso para ' + tipoTexto + '?'
+      : '¿Seguro que deseas solicitar un reembolso para ' + tipoTexto + '?';
 
-    // IMPORTANTE: actualizar el texto del botón de confirmar para que cambie la interfaz
     confirmBtn.textContent = isCancel ? 'Confirmar Cancelación' : 'Confirmar';
 
     const doClose = () => modal.classList.add('hidden');
@@ -528,12 +485,11 @@
 
   window.openRefundConfirmModal = openRefundConfirmModal;
 
-  // Modal comprobante (para reembolsos aprobados)
+  // Modal comprobante
   window.handleRefundReceiptClick = function(btn) {
     try {
       let receipt = btn.getAttribute('data-receipt');
       if (!receipt) {
-        // fallback: puede venir en algún atributo alterno
         receipt = btn.getAttribute('data-refund-receipt') || null;
       }
       if (!receipt) {
@@ -541,7 +497,6 @@
         return;
       }
 
-      // Normalizar el src del comprobante
       let normalizedReceipt = receipt;
       if (normalizedReceipt && typeof normalizedReceipt === 'string') {
         normalizedReceipt = normalizedReceipt.trim();
@@ -564,17 +519,14 @@
 
       if (titleEl) titleEl.textContent = 'Comprobante de Reembolso';
 
-      // Guardar el src del comprobante para la descarga
       window.__inscription_receipt_src = normalizedReceipt;
 
-      // Mostrar botón de descarga y habilitarlo
       if (downloadBtn) {
         downloadBtn.style.display = '';
         downloadBtn.classList.remove('hidden');
         downloadBtn.disabled = false;
       }
 
-      // Contenedor mediano como en agendar.html
       contentDiv.innerHTML =
         '<div class="flex justify-center w-full pt-0 pb-1">' +
         '<img id="inscription-receipt-img" src="' + normalizedReceipt + '" alt="Comprobante" class="max-h-[45vh] w-auto max-w-[420px] object-contain rounded" />' +
@@ -582,27 +534,36 @@
 
       modal.classList.remove('hidden');
     } catch (e) {
-      // no romper
       showToast('Error al mostrar el comprobante.', 'error');
     }
   };
 
-  window.handleRefundToggle = async function (btn) {
+  window.handleRefundToggle = function (btn) {
     const id = btn.getAttribute('data-refund-id');
     const type = btn.getAttribute('data-refund-type');
     const state = btn.getAttribute('data-state') || 'active';
 
-    if (state === 'active') {
-      // Solicitar => confirmar modal de solicitud
-      await openRefundConfirmModal(id, type);
-      return;
+    if (type === 'advisory_asesoria') {
+      if (state === 'active') {
+        window.openRefundConfirmModal(id, type, 'request');
+      } else {
+        window.openRefundConfirmModal(id, type, 'cancel');
+      }
+    } else if (type === 'advisory_evento') {
+      if (state === 'active') {
+        window.openRefundConfirmModal(id, type, 'request');
+      } else {
+        window.openRefundConfirmModal(id, type, 'cancel');
+      }
+    } else {
+      if (state === 'active') {
+        window.openRefundConfirmModal(id, type);
+      } else {
+        window.openRefundConfirmModal(id, type, 'cancel');
+      }
     }
-
-    // Cancelar => confirmar con modal (modal de cancelación)
-    await openRefundConfirmModal(id, type, 'cancel');
   };
 
-  // Función para descargar comprobante
   window.downloadInscriptionReceipt = function () {
     try {
       const src = window.__inscription_receipt_src;
@@ -624,12 +585,10 @@
     }
   };
 
-  // Función para cerrar el modal de detalles
   window.closeDetallesModal = function() {
     document.getElementById('detalles-solicitud-modal')?.classList.add('hidden');
   };
 
-  // Función para cerrar el modal de comprobante
   window.closeComprobanteModal = function() {
     document.getElementById('comprobante-reembolso-modal')?.classList.add('hidden');
   };

@@ -17,31 +17,72 @@ Plataforma web de ventas online para cursos y asesorías de pastelería.
 ---
 
 ## Requisitos
-1. **XAMPP** con:
-   - Apache
-   - MySQL
-2. Navegador.
+1. **PHP 8.x**
+2. **MySQL o MariaDB**
+3. **Servidor web** (Apache/XAMPP o el servidor integrado de PHP)
+4. Navegador.
+
+### Extensiones PHP necesarias
+Asegúrate de que estén instaladas y cargadas:
+- `pdo`
+- `pdo_mysql`
+- `mysqli`
+- `mysqlnd`
+
+### Fedora / Linux
+Si estás en Fedora o un sistema similar, instala lo siguiente:
+```bash
+sudo dnf install -y php php-cli php-pdo php-mysqlnd mariadb-server
+```
+
+Si quieres usar Apache además:
+```bash
+sudo dnf install -y httpd
+sudo systemctl enable --now httpd mariadb
+```
+
+Comprueba que todo esté listo:
+```bash
+php -v
+php -m | grep -Ei 'pdo|mysql|mysqli'
+php /opt/lampp/htdocs/Chef-Jonathan-Buitrago/check_requirements.php
+```
+Si no ves `PDO`, `pdo_mysql` o `mysqlnd`, vuelve a instalar los paquetes anteriores.
+
+### XAMPP (Linux/Windows)
+Si usas XAMPP, comprueba que la versión de PHP de XAMPP tenga PDO/MySQL habilitado:
+```bash
+/opt/lampp/bin/php -m | grep -Ei 'pdo|mysql|mysqli'
+```
+Si no aparece nada, instala o reinstala los módulos de XAMPP o usa la versión de PHP del sistema con los paquetes de Fedora indicados arriba.
 
 ---
 
 ## Instalación / Inicialización (local)
-### 1) Inicia servicios
-- Abre `C:\xampp\xampp-control.exe`
-- Click **Start** en:
-  - **Apache**
-  - **MySQL**
+### Opción 1: XAMPP (Windows o Linux)
+- Inicia Apache y MySQL desde XAMPP.
+- Abre:
+  - `http://localhost/Chef-Jonathan-Buitrago/backend/init_db.php`
+  - `http://localhost/Chef-Jonathan-Buitrago/backend/seed.php`
+- Luego entra en:
+  - `http://localhost/Chef-Jonathan-Buitrago/`
 
-### 2) Inicializa la base de datos
+### Opción 2: PHP integrado (Linux/Fedora)
+Desde la carpeta del proyecto:
+```bash
+php -S 0.0.0.0:8000
+```
+Y luego abre:
+- `http://localhost:8000/`
+
+### Paso 2: Inicializa la base de datos
 Abre:
 - `http://localhost/Chef-Jonathan-Buitrago/backend/init_db.php`
 
-Deberías ver un mensaje ✓ de inicialización.
+Deberías ver un mensaje ✓ de inicialización. Ese script ya crea tablas, usuarios y datos iniciales.
 
-### 3) Inserta datos de prueba
-- `http://localhost/Chef-Jonathan-Buitrago/backend/seed.php`
-
-### 4) Abre la app
-- `http://localhost/Chef-Jonathan-Buitrago/`
+### Paso 3: Abre la app
+- `http://localhost/Chef-Jonathan-Buitrago/` o `http://localhost:8000/`
 
 ---
 

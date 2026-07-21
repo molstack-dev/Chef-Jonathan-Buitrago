@@ -233,6 +233,12 @@ if ($method === 'PUT') {
         $receipt = trim($data['payment_receipt']);
         if (!empty($receipt)) {
             try {
+                try {
+                    $pdo->exec('ALTER TABLE registrations MODIFY COLUMN payment_receipt LONGTEXT');
+                } catch (Exception $e) {
+                    // Ignorar si ya está adaptado o si la tabla aún no existe.
+                }
+
                 $stmt = $pdo->prepare('UPDATE registrations SET payment_receipt = ?, payment_status = ? WHERE id = ?');
                 $stmt->execute([$receipt, 'paid', $id]);
                 echo json_encode(['success'=>true, 'message'=>'Comprobante recibido, en espera de verificación']);

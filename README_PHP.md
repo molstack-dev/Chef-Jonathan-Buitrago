@@ -1,156 +1,104 @@
 # Chef Jonathan Buitrago - Versión PHP (MySQL)
 
-## ✅ Cambios Realizados
+## ✅ Estado actual
+El proyecto ya está funcional en Linux/Fedora cuando PHP tiene instaladas las extensiones correctas de PDO/MySQL.
 
-### 1. **Base de Datos SQLite (Local)**
-- Uso de **MySQL** con XAMPP para desarrollo local.
-- El nombre de la base es: `chef_jonathan`.
-- Archivo de base de datos: `backend/chef_jonathan.sqlite3`
-- Totalmente portátil y funciona con PHP por defecto.
+## Requisitos de software
+### Opción recomendada: Fedora / Linux
+```bash
+sudo dnf install -y php php-cli php-pdo php-mysqlnd mariadb-server
+```
 
-### 2. **CRUD Completo Implementado**
+### Si vas a usar Apache
+```bash
+sudo dnf install -y httpd
+sudo systemctl enable --now httpd mariadb
+```
 
-#### **Usuarios (Admin, Trabajadores, Usuarios)**
-- `POST /backend/api/register.php` - Registro con password encriptado
-- `POST /backend/api/login.php` - Login con verificación segura
-- `GET /backend/api/users.php` - Listar todos los usuarios
+### Verificar que todo esté instalado
+```bash
+php -v
+php -m | grep -Ei 'pdo|mysql|mysqli'
+php /opt/lampp/htdocs/Chef-Jonathan-Buitrago/check_requirements.php
+```
 
-#### **Clientes**
-- `GET /backend/api/clients.php` - Listar clientes
-- `POST /backend/api/clients.php` - Crear cliente
-- `PUT /backend/api/clients.php` - Actualizar cliente
-- `DELETE /backend/api/clients.php` - Eliminar cliente
+Debes ver algo como:
+- `PDO`
+- `pdo_mysql`
+- `mysqli`
+- `mysqlnd`
 
-#### **Vendedores/Trabajadores**
-- `GET /backend/api/sellers.php` - Listar vendedores
-- `POST /backend/api/sellers.php` - Crear vendedor
-- `PUT /backend/api/sellers.php` - Actualizar vendedor
-- `DELETE /backend/api/sellers.php` - Eliminar vendedor
+Si no aparecen, el backend no podrá conectar con MySQL y devolverá errores 500 o JSON inválido.
 
-#### **Cursos**
-- `GET /backend/api/courses.php` - Listar cursos
-- `POST /backend/api/courses.php` - Crear curso
-
-### 3. **Seguridad**
-✅ Passwords encriptados con `password_hash()`
-✅ Verificación con `password_verify()`
-✅ Validación de emails y datos
-✅ Manejo de errores PDO
-
-### 4. **Datos Iniciales**
-- **Admin**: `admin@chefjonathan.com` / `admin123`
-- **Usuario Test**: `edwinalex8712@gmail.com` / `12345`
-- **Tres cursos de ejemplo**
+### XAMPP (si lo usas)
+```bash
+/opt/lampp/bin/php -m | grep -Ei 'pdo|mysql|mysqli'
+```
 
 ---
 
-## 🚀 Cómo Usar
-
-### 1. **Iniciar el Servidor**
+## 🚀 Cómo arrancar el proyecto
+### Opción 1: Servidor integrado de PHP
 ```bash
-cd /workspaces/Chef-Jonathan-Buitrago
+cd /opt/lampp/htdocs/Chef-Jonathan-Buitrago
 php -S 0.0.0.0:8000
 ```
-
-### 2. **Acceder a la Aplicación**
+Y luego abre:
+```text
+http://localhost:8000/
 ```
-http://localhost:8000
-```
 
-### 3. **Login de Prueba**
-- **Email**: `admin@chefjonathan.com`
-- **Contraseña**: `admin123`
+### Opción 2: XAMPP / Apache
+- Inicia Apache y MySQL desde XAMPP.
+- Abre la app en:
+```text
+http://localhost/Chef-Jonathan-Buitrago/
+```
 
 ---
 
-## 📋 Tablas de Base de Datos
+## 🗄️ Inicializar la base de datos
+1. Abre:
+```text
+http://localhost:8000/backend/init_db.php
+```
+2. Luego ejecuta:
+```text
+http://localhost:8000/backend/seed.php
+```
 
-### `users`
-- id, name, email, password, role (admin|seller|user), created_at
-
-### `clients`
-- id, name, email, phone, address, created_at
-
-### `sellers`
-- id, name, email, phone, commission_rate, created_at
-
-### `courses`
-- id, title, description, price, duration, category, created_at
-
-### `sales`
-- id, client_id, seller_id, course_id, amount, date
-
-### `commissions`
-- id, seller_id, sale_id, amount, date
-
-### `visits`
-- id, client_id, date, notes
-
-### `registrations`
-- id, client_id, course_id, status (pending|confirmed|completed), registration_date
+Si usas XAMPP, reemplaza `localhost:8000` por `localhost/Chef-Jonathan-Buitrago`.
 
 ---
 
-## 🔧 Endpoints de Ejemplo
+## 🔑 Credenciales de prueba
+- Admin: `admin@chefjonathan.com` / `admin123`
+- Usuario: `edwinalex8712@gmail.com` / `12345`
 
-### Registro de Usuario
+---
+
+## 🔧 Endpoints principales
+- `POST /backend/api/register.php`
+- `POST /backend/api/login.php`
+- `GET /backend/api/cursos-get.php`
+- `GET /backend/api/usuarios-get.php`
+- `GET /backend/api/inscripciones-get.php`
+
+---
+
+## 🛠️ Qué revisar si algo falla
+- Ejecuta:
 ```bash
-curl -X POST http://localhost:8000/backend/api/register.php \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Juan","email":"juan@test.com","password":"123456"}'
+php -m | grep -Ei 'pdo|mysql|mysqli'
 ```
-
-### Login
-```bash
-curl -X POST http://localhost:8000/backend/api/login.php \
-  -H "Content-Type: application/json" \
-  -d '{"email":"admin@chefjonathan.com","password":"admin123"}'
-```
-
-### Crear Cliente
-```bash
-curl -X POST http://localhost:8000/backend/api/clients.php \
-  -H "Content-Type: application/json" \
-  -d '{"name":"María López","email":"maria@email.com","phone":"3001234567"}'
-```
-
-### Listar Clientes
-```bash
-curl http://localhost:8000/backend/api/clients.php
-```
+- Verifica que la base de datos esté corriendo.
+- Revisa que `backend/config.php` pueda crear y usar la base `chef_jonathan`.
 
 ---
 
-## 📦 Archivos Clave
-
-```
-backend/
-├── config.php              # Configuración MySQL
-├── init_db.php             # Inicializar base de datos
-├── chef_jonathan.sqlite3   # Base de datos (auto-generada)
-└── api/
-    ├── register.php        # Registro de usuarios
-    ├── login.php           # Login
-    ├── users.php           # Gestión de usuarios
-    ├── clients.php         # CRUD de clientes
-    ├── sellers.php         # CRUD de vendedores
-    ├── courses.php         # CRUD de cursos
-    └── dashboard.php       # Dashboard por rol
-```
-
----
-
-## ✨ Estados de los Endpoints
-
-| Item | Estado |
-|------|--------|
-| Login Admin | ✅ Funcionando |
-| Registro | ✅ Funcionando |
-| CRUD Clientes | ✅ Funcionando |
-| CRUD Vendedores | ✅ Funcionando |
-| CRUD Cursos | ✅ Funcionando |
-| Seguridad | ✅ Activa |
-
----
-
-**Rama**: `php` | **Base de Datos**: MySQL | **Servidor**: PHP Built-in
+## 📌 Resumen rápido
+Si el proyecto no funciona en Linux/Fedora, lo primero que debes comprobar es:
+1. PHP instalado.
+2. Extensiones PDO/MySQL cargadas.
+3. MySQL/MariaDB corriendo.
+4. Scripts de inicialización ejecutados.

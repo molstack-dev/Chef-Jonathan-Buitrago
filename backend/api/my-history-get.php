@@ -18,12 +18,18 @@ try {
     $history = [];
 
     // Obtener asesorías del usuario
-    // Nota: si existe un flujo que crea advisories también para 'curso', eso duplica las filas del historial
-    // (porque las 'inscripciones' del curso ya aparecen desde registrations). Por eso filtramos advisories de tipo curso.
+    // Nota: Excluimos advisories que ya tienen un refund pendiente/aprobado para evitar duplicados en el historial.
     $stmt = $pdo->prepare("SELECT a.id, a.name, a.email, a.phone, a.service_type, a.advisory_type, a.advisory_service, a.advisory_mode, a.event_name, a.date, a.time, a.notes, a.status, a.price, a.num_persons, a.payment_status, a.payment_receipt, a.created_at, 'advisory' as source
         FROM advisories a
         WHERE a.user_id = ?
           AND (a.service_type IS NULL OR a.service_type <> 'curso')
+          AND NOT EXISTS (
+              SELECT 1 FROM refunds rf
+              WHERE rf.refundable_id = a.id
+                AND rf.type IN ('advisory_asesoria','advisory_evento','advisory_course')
+                AND rf.user_id = a.user_id
+                AND rf.refund_status IN ('pending','approved')
+          )
         ORDER BY a.created_at DESC");
     $stmt->execute([$userId]);
     $advisories = $stmt->fetchAll(PDO::FETCH_ASSOC);

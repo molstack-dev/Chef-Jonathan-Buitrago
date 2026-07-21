@@ -13,7 +13,7 @@ function getImageMimeType($imageData) {
 }
 
 try {
-    $stmt = $pdo->query("SELECT id, title, description, description_detail, price, duration, category, image, created_at FROM courses ORDER BY created_at DESC");
+    $stmt = $pdo->query("SELECT id, title, description, description_detail, price, duration, category, event_date, image, created_at FROM courses ORDER BY created_at DESC");
     $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Convertir imágenes base64 a data URLs (o dejar URL tal cual si existe)

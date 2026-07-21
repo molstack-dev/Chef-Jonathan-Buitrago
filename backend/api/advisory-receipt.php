@@ -43,6 +43,12 @@ try {
         exit;
     }
 
+    try {
+        $pdo->exec('ALTER TABLE advisories MODIFY COLUMN payment_receipt LONGTEXT');
+    } catch (Exception $e) {
+        // Ignorar si la tabla no existe o ya está en el formato correcto.
+    }
+
     $stmt = $pdo->prepare('UPDATE advisories SET payment_receipt = ?, payment_status = ? WHERE id = ?');
     $stmt->execute([$receipt, 'paid', $id]);
 

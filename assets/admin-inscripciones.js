@@ -143,7 +143,6 @@
                                 ${receiptBtn}
                                 <button type="button" class="approve-payment-btn px-2 py-1 bg-green-600 text-white rounded hover:bg-green-700 text-xs" data-id="${item.id}">Aprobar</button>
                                 <button type="button" class="reject-payment-btn px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs" data-id="${item.id}">Rechazar</button>
-                                <button type="button" class="delete-advisory-btn px-2 py-1 bg-gray-600 text-white rounded hover:bg-gray-500 text-xs" data-id="${item.id}">Eliminar</button>
                             </div>
                         </td>
                     `;
@@ -205,7 +204,6 @@
                             <div class="flex flex-col space-y-1">
                                 <button type="button" class="view-receipt-btn px-2 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs" data-receipt="${item.payment_receipt || ''}">Ver Comprobante</button>
                                 <button type="button" class="view-details-btn px-2 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 text-xs" data-details="${encodeURIComponent(detailsStr)}">Ver detalles</button>
-                                <button type="button" class="delete-advisory-btn px-2 py-1 bg-gray-600 text-white rounded hover:bg-gray-500 text-xs" data-id="${item.id}">Eliminar</button>
                             </div>
                         </td>
                     `;

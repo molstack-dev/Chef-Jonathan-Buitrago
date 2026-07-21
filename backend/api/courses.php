@@ -13,7 +13,7 @@ if (session_status() === PHP_SESSION_NONE) {
 // GET - Listar cursos
 if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
-        $stmt = $pdo->query("SELECT id, title, description, description_detail, price, duration, category, image, created_at FROM courses ORDER BY created_at DESC");
+        $stmt = $pdo->query("SELECT id, title, description, description_detail, price, duration, category, event_date, image, created_at FROM courses ORDER BY created_at DESC");
         $courses = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
         echo json_encode([
@@ -40,6 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $category = isset($_POST['category']) ? trim($_POST['category']) : 'cursos';
         $duration = isset($_POST['duration']) ? trim($_POST['duration']) : '';
         $price = isset($_POST['price']) ? floatval($_POST['price']) : 0;
+        $event_date = isset($_POST['event_date']) ? trim($_POST['event_date']) : null;
         $imageUrl = isset($_POST['image_url']) ? trim($_POST['image_url']) : '';
 
         if (empty($title) || $price <= 0) {
@@ -48,26 +49,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
-        // Manejar imagen - guardar como base64 en BD
+            // Manejar imagen - guardar como base64 en BD
         $imageData = null;
         if (isset($_FILES['image']) && $_FILES['image']['error'] === UPLOAD_ERR_OK) {
             $imageData = base64_encode(file_get_contents($_FILES['image']['tmp_name']));
         }
 
+        // Normalizar event_date (solo aplica para eventos)
+        $event_date_normalized = null;
+        if ($category === 'eventos' && !empty($event_date)) {
+            // input date => YYYY-MM-DD
+            $event_date_normalized = $event_date;
+        }
+
         if ($id) {
             // Actualizar curso existente
             if ($imageData) {
-                $stmt = $pdo->prepare("UPDATE courses SET title = ?, description = ?, description_detail = ?, category = ?, duration = ?, price = ?, image = ? WHERE id = ?");
-                $stmt->execute([$title, $description, $descriptionDetail, $category, $duration, $price, $imageData, $id]);
+                $stmt = $pdo->prepare("UPDATE courses SET title = ?, description = ?, description_detail = ?, category = ?, duration = ?, price = ?, event_date = ?, image = ? WHERE id = ?");
+                $stmt->execute([$title, $description, $descriptionDetail, $category, $duration, $price, $event_date_normalized, $imageData, $id]);
             } else {
-                $stmt = $pdo->prepare("UPDATE courses SET title = ?, description = ?, description_detail = ?, category = ?, duration = ?, price = ? WHERE id = ?");
-                $stmt->execute([$title, $description, $descriptionDetail, $category, $duration, $price, $id]);
+                $stmt = $pdo->prepare("UPDATE courses SET title = ?, description = ?, description_detail = ?, category = ?, duration = ?, price = ?, event_date = ? WHERE id = ?");
+                $stmt->execute([$title, $description, $descriptionDetail, $category, $duration, $price, $event_date_normalized, $id]);
             }
 
             echo json_encode(['success' => true, 'message' => 'Curso actualizado correctamente']);
         } else {
-            $stmt = $pdo->prepare("INSERT INTO courses (title, description, description_detail, category, duration, price, image) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$title, $description, $descriptionDetail, $category, $duration, $price, $imageData]);
+            $stmt = $pdo->prepare("INSERT INTO courses (title, description, description_detail, category, duration, price, event_date, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$title, $description, $descriptionDetail, $category, $duration, $price, $event_date_normalized, $imageData]);
 
             echo json_encode(['success' => true, 'message' => 'Curso creado correctamente']);
         }

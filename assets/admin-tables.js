@@ -144,13 +144,41 @@ async function loadInscriptions() {
 
 let allCourses = [];
 
+function syncEditEventDateVisibility(existing = null) {
+    const select = document.getElementById('edit-service-category');
+    const container = document.getElementById('edit-event-date-container');
+    const input = document.getElementById('edit-event_date');
+
+    if (!select || !container || !input) return;
+
+    const isEventos = String(select.value).toLowerCase() === 'eventos';
+    container.style.display = isEventos ? 'block' : 'none';
+    input.required = isEventos;
+
+    if (!isEventos) {
+        input.value = '';
+        return;
+    }
+
+    if (existing && existing.event_date) {
+        input.value = String(existing.event_date);
+    } else if (!input.value) {
+        input.value = '';
+    }
+}
+
+window.syncEditEventDateVisibility = syncEditEventDateVisibility;
+
 async function loadCourses() {
     try {
         const response = await fetch('/backend/api/cursos-get.php');
         const result = await response.json();
 
         if (result.success && result.data.length > 0) {
-            allCourses = result.data;
+            allCourses = result.data.map((course) => ({
+                ...course,
+                event_date: course.event_date ?? course.eventDate ?? ''
+            }));
             const tbody = document.getElementById('courses-tbody');
             if (!tbody) return;
 
@@ -196,6 +224,8 @@ function setupCreateCourseForm() {
         const duration = document.getElementById('course-duration').value.trim();
         const price = document.getElementById('course-price').value;
         const imageInput = document.getElementById('course-image');
+        const eventDateInput = document.getElementById('event_date');
+        const event_date = eventDateInput ? eventDateInput.value : '';
 
         if (!title) {
             showToast('El título es requerido', 'error');
@@ -213,6 +243,9 @@ function setupCreateCourseForm() {
         formData.append('category', category);
         formData.append('duration', duration);
         formData.append('price', price);
+        if (category === 'eventos' && event_date) {
+            formData.append('event_date', event_date);
+        }
         if (imageInput.files[0]) {
             formData.append('image', imageInput.files[0]);
         }
@@ -247,6 +280,9 @@ function openEditCourseModal(course) {
     document.getElementById('edit-service-category').value = course.category || 'cursos';
     document.getElementById('edit-service-duration').value = course.duration || '';
     document.getElementById('edit-service-price').value = course.price;
+    document.getElementById('edit-event_date').value = course.event_date || course.eventDate || '';
+
+    syncEditEventDateVisibility(course);
 
     // Guardar imagen actual en campo oculto
     let currentImageInput = document.getElementById('edit-service-current-image');
@@ -291,6 +327,10 @@ function setupEditCourseModal() {
     cancelBtn.addEventListener('click', () => modal.classList.add('hidden'));
     modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.add('hidden'); });
 
+    const categorySelect = document.getElementById('edit-service-category');
+    if (categorySelect) {
+        categorySelect.addEventListener('change', () => syncEditEventDateVisibility());
+    }
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -302,9 +342,12 @@ function setupEditCourseModal() {
         const duration = document.getElementById('edit-service-duration').value.trim();
         const price = document.getElementById('edit-service-price').value;
         const imageInput = document.getElementById('edit-service-image');
+        const eventDateInput = document.getElementById('edit-event_date');
+        const eventDate = eventDateInput ? eventDateInput.value : '';
 
         if (!title) { showToast('El título es requerido', 'error'); return; }
         if (!price || parseFloat(price) <= 0) { showToast('El precio debe ser mayor a 0', 'error'); return; }
+        if (category === 'eventos' && !eventDate) { showToast('La fecha del evento es requerida', 'error'); return; }
 
         const formData = new FormData();
         formData.append('id', id);
@@ -319,6 +362,10 @@ function setupEditCourseModal() {
         const currentImage = document.getElementById('edit-service-current-image');
         if (currentImage && currentImage.value) {
             formData.append('image_url', currentImage.value);
+        }
+
+        if (category === 'eventos' && eventDate) {
+            formData.append('event_date', eventDate);
         }
 
         if (imageInput.files[0]) {
@@ -391,14 +438,20 @@ function setupCourseTableDelegation() {
             const id = target.getAttribute('data-course-id');
             const course = allCourses.find(c => String(c.id) === String(id));
             if (course) {
-                openEditCourseModal(course);
+                openEditCourseModal({
+                    ...course,
+                    event_date: course.event_date ?? course.eventDate ?? ''
+                });
             } else {
                 // Fallback: si allCourses no coincide/está vacío, cargamos por request
                 fetch('/backend/api/courses.php?id=' + encodeURIComponent(id))
                     .then(r => r.json())
                     .then(res => {
                         const c = res?.data ?? res?.course ?? null;
-                        if (c) openEditCourseModal(c);
+                        if (c) openEditCourseModal({
+                            ...c,
+                            event_date: c.event_date ?? c.eventDate ?? ''
+                        });
                         else showToast('No se pudo cargar el curso para editar', 'error');
                     })
                     .catch(() => showToast('Error al cargar curso para editar', 'error'));
