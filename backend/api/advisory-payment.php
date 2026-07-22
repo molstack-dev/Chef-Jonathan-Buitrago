@@ -73,7 +73,7 @@ try {
 
     // 3) IMPORTANT: Si la advisory es para un CURSO y fue pagada,
     //    debemos crear/actualizar el registro en `registrations`
-    //    para que `views/user/mis-cursos.html` se active.
+    //    para que `views/user/mis-servicios.html` se active.
     //    (El admin aprueba en advisories; el usuario ve cursos desde registrations.)
     if ($payment_status === 'paid') {
         try {

@@ -69,7 +69,7 @@
                             <form id="register-form">
                                 <div class="mb-4">
                                     <label for="register-name" class="block text-gray-300 mb-2">Nombre </label>
-                                    <input type="text" id="register-name" class="w-full" required>
+                                    <input type="text" id="register-name" class="w-full" onkeypress="return /^[a-zA-ZÁéíóúÁÉÍÓÚñÑ ]+$/.test(event.key)" required>
                                 </div>
                                 <div class="mb-4">
                                     <label for="register-email" class="block text-gray-300 mb-2">Correo Electrónico</label>
@@ -81,7 +81,7 @@
                                 </div>
 
                                 <div class="mb-4">
-                                    <label for="register-password" class="block text-gray-300 mb-2">Contraseña</label>
+                                    <label for="register-password" class="block text-gray-300 mb-2">Contraseña (Minimo 8 caracteres con: <strong>Abc1*</strong>)</label>
                                     <input type="password" id="register-password" class="w-full" required>
                                 </div>
                                 <div class="mb-4">

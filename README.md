@@ -107,7 +107,7 @@ views/
 ├── user/
 │   ├── user.html           # Dashboard usuario
 │   ├── perfil.html         # Perfil del usuario
-│   ├── mis-cursos.html     # Cursos inscritos
+│   ├── mis-servicios.html     # Cursos inscritos
 │   ├── historial.html      # Historial
 │   ├── certificados.html   # Certificados
 │   └── agendar.html        # Agendar asesoría

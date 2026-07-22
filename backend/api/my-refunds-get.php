@@ -30,9 +30,10 @@ try {
             rf.service_name,
             rf.amount AS price,
             rf.refundable_id,
-            rf.admin_receipt AS admin_receipt
+            rf.admin_receipt AS admin_receipt,
+            rf.rejection_reason AS rejection_reason
          FROM refunds rf
-         WHERE rf.user_id = ? AND rf.refund_status IN ('pending','approved')
+         WHERE rf.user_id = ? AND rf.refund_status IN ('pending','approved','rejected')
          ORDER BY rf.created_at DESC"
     );
 
@@ -51,6 +52,7 @@ try {
             'price' => $r['price'],
             'refundable_id' => $r['refundable_id'],
             'admin_receipt' => $r['admin_receipt'],
+            'rejection_reason' => $r['rejection_reason']
         ];
     }
 
@@ -60,4 +62,3 @@ try {
     respond(500, ['success' => false, 'message' => 'Error al obtener reembolsos']);
 }
 ?>
-

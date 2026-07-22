@@ -119,7 +119,7 @@ try {
         course_price DECIMAL(10,2),
         status ENUM('pending', 'confirmed', 'completed') DEFAULT 'pending',
         payment_status ENUM('pending', 'paid', 'rejected', 'refund_requested', 'refunded') DEFAULT 'pending',
-        payment_receipt TEXT,
+        payment_receipt TEXT NOT NULL,
         payment_date DATETIME,
         registration_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE SET NULL,
@@ -198,6 +198,11 @@ try {
     if (!in_array('num_persons', $cols)) {
         try { $pdo->exec("ALTER TABLE advisories ADD COLUMN num_persons INT DEFAULT 1"); } catch (Exception $e) {}
     }
+    
+    // Agregar columna para método de pago
+    if (!in_array('payment_method', $cols)) {
+        try { $pdo->exec("ALTER TABLE advisories ADD COLUMN payment_method ENUM('nequi', 'bancolombia', 'daviplata', 'nu')"); } catch (Exception $e) {}
+    }
     // Hacer phone NOT NULL si aún no lo es
     try {
         $pdo->exec("ALTER TABLE advisories MODIFY COLUMN phone VARCHAR(20) NOT NULL");
@@ -221,6 +226,11 @@ try {
     }
     if (!in_array('course_price', $regCols)) {
         try { $pdo->exec("ALTER TABLE registrations ADD COLUMN course_price DECIMAL(10,2)"); } catch (Exception $e) {}
+    }
+
+    // Agregar columna para método de pago
+    if (!in_array('payment_method', $regCols)) {
+        try { $pdo->exec("ALTER TABLE registrations ADD COLUMN payment_method ENUM('nequi', 'bancolombia', 'daviplata', 'nu')"); } catch (Exception $e) {}
     }
 
     // Crear tabla de reservas
@@ -260,7 +270,7 @@ try {
         processed_at DATETIME NULL,
         processed_by INT NULL,
         rejection_reason TEXT NULL,
-        admin_receipt TEXT NULL,
+        admin_receipt LONGTEXT NULL,
         INDEX idx_refund_status (refund_status),
 
         INDEX idx_refund_user (user_id),

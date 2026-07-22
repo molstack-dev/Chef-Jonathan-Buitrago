@@ -19,7 +19,7 @@ try {
 
     // Obtener asesorías del usuario
     // Nota: Excluimos advisories que ya tienen un refund pendiente/aprobado para evitar duplicados en el historial.
-    $stmt = $pdo->prepare("SELECT a.id, a.name, a.email, a.phone, a.service_type, a.advisory_type, a.advisory_service, a.advisory_mode, a.event_name, a.date, a.time, a.notes, a.status, a.price, a.num_persons, a.payment_status, a.payment_receipt, a.created_at, 'advisory' as source
+    $stmt = $pdo->prepare("SELECT a.id, a.name, a.email, a.phone, a.service_type, a.advisory_type, a.advisory_service, a.advisory_mode, a.event_name, a.date, a.time, a.notes, a.status, a.price, a.num_persons, a.payment_status, a.payment_receipt, a.payment_method, a.created_at, 'advisory' as source
         FROM advisories a
         WHERE a.user_id = ?
           AND (a.service_type IS NULL OR a.service_type <> 'curso')

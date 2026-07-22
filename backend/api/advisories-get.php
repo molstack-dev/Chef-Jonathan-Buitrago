@@ -5,7 +5,7 @@ header('Access-Control-Allow-Origin: *');
 require_once '../config.php';
 
 try {
-    $stmt = $pdo->query("SELECT a.id, u.name AS user_name, a.name AS client_name, a.email, a.phone, a.service_type, a.advisory_type, a.advisory_service, a.advisory_mode, a.event_name, a.date, a.time, a.notes, a.status, a.price, a.num_persons, a.payment_status, a.payment_receipt, a.payment_date, a.created_at
+    $stmt = $pdo->query("SELECT a.id, u.name AS user_name, a.name AS client_name, a.email, a.phone, a.service_type, a.advisory_type, a.advisory_service, a.advisory_mode, a.event_name, a.date, a.time, a.notes, a.status, a.price, a.num_persons, a.payment_status, a.payment_receipt, a.payment_date, a.payment_method, a.created_at
         FROM advisories a
         LEFT JOIN users u ON a.user_id = u.id
         ORDER BY a.created_at DESC");

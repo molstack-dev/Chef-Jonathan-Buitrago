@@ -76,6 +76,12 @@ try {
         if (isset($data['admin_receipt'])) {
             $adminReceipt = trim((string)$data['admin_receipt']);
             if ($adminReceipt === '') $adminReceipt = null;
+            
+            // Validar tamaño del archivo base64
+            if ($adminReceipt && strlen($adminReceipt) > 16000000) { // Limitar a 16MB para LONGTEXT
+                $pdo->rollBack();
+                respond(400, ['success' => false, 'message' => 'El archivo es demasiado grande. Máximo 16MB permitido.']);
+            }
         }
 
         $upd = $pdo->prepare("UPDATE refunds SET refund_status = 'approved', processed_at = NOW(), processed_by = ?, admin_receipt = ? WHERE id = ?");
@@ -166,6 +172,12 @@ try {
     $pdo->commit();
     respond(200, ['success' => true, 'message' => 'Reembolso rechazado']);
 
+} catch (PDOException $e) {
+    if (isset($pdo) && $pdo->inTransaction()) {
+        $pdo->rollBack();
+    }
+    error_log('Error PDO en refund-process.php: ' . $e->getMessage() . ' | Code: ' . $e->getCode());
+    respond(500, ['success' => false, 'message' => 'Error en la base de datos: ' . $e->getMessage()]);
 } catch (Exception $e) {
     if (isset($pdo) && $pdo->inTransaction()) {
         $pdo->rollBack();

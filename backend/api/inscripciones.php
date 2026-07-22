@@ -231,6 +231,13 @@ if ($method === 'PUT') {
     // Si viene payment_receipt (base64), el usuario está subiendo su comprobante
     if (isset($data['payment_receipt'])) {
         $receipt = trim($data['payment_receipt']);
+        $payment_method = isset($data['payment_method']) ? trim($data['payment_method']) : null;
+        
+        // Validar método de pago si se proporciona
+        if ($payment_method && !in_array($payment_method, ['nequi', 'bancolombia', 'daviplata', 'nu'])) {
+            jsonResponse(400, ['success'=>false, 'message'=>'Método de pago no válido']);
+        }
+        
         if (!empty($receipt)) {
             try {
                 try {
@@ -239,8 +246,15 @@ if ($method === 'PUT') {
                     // Ignorar si ya está adaptado o si la tabla aún no existe.
                 }
 
-                $stmt = $pdo->prepare('UPDATE registrations SET payment_receipt = ?, payment_status = ? WHERE id = ?');
-                $stmt->execute([$receipt, 'paid', $id]);
+                // Actualizar con método de pago si se proporciona
+                if ($payment_method) {
+                    $stmt = $pdo->prepare('UPDATE registrations SET payment_receipt = ?, payment_status = ?, payment_method = ? WHERE id = ?');
+                    $stmt->execute([$receipt, 'paid', $payment_method, $id]);
+                } else {
+                    $stmt = $pdo->prepare('UPDATE registrations SET payment_receipt = ?, payment_status = ? WHERE id = ?');
+                    $stmt->execute([$receipt, 'paid', $id]);
+                }
+                
                 echo json_encode(['success'=>true, 'message'=>'Comprobante recibido, en espera de verificación']);
             } catch (PDOException $e) {
                 jsonResponse(500, ['success'=>false, 'message'=>'Error al guardar comprobante']);

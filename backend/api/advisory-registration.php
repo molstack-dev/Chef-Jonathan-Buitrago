@@ -56,11 +56,19 @@ $date = isset($data['date']) ? trim($data['date']) : '';
 $time = isset($data['time']) ? trim($data['time']) : '';
 $notes = isset($data['notes']) ? trim($data['notes']) : '';
 $num_persons = isset($data['numPersons']) ? intval($data['numPersons']) : 1;
+$payment_method = isset($data['payment_method']) ? trim($data['payment_method']) : null;
 
 // Validar email solo si se proporciona
 if (!empty($email) && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
     http_response_code(400);
     echo json_encode(['success' => false, 'message' => 'Email no válido']);
+    exit;
+}
+
+// Validar método de pago si se proporciona
+if ($payment_method && !in_array($payment_method, ['nequi', 'bancolombia', 'daviplata', 'nu'])) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Método de pago no válido']);
     exit;
 }
 
@@ -71,8 +79,8 @@ if ($date && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
 }
 
 try {
-    $stmt = $pdo->prepare("INSERT INTO advisories (user_id, name, email, phone, service_type, advisory_type, advisory_service, advisory_mode, event_name, price, date, time, notes, num_persons) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute([$user_id, $name, $email, $phone, $service_type, $advisory_type, $advisory_service, $advisory_mode, $event_name, $price ?: null, $date ?: null, $time ?: null, $notes, $num_persons]);
+    $stmt = $pdo->prepare("INSERT INTO advisories (user_id, name, email, phone, service_type, advisory_type, advisory_service, advisory_mode, event_name, price, date, time, notes, num_persons, payment_method) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute([$user_id, $name, $email, $phone, $service_type, $advisory_type, $advisory_service, $advisory_mode, $event_name, $price ?: null, $date ?: null, $time ?: null, $notes, $num_persons, $payment_method]);
 
     $advisory_id = $pdo->lastInsertId();
 

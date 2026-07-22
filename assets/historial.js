@@ -71,64 +71,105 @@
 
       // Construir un historial unificado
       const unified = [];
+      const seenItems = new Set(); // Para rastrear entradas únicas
+      
+      // Función para generar una clave única para cada entrada
+      function generateUniqueKey(item) {
+        // Generar clave basada en información relevante del ítem
+        const serviceName = (item.service_title || item.service_name || item.advisory_service || item.event_name || item.course_title || '').toLowerCase().trim();
+        const date = item.created_at || item.registration_date || item.date || '';
+        const price = item.price || item.course_price || '';
+        const type = item.type || item.service_type || item.source || '';
+        
+        // Normalizar el nombre del servicio eliminando espacios y caracteres especiales
+        const normalizedService = serviceName.replace(/\s+/g, '').replace(/[^\w]/g, '');
+        
+        // Usar solo información que identifica la transacción original, no el estado
+        return `${normalizedService}_${date}_${price}_${type}`;
+      }
+      
+      // Agrupar reembolsos por refundable_id y type para mapear estados
+      const refundMap = {};
+      refundsData.forEach(r => {
+        const key = `${r.refundable_id}_${r.type}`;
+        refundMap[key] = r;
+      });
       
       // Primero agregar los datos del historial base (advisories + registrations sin refund)
       historyData.forEach(item => {
-        unified.push(item);
+        const key = generateUniqueKey(item);
+        if (!seenItems.has(key)) {
+          // Verificar si este ítem tiene un reembolso asociado
+          let refundItem = null;
+          if (item.source === 'registration') {
+            refundItem = refundMap[`${item.id}_registration`] || null;
+          } else if (item.source === 'advisory') {
+            if (item.service_type === 'asesoria') {
+              refundItem = refundMap[`${item.id}_advisory_asesoria`] || null;
+            } else if (item.service_type === 'evento') {
+              refundItem = refundMap[`${item.id}_advisory_evento`] || null;
+            } else if (item.service_type === 'curso') {
+              refundItem = refundMap[`${item.id}_advisory_course`] || null;
+            }
+          }
+          
+          // Si hay un reembolso asociado, actualizar el estado del ítem original
+          if (refundItem) {
+            item.original_status = item.status; // Guardar el estado original
+            item.original_payment_status = item.payment_status;
+            item.status = `refund_${refundItem.refund_status}`;
+            item.payment_status = refundItem.refund_status;
+            item.admin_receipt = refundItem.admin_receipt;
+            item.rejection_reason = refundItem.rejection_reason;
+            item.refund_id = refundItem.id; // Agregar ID del reembolso para referencia
+          }
+          
+          unified.push(item);
+          seenItems.add(key);
+        }
       });
 
-      // Agregar reembolsos aprobados como entradas separadas
-      // y reembolsos pendientes
+      // Agregar solo reembolsos que no están asociados a entradas del historial base
       refundsData.forEach(r => {
-        if (r.refund_status === 'approved') {
-          const existsInHistory = historyData.some(h => {
-            const hId = h.id;
-            const hSource = h.source || '';
-            const rType = r.type || '';
-            // Coincidir por id y relación source/type
-            if (hSource === 'registration' && rType === 'registration') {
-              return String(h.id) === String(r.refundable_id);
-            }
-            return false;
-          });
-          
-          if (!existsInHistory) {
-            unified.push({
-              id: r.id,
-              source: r.type,
-              type: r.type,
-              status: 'refund_approved',
-              payment_status: r.refund_status,
-              created_at: r.created_at,
-              service_title: r.service_title,
-              service_name: r.service_name,
-              price: r.price,
-              admin_receipt: r.admin_receipt,
-              refund_admin_receipt: r.admin_receipt
-            });
-          }
-        } else {
-          // Reembolsos pendientes
-          const existingRefundIndex = unified.findIndex(u => 
-            u.source === r.type && 
-            u.id === r.id && 
-            u.status === 'refund_requested'
+        // Verificar si este reembolso ya fue incluido con la entrada original
+        let isAssociatedWithBaseEntry = false;
+        if (r.type === 'registration') {
+          isAssociatedWithBaseEntry = historyData.some(h => 
+            h.source === 'registration' && String(h.id) === String(r.refundable_id)
           );
+        } else if (r.type.startsWith('advisory_')) {
+          let expectedServiceType = '';
+          if (r.type === 'advisory_asesoria') expectedServiceType = 'asesoria';
+          else if (r.type === 'advisory_evento') expectedServiceType = 'evento';
+          else if (r.type === 'advisory_course') expectedServiceType = 'curso';
           
-          if (existingRefundIndex === -1) {
+          isAssociatedWithBaseEntry = historyData.some(h => 
+            h.source === 'advisory' && 
+            h.service_type === expectedServiceType && 
+            String(h.id) === String(r.refundable_id)
+          );
+        }
+        
+        if (!isAssociatedWithBaseEntry) {
+          // Este reembolso no está asociado a ninguna entrada base, así que agregarlo como entrada separada
+          const key = generateUniqueKey(r);
+          if (!seenItems.has(key)) {
             unified.push({
               id: r.id,
               source: r.type,
               type: r.type,
-              status: 'refund_requested',
+              status: `refund_${r.refund_status}`,
               payment_status: r.refund_status,
               created_at: r.created_at,
               service_title: r.service_title,
               service_name: r.service_name,
               price: r.price,
               admin_receipt: r.admin_receipt,
-              refund_admin_receipt: r.admin_receipt
+              refund_admin_receipt: r.admin_receipt,
+              rejection_reason: r.rejection_reason,
+              refund_only_entry: true // Indicar que es una entrada solo de reembolso
             });
+            seenItems.add(key);
           }
         }
       });
@@ -169,7 +210,9 @@
                   ? 'bg-green-900 text-green-300'
                   : item.status === 'refund_requested'
                     ? 'bg-yellow-900 text-yellow-300'
-                    : 'bg-red-900 text-red-300';
+                    : item.status === 'refund_rejected'
+                      ? 'bg-red-900 text-red-300'
+                      : 'bg-red-900 text-red-300';
 
           const statusLabel =
             item.status === 'confirmed'
@@ -180,7 +223,9 @@
                   ? 'Reembolso Aprobado'
                   : item.status === 'refund_requested'
                     ? 'Pendiente'
-                    : 'Cancelado';
+                    : item.status === 'refund_rejected'
+                      ? 'Rechazado'
+                      : 'Cancelado';
 
           // Determine type and name
           let serviceTypeLabel = 'N/A';
@@ -256,12 +301,16 @@
             
             const refundPending = item.payment_status === 'refund_requested' || item.payment_status === 'pending';
             
-            if (isRefundable || refundPending) {
-              const isPending = refundPending;
-              const btnState = isPending ? 'cancel' : 'active';
-              const refundApproved = (item.status === 'refund_approved' || item.payment_status === 'refunded' || item.refund_status === 'approved');
-              
-              if (refundApproved) {
+            // Verificar si hay un reembolso ya procesado (aprobado o rechazado)
+            const refundProcessed = (item.status === 'refund_approved' || 
+                                   item.status === 'refund_rejected' || 
+                                   item.payment_status === 'refunded' || 
+                                   item.refund_status === 'approved' || 
+                                   item.refund_status === 'rejected');
+            
+            if (refundProcessed) {
+              // Mostrar botones según el estado del reembolso
+              if (item.status === 'refund_approved' || item.payment_status === 'refunded' || item.refund_status === 'approved') {
                 const receipt = item.admin_receipt || item.refund_admin_receipt || item.admin_receipt_base64 || null;
                 let receiptSrc = receipt;
                 if (receiptSrc && typeof receiptSrc === 'string') {
@@ -276,30 +325,49 @@
                   'data-receipt="' + (receiptSrc ? String(receiptSrc).replace(/"/g, '"') : '') + '" ' +
                   'onclick="window.handleRefundReceiptClick(this)"' +
                   '>Comprobante Reembolso</button>';
-              } else {
-                const btnText = isPending ? 'Cancelar Reembolso' : 'Solicitar Reembolso';
-                const btnClass = isPending ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-600 hover:bg-red-700';
-
-                let refundType = null;
-                if (source === 'registration') {
-                  refundType = 'registration';
-                } else {
-                  const st = (item.service_type || '').toString();
-                  if (st === 'evento') refundType = 'advisory_evento';
-                  else if (st === 'asesoria') refundType = 'advisory_asesoria';
-                  else if (st === 'curso' || st === 'advisory_course') refundType = 'advisory_course';
-                  else {
-                    const serviceLower = (serviceName || '').toString().toLowerCase();
-                    if (serviceLower.includes('evento')) refundType = 'advisory_evento';
-                    else refundType = 'advisory_asesoria';
-                  }
+                  
+                // Si también hay motivo de rechazo, añadir otro botón
+                if (item.rejection_reason) {
+                  refundBtn += 
+                    '<button type="button" class="refund-rejection-btn px-3 py-1 text-white rounded text-xs transition-colors bg-red-600 hover:bg-red-700 ml-1" ' +
+                    'data-rejection="' + String(item.rejection_reason).replace(/"/g, '"') + '" ' +
+                    'onclick="window.handleRefundRejectionClick(this)">Motivo Rechazo</button>';
                 }
-
-                refundBtn =
-                  '<button type="button" class="refund-toggle-btn px-3 py-1 text-white rounded text-xs transition-colors ' + btnClass + '" ' +
-                  'data-refund-id="' + item.id + '" data-refund-type="' + refundType + '" data-state="' + btnState + '" onclick="window.handleRefundToggle(this)">' +
-                  btnText + '</button>';
+              } else if (item.status === 'refund_rejected' || item.refund_status === 'rejected') {
+                // Para rechazos, mostrar solo el motivo de rechazo
+                if (item.rejection_reason) {
+                  refundBtn = 
+                    '<button type="button" class="refund-rejection-btn px-3 py-1 text-white rounded text-xs transition-colors bg-red-600 hover:bg-red-700" ' +
+                    'data-rejection="' + String(item.rejection_reason).replace(/"/g, '"') + '" ' +
+                    'onclick="window.handleRefundRejectionClick(this)">Motivo Rechazo</button>';
+                }
               }
+            } else if (isRefundable || refundPending) {
+              const isPending = refundPending;
+              const btnState = isPending ? 'cancel' : 'active';
+              
+              const btnText = isPending ? 'Cancelar Reembolso' : 'Solicitar Reembolso';
+              const btnClass = isPending ? 'bg-gray-700 hover:bg-gray-600' : 'bg-red-600 hover:bg-red-700';
+
+              let refundType = null;
+              if (source === 'registration') {
+                refundType = 'registration';
+              } else {
+                const st = (item.service_type || '').toString();
+                if (st === 'evento') refundType = 'advisory_evento';
+                else if (st === 'asesoria') refundType = 'advisory_asesoria';
+                else if (st === 'curso' || st === 'advisory_course') refundType = 'advisory_course';
+                else {
+                  const serviceLower = (serviceName || '').toString().toLowerCase();
+                  if (serviceLower.includes('evento')) refundType = 'advisory_evento';
+                  else refundType = 'advisory_asesoria';
+                }
+              }
+
+              refundBtn =
+                '<button type="button" class="refund-toggle-btn px-3 py-1 text-white rounded text-xs transition-colors ' + btnClass + '" ' +
+                'data-refund-id="' + item.id + '" data-refund-type="' + refundType + '" data-state="' + btnState + '" onclick="window.handleRefundToggle(this)">' +
+                btnText + '</button>';
             }
           }
 
@@ -332,7 +400,8 @@
             if (item.date) details.push('Fecha: ' + new Date(item.date).toLocaleDateString('es-ES'));
             if (item.time) details.push('Hora: ' + item.time);
             if (item.num_persons > 1) details.push('Personas: ' + item.num_personas);
-            if (item.notes) details.push('Notas: ' + item.notes);
+if (item.notes) details.push('Notas: ' + item.notes);
+            if (item.payment_method) details.push('Método de pago: ' + item.payment_method.charAt(0).toUpperCase() + item.payment_method.slice(1));
             if (item.price) details.push('Precio: $' + Number(item.price).toLocaleString('es-CO'));
 
             const contentDiv = document.getElementById('detalles-solicitud-content');
@@ -486,6 +555,32 @@
   window.openRefundConfirmModal = openRefundConfirmModal;
 
   // Modal comprobante
+  window.handleRefundRejectionClick = function(btn) {
+    try {
+      let rejectionReason = btn.getAttribute('data-rejection');
+      if (!rejectionReason) {
+        showToast('No hay motivo de rechazo disponible para esta solicitud.', 'error');
+        return;
+      }
+
+      const modal = document.getElementById('detalles-solicitud-modal');
+      const contentDiv = document.getElementById('detalles-solicitud-content');
+      const titleEl = document.getElementById('detalles-modal-title');
+      
+      if (!modal || !contentDiv) return;
+
+      if (titleEl) titleEl.textContent = 'Motivo de Rechazo del Reembolso';
+
+      contentDiv.innerHTML = 
+        '<div class="py-2 border-b border-gray-700 last:border-0">' +
+        '<strong>Motivo:</strong> ' + rejectionReason + '</div>';
+
+      modal.classList.remove('hidden');
+    } catch (e) {
+      showToast('Error al mostrar el motivo de rechazo.', 'error');
+    }
+  };
+
   window.handleRefundReceiptClick = function(btn) {
     try {
       let receipt = btn.getAttribute('data-receipt');

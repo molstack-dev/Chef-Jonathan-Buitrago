@@ -49,7 +49,7 @@
 - **Funciones**: Bienvenida personalizada, navegación a módulos
 
 ### Mis Cursos
-- **Archivo**: `views/user/mis-cursos.html` + `assets/mis-cursos.js`
+- **Archivo**: `views/user/mis-servicios.html` + `assets/mis-servicios.js`
 - **Características**:
   - Lista de cursos con pago aprobado
   - Barra de progreso por curso
@@ -72,7 +72,7 @@
 - **Archivo**: `views/user/agendar.html` + `assets/agendar.js`
 - **Tipos**: `curso`, `asesoria`, `evento`
 - **Campos**: Servicio, fecha, hora, número de personas, notas
-- **Accordion de lecciones**: Igual que en mis-cursos,click en curso expande lecciones
+- **Accordion de lecciones**: Igual que en mis-servicios,click en curso expande lecciones
 
 ### Perfil
 - **Archivo**: `views/user/perfil.html` + `assets/perfil.js`
@@ -207,7 +207,7 @@ id, user_id, title, message, type, is_read, created_at
 3.填写 datos (número de personas)
 4. `inscripciones.php` crea registro con `payment_status = pending`
 5. Admin approves en `admin-inscripciones.html`
-6. Usuario puede ver curso en `mis-cursos.html`
+6. Usuario puede ver curso en `mis-servicios.html`
 
 ### Solicitar Reembolso
 1. Usuario va a `historial.html`
@@ -217,7 +217,7 @@ id, user_id, title, message, type, is_read, created_at
 5. Admin approve/reject en `refund-process.php`
 
 ### Ver Contenido de Curso
-1. Usuario click en curso en `mis-cursos.html`
+1. Usuario click en curso en `mis-servicios.html`
 2. Accordion expande y carga contenido via `course-content-get.php`
 3. Usuario click "Ver" en lección
 4. Abre `reproductor.php` con token tiempo-limitado
@@ -248,12 +248,12 @@ Chef-Jonathan-Buitrago/
 │   ├── script.js
 │   ├── style.css
 │   ├── agendar.js
-│   ├── mis-cursos.js
+│   ├── mis-servicios.js
 │   └── ...
 ├── views/
 │   ├── user/
 │   │   ├── user.html
-│   │   ├── mis-cursos.html
+│   │   ├── mis-servicios.html
 │   │   ├── historial.html
 │   │   ├── agendar.html
 │   │   └── ...
@@ -274,4 +274,4 @@ Chef-Jonathan-Buitrago/
 - **CORS**: Configurado para permitir peticiones desde cualquier origen
 - **Sesiones**: PHP native sessions
 - **Frontend**: HTML vanilla + TailwindCSS + vanilla JS
-- **Accordion cursos**: Implementado en `agendar.js` y `mis-cursos.js` con carga async de lecciones
+- **Accordion cursos**: Implementado en `agendar.js` y `mis-servicios.js` con carga async de lecciones

@@ -87,6 +87,7 @@ window.loadMyAdvisories = async function() {
                 if (item.date) detalles.push('Fecha: ' + new Date(item.date).toLocaleDateString('es-ES'));
                 if (item.time) detalles.push('Hora: ' + item.time);
                 if (item.num_persons > 1) detalles.push('Personas: ' + item.num_persons);
+                if (item.payment_method) detalles.push('Método de pago: ' + item.payment_method.charAt(0).toUpperCase() + item.payment_method.slice(1));
                 if (item.notes) detalles.push('Notas: ' + item.notes);
                 var detallesCompletos = detalles.join('\n');
 
@@ -1233,7 +1234,7 @@ window.setupPaginationControls = function(tableName) {
         // Mapa por href (se compara terminación para que funcione con rutas relativas)
         const map = [
             { href: 'user.html', label: 'Panel' },
-            { href: 'mis-cursos.html', label: 'Cursos' },
+            { href: 'mis-servicios.html', label: 'Servicios' },
             { href: 'historial.html', label: 'Historial' },
             { href: 'certificados.html', label: 'Certificados' },
             { href: 'agendar.html', label: 'Compras' },

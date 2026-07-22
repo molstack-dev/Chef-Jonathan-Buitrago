@@ -20,13 +20,13 @@ if (!$userId && !$email) {
 try {
     if ($userId) {
         $userEmail = $_SESSION['user_email'] ?? '';
-        $stmt = $pdo->prepare("SELECT a.id, a.name, a.email, a.phone, a.service_type, a.advisory_type, a.advisory_service, a.advisory_mode, a.event_name, a.date, a.time, a.notes, a.status, a.price, a.num_persons, a.payment_status, a.payment_receipt, a.created_at
+        $stmt = $pdo->prepare("SELECT a.id, a.name, a.email, a.phone, a.service_type, a.advisory_type, a.advisory_service, a.advisory_mode, a.event_name, a.date, a.time, a.notes, a.status, a.price, a.num_persons, a.payment_status, a.payment_receipt, a.payment_method, a.created_at
             FROM advisories a
             WHERE a.user_id = ? OR (? != '' AND a.email = ?)
             ORDER BY a.created_at DESC");
         $stmt->execute([$userId, $userEmail, $userEmail]);
     } else {
-        $stmt = $pdo->prepare("SELECT a.id, a.name, a.email, a.phone, a.service_type, a.advisory_type, a.advisory_service, a.advisory_mode, a.event_name, a.date, a.time, a.notes, a.status, a.price, a.num_persons, a.payment_status, a.payment_receipt, a.created_at
+        $stmt = $pdo->prepare("SELECT a.id, a.name, a.email, a.phone, a.service_type, a.advisory_type, a.advisory_service, a.advisory_mode, a.event_name, a.date, a.time, a.notes, a.status, a.price, a.num_persons, a.payment_status, a.payment_receipt, a.payment_method, a.created_at
             FROM advisories a
             WHERE a.email = ?
             ORDER BY a.created_at DESC");

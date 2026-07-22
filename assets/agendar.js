@@ -595,9 +595,31 @@ window.agendarJsLoaded = true;
             });
         }
 
+// Configurar fecha mínima para asesorías (3 días después de hoy)
+        function setMinDateForAdvisory() {
+            const dateInput = document.getElementById('advisory-date');
+            if (!dateInput) return;
+            
+            const today = new Date();
+            const minDate = new Date(today);
+            minDate.setDate(today.getDate() + 3);
+            
+            const year = minDate.getFullYear();
+            const month = String(minDate.getMonth() + 1).padStart(2, '0');
+            const day = String(minDate.getDate()).padStart(2, '0');
+            
+            dateInput.min = year + '-' + month + '-' + day;
+            
+            // Si el valor actual es anterior a la fecha mínima, limpiarlo
+            if (dateInput.value && dateInput.value < dateInput.min) {
+                dateInput.value = '';
+            }
+        }
+        setMinDateForAdvisory();
+
         // Cargar datos y configurar
         loadCatalogData().catch(console.error);
-        loadCoursesGrid().catch(console.error);
+loadCoursesGrid().catch(console.error);
 
         if (typeof loadMyAdvisories === 'function') {
             loadMyAdvisories().catch(console.error);
@@ -621,6 +643,8 @@ window.agendarJsLoaded = true;
             const modal = document.getElementById('payment-modal');
             const refSpan = document.getElementById('payment-reference');
             const amountSpan = document.getElementById('payment-amount');
+            const paymentNumber = document.getElementById('payment-number');
+            const paymentMethodSelect = document.getElementById('payment-method-select');
 
             if (refSpan) refSpan.textContent = serviceData.reference || 'PAGO-' + Date.now();
 
@@ -636,8 +660,27 @@ window.agendarJsLoaded = true;
                 }
             }
 
+            // Actualizar el número de pago según el método seleccionado
+            if (paymentMethodSelect) {
+                // Agregar evento para actualizar la información cuando cambie la selección
+                paymentMethodSelect.onchange = function() {
+                    updatePaymentInfo(this.value);
+                };
+                
+                // Mostrar la información del primer método por defecto
+                updatePaymentInfo(paymentMethodSelect.value);
+            }
+
             if (modal) modal.classList.remove('hidden');
         };
+
+        // Función para actualizar la información del pago según el método seleccionado
+        function updatePaymentInfo(method) {
+            const paymentNumber = document.getElementById('payment-number');
+            if (!paymentNumber) return;
+
+            paymentNumber.textContent = '322 945 2346';
+        }
 
         window.openTerminosModal = function() {
             const modal = document.getElementById('terminos-modal');
@@ -676,6 +719,10 @@ window.agendarJsLoaded = true;
                 return;
             }
 
+            // Obtener el método de pago seleccionado
+            const paymentMethodSelect = document.getElementById('payment-method-select');
+            const paymentMethod = paymentMethodSelect ? paymentMethodSelect.value : 'nequi';
+
             const notify = window.showToast || window.alert;
 
             const reader = new FileReader();
@@ -700,7 +747,8 @@ window.agendarJsLoaded = true;
                     advisoryType: formData.advisoryType,
                     advisoryService: formData.advisoryService,
                     advisoryMode: formData.advisoryMode,
-                    eventName: formData.eventName
+                    eventName: formData.eventName,
+                    payment_method: paymentMethod  // Agregar el método de pago al payload
                 };
 
                 if (!currentUser) {
@@ -731,7 +779,7 @@ window.agendarJsLoaded = true;
                         method: 'PUT',
                         credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: registrationId, payment_receipt: base64 })
+                        body: JSON.stringify({ id: registrationId, payment_receipt: base64, payment_method: paymentMethod })
                     }).then(resp => resp.json());
                 })
                 .then(function(result) {

@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Proyecto ventas Chef Jonathan Buitrago — documentación actualizada</title>
+<style>
+  @page { size: Letter; margin: 2.54cm; }
+  body { font-family: Arial, sans-serif; font-size: 12pt; line-height: 2; color: #000; }
+  h1, h2, h3 { font-family: Arial, sans-serif; font-weight: bold; line-height: 1.35; }
+  h1 { font-size: 14pt; text-align: center; margin: 22pt 0 16pt; }
+  h2 { font-size: 12pt; margin: 20pt 0 8pt; }
+  h3 { font-size: 12pt; margin: 16pt 0 6pt; font-style: italic; }
+  p { text-align: left; margin: 0 0 10pt; }
+  .cover { text-align: center; page-break-after: always; padding-top: 4cm; }
+  .cover p { text-align: center; margin: 0 0 12pt; }
+  .cover .title { font-weight: bold; text-transform: uppercase; margin: 0 auto 90pt; max-width: 470pt; }
+  .cover .bottom { margin-top: 80pt; }
+  .page { page-break-before: always; }
+  .toc p { margin: 1pt 0; text-indent: 0; }
+  .toc .sub { margin-left: 24pt; }
+  .abstract { margin-left: 0; }
+  .keywords { font-style: italic; }
+  ul, ol { margin: 0 0 10pt 26pt; padding: 0; }
+  li { margin-bottom: 3pt; }
+  table { border-collapse: collapse; width: 100%; margin: 8pt 0 16pt; font-size: 9pt; line-height: 1.3; }
+  th, td { border: 1px solid #333; padding: 5pt; vertical-align: top; text-align: left; }
+  th { background: #e7e7e7; font-weight: bold; }
+  .caption { font-size: 10pt; font-style: italic; margin: 4pt 0 8pt; }
+  .small { font-size: 9pt; line-height: 1.35; }
+  .diagram { border: 1.5pt solid #000; padding: 12pt; margin: 10pt 0 14pt; text-align: center; line-height: 1.4; }
+  .diagram table { font-size: 10pt; margin: 0; }
+  .box { border: 1pt solid #000; padding: 6pt; font-weight: bold; }
+  .note { border-left: 3pt solid #555; padding-left: 10pt; margin: 10pt 0; }
+  .code { font-family: "Liberation Mono", monospace; font-size: 8.5pt; line-height: 1.35; white-space: pre-wrap; border: 1pt solid #666; padding: 8pt; }
+  .references p { padding-left: 30pt; text-indent: -30pt; }
+</style>
+</head>
+<body>
+
+<section class="cover">
+  <p class="title">Sistema web para la gestión de cursos, asesorías, eventos e inscripciones de Chef Jonathan Buitrago</p>
+  <p>Documentación técnica y de análisis actualizada con base en el proyecto Chef Jonathan Buitrago</p>
+  <p>Desarrollado por:</p>
+  <p>Juan Chacón<br>Edwin Molina</p>
+  <p>Instructor<br>Rosemberg Muñoz Parra</p>
+  <p class="bottom">Servicio Nacional de Aprendizaje – SENA<br>2026</p>
+</section>
+
+<section class="page toc">
+  <h1>Tabla de contenido</h1>
+  <p>Resumen</p><p>Abstract</p><p>Introducción</p><p>1. Descripción del problema</p><p>2. Justificación</p><p>3. Objetivos</p><p class="sub">3.1 Objetivo general</p><p class="sub">3.2 Objetivos específicos</p>
+  <p>4. Alcance y delimitación</p><p>5. Metodología de actualización documental</p><p>6. Arquitectura y tecnologías implementadas</p><p>7. Requisitos funcionales</p><p>8. Requisitos no funcionales</p><p>9. Casos de uso y recorridos</p><p>10. Modelo de datos</p><p class="sub">10.1 Modelo relacional</p><p class="sub">10.2 Diccionario de datos</p><p>11. Interfaces y servicios API</p><p>12. Instalación y operación local</p><p>13. Hallazgos y trabajo futuro</p><p>Conclusiones</p><p>Referencias</p>
+</section>
+
+<section class="page">
+  <h1>Resumen</h1>
+  <p class="abstract">Chef Jonathan Buitrago es una aplicación web orientada a la oferta y administración de cursos, asesorías y eventos de pastelería. La solución permite a los visitantes consultar el catálogo; a los usuarios registrados, crear su cuenta, gestionar su perfil, agendar servicios, cargar comprobantes de pago, consultar el historial, acceder al contenido de cursos pagados y solicitar reembolsos; y a los administradores, gestionar usuarios, cursos, contenido formativo, solicitudes de servicio e incidencias de reembolso. La implementación revisada se compone de páginas HTML, hojas de estilo y JavaScript del lado del cliente, además de una API PHP que se comunica con una base de datos MySQL mediante PDO. La autenticación usa sesiones PHP y las contraseñas se almacenan con funciones de hash. Este documento sustituye afirmaciones no respaldadas por el código —como SQLite, inventario, facturación electrónica, infraestructura cloud o lectores de códigos de barras— por la funcionalidad verificable en el repositorio.</p>
+  <p class="keywords">Palabras clave: sistema web, cursos de pastelería, PHP, MySQL, inscripciones, asesorías.</p>
+
+  <h1>Abstract</h1>
+  <p class="abstract">Chef Jonathan Buitrago is a web application for offering and administering pastry courses, advisory services, and events. Visitors can browse the catalog; registered users can create an account, manage their profile, schedule services, upload payment receipts, review their history, access paid course content, and request refunds; administrators can manage users, courses, learning content, service requests, and refund cases. The reviewed implementation consists of HTML pages, client-side CSS and JavaScript, and a PHP API connected to a MySQL database through PDO. Authentication relies on PHP sessions and passwords are stored using hashing functions. This document replaces unsupported statements—such as SQLite, inventory management, electronic invoicing, cloud infrastructure, and barcode readers—with functionality verified in the repository.</p>
+  <p class="keywords">Keywords: web system, pastry courses, PHP, MySQL, registrations, advisory services.</p>
+</section>
+
+<section class="page">
+  <h1>Introducción</h1>
+  <p>La presencia digital facilita que un negocio de formación y servicios gastronómicos divulgue su oferta, reciba solicitudes y haga seguimiento a los servicios vendidos. El proyecto Chef Jonathan Buitrago responde a esta necesidad mediante una aplicación web que centraliza la consulta de cursos y la gestión posterior de las solicitudes de usuarios.</p>
+  <p>La documentación anterior describía un sistema de inventario, facturación y tecnologías que no corresponden al código disponible. La presente versión fue actualizada mediante revisión estática del repositorio local asociado a <i>molstack-dev/Chef-Jonathan-Buitrago</i>, incluida la estructura de vistas, scripts del cliente, API PHP y esquema creado por <i>backend/init_db.php</i>. Por tanto, el texto describe el estado implementado al 21 de julio de 2026, no una propuesta futura.</p>
+
+  <h1>1. Descripción del problema</h1>
+  <p>El negocio requiere un canal digital para presentar cursos y servicios de pastelería, recibir datos de contacto y solicitud de los interesados, registrar las inscripciones y controlar su estado de pago. También necesita que el usuario consulte sus servicios y que el administrador revise y procese las solicitudes generadas.</p>
+  <p>Sin un sistema centralizado, la información de clientes, reservas, comprobantes, estados de pago y solicitudes de reembolso puede quedar dispersa y ser difícil de consultar. La aplicación aborda ese problema al mantener dichos datos en una base relacional y exponerlos en paneles diferenciados para el usuario y el administrador.</p>
+
+  <h1>2. Justificación</h1>
+  <p>La solución concentra el catálogo, las solicitudes de servicio y el seguimiento de pagos en un solo entorno web. Para el cliente, reduce pasos de contacto al permitir registro, agenda y consulta del historial. Para el administrador, proporciona interfaces de administración de usuarios, cursos, contenido, inscripciones y reembolsos.</p>
+  <p>El valor de la implementación actual no reside en un módulo de inventarios ni en facturación electrónica, pues esos componentes no están presentes. Su alcance comprobable es la administración de la relación entre usuarios, oferta formativa y solicitudes de servicio, con trazabilidad básica mediante estados, fechas y comprobantes almacenados.</p>
+
+  <h1>3. Objetivos</h1>
+  <h2>3.1 Objetivo general</h2>
+  <p>Documentar y sustentar el sistema web Chef Jonathan Buitrago, el cual permite gestionar la oferta de cursos, asesorías y eventos, así como el registro, las solicitudes, los pagos y los reembolsos asociados.</p>
+  <h2>3.2 Objetivos específicos</h2>
+  <ul>
+    <li>Identificar las funcionalidades realmente implementadas en las vistas, los scripts, los endpoints PHP y la base de datos MySQL.</li>
+    <li>Describir la arquitectura cliente–servidor, los roles del sistema y los componentes de persistencia.</li>
+    <li>Especificar requisitos funcionales y no funcionales congruentes con la implementación.</li>
+    <li>Documentar los flujos principales, el modelo relacional y el diccionario de datos vigente.</li>
+    <li>Excluir de la documentación las funcionalidades no implementadas o los componentes heredados sin esquema actual.</li>
+  </ul>
+</section>
+
+<section class="page">
+  <h1>4. Alcance y delimitación</h1>
+  <h2>4.1 Alcance funcional implementado</h2>
+  <ul>
+    <li>Landing pública con información del chef, enlaces sociales y una muestra de cursos.</li>
+    <li>Catálogo dinámico de cursos/servicios con título, descripción, precio, duración, categoría, fecha de evento e imagen.</li>
+    <li>Registro, inicio de sesión, recuperación por pregunta de seguridad y cambio de contraseña.</li>
+    <li>Perfil de usuario con actualización de datos, pregunta de seguridad y preferencias de notificación.</li>
+    <li>Registro de asesorías, cursos y eventos; reserva con datos de identificación y fecha.</li>
+    <li>Registro y consulta de inscripciones, carga de comprobante y actualización administrativa de estado de pago.</li>
+    <li>Acceso al contenido activo de cursos pagados, seguimiento de progreso y emisión de datos para certificados cuando la inscripción está completada.</li>
+    <li>Historial de solicitudes y flujo de solicitud, cancelación, aprobación o rechazo de reembolsos.</li>
+    <li>Panel administrativo para usuarios, servicios, contenido, solicitudes e incidencias de reembolso.</li>
+  </ul>
+  <h2>4.2 Fuera de alcance</h2>
+  <ul>
+    <li>Inventario, compras, proveedores, códigos de barras, facturación electrónica y reportes contables: no existen tablas ni interfaces activas que los implementen.</li>
+    <li>Pasarela de pago integrada: el sistema conserva comprobantes y estados; no procesa transacciones bancarias o de tarjeta.</li>
+    <li>Despliegue cloud, AWS, Azure o arquitectura de microservicios: el repositorio está preparado para ejecución local con Apache/PHP y MySQL/MariaDB.</li>
+    <li>Notificaciones persistentes: existe un endpoint que intenta enviar correo con <i>mail()</i>, pero no hay tabla de notificaciones ni configuración de envío garantizada.</li>
+  </ul>
+  <p class="note"><b>Nota de consistencia:</b> los archivos <i>clients.php</i>, <i>sellers.php</i> y sus listados asociados permanecen en el repositorio, pero sus tablas no son creadas por <i>init_db.php</i>. Se consideran endpoints heredados y no forman parte del alcance operativo documentado.</p>
+
+  <h1>5. Metodología de actualización documental</h1>
+  <p>Se aplicó revisión estática y trazabilidad entre cuatro fuentes internas: (a) el repositorio Git configurado con el remoto del proyecto; (b) las páginas de <i>views/</i> e <i>index.html</i>; (c) los scripts de <i>assets/</i> que consumen la API; y (d) los archivos PHP de <i>backend/</i>, especialmente el inicializador de base de datos. Los requisitos y el diccionario se redactaron a partir de esas evidencias. No se infirieron módulos por el nombre de archivos que no tengan soporte en el esquema o la interfaz actual.</p>
+</section>
+
+<section class="page">
+  <h1>6. Arquitectura y tecnologías implementadas</h1>
+  <div class="diagram">
+    <table>
+      <tr><td class="box" colspan="3">Navegador web</td></tr>
+      <tr><td colspan="3">Landing, catálogo, autenticación, panel de usuario y panel administrativo<br>HTML + CSS (Tailwind cargado por CDN y estilos propios) + JavaScript vanilla</td></tr>
+      <tr><td colspan="3">↓ solicitudes HTTP/JSON y sesiones con credenciales ↓</td></tr>
+      <tr><td class="box">Servidor Apache / PHP</td><td class="box">API REST-like<br>backend/api/*.php</td><td class="box">Autorización<br>sesiones PHP y roles</td></tr>
+      <tr><td colspan="3">↓ PDO con sentencias preparadas ↓</td></tr>
+      <tr><td class="box" colspan="3">MySQL o MariaDB — base de datos <i>chef_jonathan</i>, charset utf8mb4</td></tr>
+    </table>
+  </div>
+  <p class="caption">Figura 1. Arquitectura lógica verificada en la implementación.</p>
+  <table>
+    <tr><th>Componente</th><th>Tecnología y evidencia</th><th>Responsabilidad</th></tr>
+    <tr><td>Cliente</td><td>HTML, CSS, JavaScript vanilla; archivos en <i>views/</i>, <i>assets/</i> e <i>index.html</i>.</td><td>Interfaz, formularios, renderizado del catálogo y consumo de la API.</td></tr>
+    <tr><td>Presentación</td><td>Tailwind CSS por CDN y <i>assets/style.css</i>.</td><td>Diseño responsivo y estilos visuales.</td></tr>
+    <tr><td>Servidor</td><td>PHP 8.x, Apache/XAMPP o servidor PHP integrado.</td><td>Reglas de negocio, sesiones, validación y respuestas JSON.</td></tr>
+    <tr><td>Persistencia</td><td>MySQL/MariaDB, PDO, InnoDB y utf8mb4.</td><td>Usuarios, cursos, solicitudes, pagos, reembolsos y contenido.</td></tr>
+    <tr><td>Autenticación</td><td><i>$_SESSION</i>, <i>password_hash</i> y <i>password_verify</i>.</td><td>Identificación del usuario y control de roles <i>admin</i>/<i>user</i>.</td></tr>
+  </table>
+  <h2>6.1 Roles</h2>
+  <table><tr><th>Actor</th><th>Permisos principales</th></tr><tr><td>Visitante</td><td>Consultar información y catálogo; acceder a registro e inicio de sesión.</td></tr><tr><td>Usuario</td><td>Gestionar perfil, crear solicitudes, registrar comprobantes, consultar historial, acceder a cursos pagados y solicitar reembolsos.</td></tr><tr><td>Administrador</td><td>Gestionar usuarios, cursos y contenido; revisar solicitudes; actualizar pagos; procesar reembolsos.</td></tr></table>
+</section>
+
+<section class="page">
+  <h1>7. Requisitos funcionales</h1>
+  <table>
+    <tr><th>ID</th><th>Requisito verificable</th><th>Actor</th><th>Evidencia principal</th></tr>
+    <tr><td>RF-01</td><td>El sistema debe mostrar la oferta de cursos/servicios con sus datos básicos.</td><td>Visitante, usuario</td><td><i>catalogo.html</i>, <i>cursos-get.php</i>.</td></tr>
+    <tr><td>RF-02</td><td>Debe permitir registrar usuarios con nombre, correo, teléfono, contraseña y pregunta de seguridad.</td><td>Visitante</td><td><i>registro.html</i>, <i>register.php</i>.</td></tr>
+    <tr><td>RF-03</td><td>Debe autenticar usuarios y redirigir según el rol almacenado.</td><td>Usuario, administrador</td><td><i>login.php</i>, <i>dashboard.php</i>.</td></tr>
+    <tr><td>RF-04</td><td>Debe permitir recuperar la contraseña validando la pregunta y respuesta de seguridad.</td><td>Usuario</td><td><i>forgot-password.php</i>.</td></tr>
+    <tr><td>RF-05</td><td>Debe permitir actualizar datos de perfil, pregunta de seguridad y preferencias de notificación.</td><td>Usuario</td><td><i>perfil.js</i>, <i>profile-update.php</i>, <i>update-security.php</i>, <i>update-notifications.php</i>.</td></tr>
+    <tr><td>RF-06</td><td>Debe permitir registrar una solicitud de asesoría, curso o evento con fecha, hora, datos de contacto, servicio y número de personas.</td><td>Usuario</td><td><i>agendar.js</i>, <i>advisory-registration.php</i>.</td></tr>
+    <tr><td>RF-07</td><td>Debe permitir registrar reservas con identificación, tipo de reserva, fecha y observaciones.</td><td>Usuario</td><td><i>reservation-registration.php</i>.</td></tr>
+    <tr><td>RF-08</td><td>Debe crear y consultar inscripciones a cursos, asociando usuario, curso, precio y estados.</td><td>Usuario, administrador</td><td><i>inscripciones.php</i>.</td></tr>
+    <tr><td>RF-09</td><td>Debe permitir adjuntar comprobantes de pago y actualizar los estados de pago de una inscripción o asesoría.</td><td>Usuario, administrador</td><td><i>inscripciones.php</i>, <i>advisory-receipt.php</i>, <i>advisory-payment.php</i>.</td></tr>
+    <tr><td>RF-10</td><td>Debe listar para el usuario sus asesorías, eventos e inscripciones, incluido el historial de estados.</td><td>Usuario</td><td><i>mis-servicios.js</i>, <i>historial.js</i>, <i>my-history-get.php</i>.</td></tr>
+    <tr><td>RF-11</td><td>Debe restringir el contenido de cursos a usuarios con inscripción pagada y confirmada/completada.</td><td>Usuario</td><td><i>course-content-get.php</i>, <i>signed-token.php</i>.</td></tr>
+    <tr><td>RF-12</td><td>Debe registrar el avance de cada contenido y completar la inscripción cuando se han completado todos los contenidos activos.</td><td>Usuario</td><td><i>content-progress.php</i>.</td></tr>
+    <tr><td>RF-13</td><td>Debe listar certificados para inscripciones cuyo estado sea <i>completed</i>.</td><td>Usuario</td><td><i>certificados.php</i>.</td></tr>
+    <tr><td>RF-14</td><td>Debe permitir solicitar y cancelar solicitudes pendientes de reembolso.</td><td>Usuario</td><td><i>refund-request.php</i>, <i>refund-cancel.php</i>.</td></tr>
+    <tr><td>RF-15</td><td>Debe permitir aprobar o rechazar reembolsos y actualizar el estado del servicio relacionado.</td><td>Administrador</td><td><i>refund-process.php</i>, <i>admin-reembolsos.html</i>.</td></tr>
+    <tr><td>RF-16</td><td>Debe permitir al administrador crear, editar y eliminar cursos y su contenido.</td><td>Administrador</td><td><i>courses.php</i>, <i>course-content.php</i>, <i>admin-servicios.html</i>.</td></tr>
+    <tr><td>RF-17</td><td>Debe permitir al administrador crear, editar, listar y eliminar usuarios.</td><td>Administrador</td><td><i>users.php</i>, <i>admin-usuarios.html</i>.</td></tr>
+    <tr><td>RF-18</td><td>Debe permitir al usuario eliminar su cuenta, eliminando antes sus registros dependientes.</td><td>Usuario</td><td><i>usuarios.php</i>.</td></tr>
+  </table>
+</section>
+
+<section class="page">
+  <h1>8. Requisitos no funcionales</h1>
+  <table>
+    <tr><th>ID</th><th>Requisito</th><th>Estado en el código</th></tr>
+    <tr><td>RNF-01</td><td>Compatibilidad con navegadores modernos y diseño adaptable.</td><td>Las vistas emplean HTML5, CSS y clases responsivas de Tailwind.</td></tr>
+    <tr><td>RNF-02</td><td>Ejecución local en un servidor HTTP con PHP 8.x y MySQL/MariaDB.</td><td>Documentado en <i>README.md</i>; configuración en <i>backend/config.php</i>.</td></tr>
+    <tr><td>RNF-03</td><td>Persistencia relacional con codificación UTF-8.</td><td>PDO, InnoDB, <i>utf8mb4</i> y <i>utf8mb4_unicode_ci</i>.</td></tr>
+    <tr><td>RNF-04</td><td>Las contraseñas no deben persistirse en texto plano.</td><td>Se usan <i>password_hash</i> y <i>password_verify</i>.</td></tr>
+    <tr><td>RNF-05</td><td>Las operaciones de datos deben usar consultas parametrizadas.</td><td>Los endpoints principales usan <i>PDO::prepare</i> y <i>execute</i>.</td></tr>
+    <tr><td>RNF-06</td><td>Las rutas protegidas deben validar sesión y, cuando aplica, rol administrativo.</td><td>Sesiones PHP y comprobaciones de rol en varios endpoints.</td></tr>
+    <tr><td>RNF-07</td><td>La API debe comunicarse mediante JSON y códigos HTTP.</td><td>Respuestas <i>json_encode</i>; encabezados en los endpoints revisados.</td></tr>
+    <tr><td>RNF-08</td><td>La base de datos debe poder inicializarse con datos de demostración.</td><td><i>backend/init_db.php</i> crea el esquema e inserta usuarios, cursos y contenido inicial.</td></tr>
+    <tr><td>RNF-09</td><td>Los comprobantes pueden requerir tamaño amplio de almacenamiento.</td><td>Columnas <i>LONGTEXT</i> para comprobantes en asesorías y ajustes de migración.</td></tr>
+    <tr><td>RNF-10</td><td>Las variables de conexión deben ser configurables.</td><td><i>DB_HOST</i>, <i>DB_USER</i>, <i>DB_PASS</i>, <i>DB_NAME</i>, <i>DB_CHARSET</i> y <i>DB_COLLATION</i>.</td></tr>
+  </table>
+  <h2>8.1 Consideraciones de seguridad y calidad</h2>
+  <p>La implementación incluye bases importantes: hash de contraseñas, sesiones y sentencias preparadas. Sin embargo, la configuración local tiene credenciales por defecto para XAMPP y algunos endpoints requieren una revisión adicional para uniformar la autorización. Antes de producción se recomienda: variables de entorno obligatorias, HTTPS, control de tamaño/tipo de comprobantes, protección CSRF, registros de auditoría, pruebas automatizadas y revisión integral de permisos de cada endpoint.</p>
+</section>
+
+<section class="page">
+  <h1>9. Casos de uso y recorridos</h1>
+  <div class="diagram">
+    <table><tr><td class="box">Visitante</td><td>→ Consultar catálogo · Registrarse · Iniciar sesión</td></tr><tr><td class="box">Usuario</td><td>→ Actualizar perfil · Agendar · Inscribirse · Cargar comprobante · Ver contenido · Consultar historial · Solicitar reembolso</td></tr><tr><td class="box">Administrador</td><td>→ Gestionar usuarios · Cursos y contenido · Solicitudes/pagos · Reembolsos</td></tr></table>
+  </div>
+  <p class="caption">Figura 2. Actores y casos de uso principales.</p>
+  <table>
+    <tr><th>Caso</th><th>Actor</th><th>Flujo principal</th><th>Resultado</th></tr>
+    <tr><td>CU-01. Registro</td><td>Visitante</td><td>Ingresa datos y pregunta de seguridad; el servidor valida correo, teléfono y contraseña; crea el usuario con rol <i>user</i>.</td><td>Cuenta creada y sesión iniciada.</td></tr>
+    <tr><td>CU-02. Autenticación</td><td>Usuario/admin</td><td>Envía correo y contraseña; el servidor verifica el hash y registra datos en sesión.</td><td>Acceso al panel correspondiente al rol.</td></tr>
+    <tr><td>CU-03. Solicitud de servicio</td><td>Usuario</td><td>Selecciona asesoría, curso o evento; indica fecha, hora, servicio, datos y personas.</td><td>Registro en <i>advisories</i> con estado pendiente.</td></tr>
+    <tr><td>CU-04. Inscripción y pago</td><td>Usuario/admin</td><td>Se crea inscripción; el usuario adjunta comprobante y el administrador marca el pago como pagado o rechazado.</td><td>El estado de pago queda disponible para seguimiento y acceso.</td></tr>
+    <tr><td>CU-05. Contenido y avance</td><td>Usuario</td><td>El sistema valida una inscripción pagada; lista contenido activo y registra cada unidad completada.</td><td>Porcentaje de avance; inscripción completada al terminar todas las unidades.</td></tr>
+    <tr><td>CU-06. Reembolso</td><td>Usuario/admin</td><td>El usuario solicita reembolso de un registro elegible; el administrador aprueba o rechaza y registra el resultado.</td><td>Actualización coordinada de <i>refunds</i> y del pago del servicio.</td></tr>
+    <tr><td>CU-07. Administración</td><td>Administrador</td><td>Consulta y modifica usuarios, cursos, contenido y solicitudes desde el panel.</td><td>Datos operativos actualizados.</td></tr>
+  </table>
+</section>
+
+<section class="page">
+  <h1>10. Modelo de datos</h1>
+  <h2>10.1 Modelo relacional</h2>
+  <div class="diagram small">
+    <table>
+      <tr><td class="box">USERS</td><td>1 ── N</td><td class="box">REGISTRATIONS</td><td>N ── 1</td><td class="box">COURSES</td></tr>
+      <tr><td class="box">USERS</td><td>1 ── N</td><td class="box">ADVISORIES</td><td></td><td></td></tr>
+      <tr><td class="box">USERS</td><td>1 ── N</td><td class="box">RESERVATIONS</td><td>N ── 0..1</td><td class="box">COURSES</td></tr>
+      <tr><td class="box">USERS</td><td>1 ── N</td><td class="box">REFUNDS</td><td>N ── 0..1</td><td class="box">USERS (processed_by)</td></tr>
+      <tr><td class="box">COURSES</td><td>1 ── N</td><td class="box">COURSE_CONTENT</td><td>1 ── N</td><td class="box">CONTENT_PROGRESS</td></tr>
+      <tr><td class="box">USERS</td><td>1 ── N</td><td class="box">CONTENT_PROGRESS</td><td>N ── 1</td><td class="box">COURSES</td></tr>
+    </table>
+  </div>
+  <p class="caption">Figura 3. Relaciones principales del esquema actual. Las tablas <i>password_resets</i> y <i>seed_meta</i> no contienen claves foráneas.</p>
+  <h2>10.2 Reglas de integridad y estados</h2>
+  <ul>
+    <li><i>users.email</i> es único; los roles admitidos son <i>admin</i> y <i>user</i>.</li>
+    <li>Las inscripciones tienen estado operativo <i>pending</i>, <i>confirmed</i> o <i>completed</i>; el pago admite <i>pending</i>, <i>paid</i>, <i>rejected</i>, <i>refund_requested</i> y <i>refunded</i>.</li>
+    <li>Las asesorías manejan los tipos <i>asesoria</i>, <i>curso</i> y <i>evento</i>; su estado incluye además <i>cancelled</i>.</li>
+    <li>Los reembolsos tienen estado <i>pending</i>, <i>approved</i> o <i>rejected</i>.</li>
+    <li>Al eliminar un curso se eliminan sus inscripciones y contenidos por cascada. Las referencias de usuario en varias tablas se establecen en nulo al eliminar el usuario.</li>
+  </ul>
+</section>
+
+<section class="page">
+  <h1>10.3 Diccionario de datos</h1>
+  <h2>Users</h2>
+  <table><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr><tr><td>id</td><td>INT, PK, AI</td><td>Identificador del usuario.</td></tr><tr><td>name</td><td>VARCHAR(255)</td><td>Nombre registrado.</td></tr><tr><td>email</td><td>VARCHAR(255), UNIQUE</td><td>Correo de acceso.</td></tr><tr><td>phone</td><td>VARCHAR(20)</td><td>Teléfono de contacto.</td></tr><tr><td>password</td><td>VARCHAR(255)</td><td>Hash de contraseña.</td></tr><tr><td>role</td><td>ENUM</td><td><i>admin</i> o <i>user</i>.</td></tr><tr><td>security_question / security_answer</td><td>VARCHAR(255)</td><td>Datos usados por la recuperación de cuenta.</td></tr><tr><td>notify_email / notify_whatsapp</td><td>BOOLEAN</td><td>Preferencias de notificación.</td></tr><tr><td>created_at</td><td>TIMESTAMP</td><td>Fecha de creación.</td></tr></table>
+  <h2>Courses</h2>
+  <table><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr><tr><td>id</td><td>INT, PK, AI</td><td>Identificador del curso/servicio del catálogo.</td></tr><tr><td>title</td><td>VARCHAR(255)</td><td>Nombre visible.</td></tr><tr><td>description / description_detail</td><td>TEXT</td><td>Descripción corta y ampliada.</td></tr><tr><td>price</td><td>DECIMAL(10,2)</td><td>Valor monetario.</td></tr><tr><td>duration / category</td><td>VARCHAR(100)</td><td>Duración y clasificación.</td></tr><tr><td>event_date</td><td>DATE, NULL</td><td>Fecha cuando corresponde a un evento.</td></tr><tr><td>image</td><td>MEDIUMTEXT</td><td>Imagen, usada con datos base64 en la siembra.</td></tr><tr><td>created_at</td><td>TIMESTAMP</td><td>Fecha de creación.</td></tr></table>
+  <h2>Registrations</h2>
+  <table><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr><tr><td>id</td><td>INT, PK, AI</td><td>Identificador de la inscripción.</td></tr><tr><td>client_id</td><td>INT, FK → users.id</td><td>Usuario inscrito; puede quedar nulo.</td></tr><tr><td>course_id</td><td>INT, FK → courses.id</td><td>Curso inscrito.</td></tr><tr><td>course_price</td><td>DECIMAL(10,2)</td><td>Precio registrado para la inscripción.</td></tr><tr><td>status</td><td>ENUM</td><td><i>pending</i>, <i>confirmed</i> o <i>completed</i>.</td></tr><tr><td>payment_status</td><td>ENUM</td><td>Estado del pago/reembolso.</td></tr><tr><td>payment_receipt</td><td>TEXT/LONGTEXT</td><td>Comprobante en texto/base64.</td></tr><tr><td>payment_date</td><td>DATETIME</td><td>Fecha de actualización del pago.</td></tr><tr><td>registration_date</td><td>TIMESTAMP</td><td>Fecha de inscripción.</td></tr></table>
+</section>
+
+<section class="page">
+  <h1>10.3 Diccionario de datos (continuación)</h1>
+  <h2>Advisories</h2>
+  <table><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr><tr><td>id</td><td>INT, PK, AI</td><td>Identificador de solicitud de servicio.</td></tr><tr><td>user_id</td><td>INT, FK → users.id</td><td>Usuario solicitante; puede quedar nulo.</td></tr><tr><td>name, email, phone</td><td>VARCHAR</td><td>Datos de contacto conservados con la solicitud.</td></tr><tr><td>service_type</td><td>ENUM</td><td><i>asesoria</i>, <i>curso</i> o <i>evento</i>.</td></tr><tr><td>advisory_type, advisory_service, advisory_mode, event_name</td><td>VARCHAR</td><td>Detalle del servicio solicitado.</td></tr><tr><td>date, time</td><td>DATE, TIME</td><td>Fecha y hora solicitadas.</td></tr><tr><td>notes</td><td>TEXT</td><td>Observaciones del usuario.</td></tr><tr><td>status</td><td>ENUM</td><td><i>pending</i>, <i>confirmed</i>, <i>completed</i> o <i>cancelled</i>.</td></tr><tr><td>price, num_persons</td><td>DECIMAL / INT</td><td>Valor y cantidad de asistentes.</td></tr><tr><td>payment_status, payment_receipt, payment_date</td><td>ENUM / LONGTEXT / DATETIME</td><td>Datos de pago y comprobante.</td></tr><tr><td>created_at</td><td>TIMESTAMP</td><td>Fecha de creación.</td></tr></table>
+  <h2>Reservations</h2>
+  <table><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr><tr><td>id</td><td>INT, PK, AI</td><td>Identificador de reserva.</td></tr><tr><td>user_id</td><td>INT, FK → users.id</td><td>Usuario asociado.</td></tr><tr><td>name, email, phone</td><td>VARCHAR</td><td>Datos de contacto.</td></tr><tr><td>id_type, id_number</td><td>VARCHAR</td><td>Tipo y número de identificación.</td></tr><tr><td>reservation_type</td><td>ENUM</td><td><i>curso</i>, <i>asesoria</i> o <i>evento</i>.</td></tr><tr><td>course_id, advisory_id, event_id</td><td>INT</td><td>Referencias de la reserva; solo <i>course_id</i> declara FK en el inicializador.</td></tr><tr><td>date, time, notes</td><td>DATE, TIME, TEXT</td><td>Programación y observaciones.</td></tr><tr><td>status, created_at</td><td>ENUM, TIMESTAMP</td><td>Estado operativo y auditoría temporal.</td></tr></table>
+  <h2>Refunds</h2>
+  <table><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr><tr><td>id</td><td>INT, PK, AI</td><td>Identificador de la solicitud.</td></tr><tr><td>user_id</td><td>INT, FK → users.id</td><td>Solicitante.</td></tr><tr><td>type / refundable_id</td><td>ENUM / INT</td><td>Tipo y registro objeto del reembolso.</td></tr><tr><td>service_title, service_name, amount</td><td>VARCHAR / DECIMAL</td><td>Datos descriptivos y valor.</td></tr><tr><td>refund_status</td><td>ENUM</td><td><i>pending</i>, <i>approved</i> o <i>rejected</i>.</td></tr><tr><td>created_at, processed_at</td><td>TIMESTAMP / DATETIME</td><td>Creación y procesamiento.</td></tr><tr><td>processed_by</td><td>INT, FK → users.id</td><td>Administrador que procesó.</td></tr><tr><td>rejection_reason, admin_receipt</td><td>TEXT / LONGTEXT</td><td>Motivo de rechazo y soporte administrativo.</td></tr></table>
+</section>
+
+<section class="page">
+  <h1>10.3 Diccionario de datos (continuación)</h1>
+  <h2>Course_content</h2>
+  <table><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr><tr><td>id</td><td>INT, PK, AI</td><td>Identificador de unidad de aprendizaje.</td></tr><tr><td>course_id</td><td>INT, FK → courses.id</td><td>Curso propietario; se elimina en cascada.</td></tr><tr><td>title, description</td><td>VARCHAR / TEXT</td><td>Información visible de la lección.</td></tr><tr><td>content_type</td><td>VARCHAR(50)</td><td>Tipo de contenido; por defecto, video.</td></tr><tr><td>video_url</td><td>TEXT</td><td>URL del material audiovisual.</td></tr><tr><td>duration</td><td>VARCHAR(20)</td><td>Duración informativa.</td></tr><tr><td>order_index</td><td>INT</td><td>Orden de presentación.</td></tr><tr><td>is_active</td><td>INT</td><td>Indicador de contenido habilitado.</td></tr><tr><td>created_at</td><td>TIMESTAMP</td><td>Fecha de creación.</td></tr></table>
+  <h2>Content_progress</h2>
+  <p>Esta tabla se crea bajo demanda por <i>course-content-get.php</i> y <i>content-progress.php</i>.</p>
+  <table><tr><th>Campo</th><th>Tipo</th><th>Descripción</th></tr><tr><td>id</td><td>INT, PK, AI</td><td>Identificador de avance.</td></tr><tr><td>user_id</td><td>INT, FK → users.id</td><td>Usuario que completó contenido.</td></tr><tr><td>course_id</td><td>INT, FK → courses.id</td><td>Curso asociado.</td></tr><tr><td>content_id</td><td>INT, FK → course_content.id</td><td>Unidad completada.</td></tr><tr><td>completed_at</td><td>TIMESTAMP</td><td>Fecha de finalización.</td></tr><tr><td>UNIQUE</td><td>user_id, content_id</td><td>Evita registrar dos veces el mismo avance.</td></tr></table>
+  <h2>Password_resets y seed_meta</h2>
+  <table><tr><th>Tabla</th><th>Campos principales</th><th>Propósito</th></tr><tr><td>password_resets</td><td>id, email, token, expires, used, created_at</td><td>Soporta restablecimiento por token; el flujo de interfaz vigente prioriza pregunta de seguridad.</td></tr><tr><td>seed_meta</td><td>key, value, updated_at</td><td>Marca de datos de ejemplo inicializados.</td></tr></table>
+</section>
+
+<section class="page">
+  <h1>11. Interfaces y servicios API</h1>
+  <table>
+    <tr><th>Área</th><th>Endpoints representativos</th><th>Finalidad</th></tr>
+    <tr><td>Autenticación</td><td>POST <i>register.php</i>, <i>login.php</i>, <i>forgot-password.php</i>, <i>reset-password.php</i></td><td>Crear cuenta, autenticar y recuperar/restablecer contraseña.</td></tr>
+    <tr><td>Perfil</td><td>GET/POST/DELETE <i>users.php</i>; POST <i>profile-update.php</i>, <i>password-change.php</i>, <i>update-security.php</i>, <i>update-notifications.php</i>; DELETE <i>usuarios.php</i></td><td>Consultar y administrar cuenta y preferencias.</td></tr>
+    <tr><td>Catálogo</td><td>GET/POST/DELETE <i>courses.php</i>; GET <i>cursos-get.php</i></td><td>Listar y administrar cursos.</td></tr>
+    <tr><td>Contenido</td><td>GET/POST/PUT/DELETE <i>course-content.php</i>; GET <i>course-content-get.php</i>; GET/POST <i>content-progress.php</i>; GET <i>signed-token.php</i></td><td>Administrar, consultar y proteger contenido; registrar avance.</td></tr>
+    <tr><td>Solicitudes</td><td>POST <i>advisory-registration.php</i>, <i>reservation-registration.php</i>; GET <i>advisories-get.php</i>, <i>my-advisories-events.php</i>, <i>my-events-get.php</i>; DELETE <i>advisory-delete.php</i></td><td>Registrar y consultar asesorías, cursos/eventos solicitados y reservas.</td></tr>
+    <tr><td>Inscripciones y pagos</td><td>GET/POST/PUT/DELETE <i>inscripciones.php</i>; POST <i>advisory-receipt.php</i>, <i>advisory-payment.php</i></td><td>Administrar inscripciones, comprobantes y estado del pago.</td></tr>
+    <tr><td>Historial y certificados</td><td>GET <i>my-history-get.php</i>, <i>certificados.php</i></td><td>Mostrar servicios del usuario y certificados elegibles.</td></tr>
+    <tr><td>Reembolsos</td><td>POST <i>refund-request.php</i>, <i>refund-cancel.php</i>, <i>refund-process.php</i>; GET <i>refunds-get.php</i>, <i>my-refunds-get.php</i></td><td>Crear, consultar, cancelar y procesar reembolsos.</td></tr>
+  </table>
+  <p>Las rutas se consumen normalmente desde <i>/backend/api/</i>. La API no es una REST estricta: varios endpoints usan acciones o métodos distintos según el caso, pero sus respuestas se expresan en JSON.</p>
+</section>
+
+<section class="page">
+  <h1>12. Instalación y operación local</h1>
+  <ol>
+    <li>Instalar PHP 8.x, MySQL o MariaDB y un servidor web. Puede utilizarse Apache con XAMPP.</li>
+    <li>Configurar, si es necesario, las variables <i>DB_HOST</i>, <i>DB_USER</i>, <i>DB_PASS</i> y <i>DB_NAME</i>. Por defecto se usa <i>127.0.0.1</i>, usuario <i>root</i>, contraseña vacía y base <i>chef_jonathan</i>.</li>
+    <li>Servir la carpeta del proyecto desde el servidor HTTP.</li>
+    <li>Abrir <i>backend/init_db.php</i> una sola vez para crear la base e insertar los datos de demostración. <b>Advertencia:</b> el archivo elimina y recrea las tablas principales; no debe ejecutarse sobre datos reales sin una copia de seguridad.</li>
+    <li>Abrir <i>index.html</i> a través de la URL del servidor, por ejemplo <i>http://localhost/Chef-Jonathan-Buitrago/</i>.</li>
+  </ol>
+  <h2>Datos de demostración definidos en el inicializador</h2>
+  <table><tr><th>Rol</th><th>Correo</th><th>Contraseña inicial</th></tr><tr><td>Administrador</td><td>admin@chefjonathan.com</td><td>Admin@2026</td></tr><tr><td>Usuario</td><td>edwinalex8712@gmail.com</td><td>User@2026</td></tr></table>
+  <p class="note"><b>Uso responsable:</b> las credenciales anteriores son únicamente datos de demostración del archivo de inicialización. Deben modificarse o eliminarse al desplegar una instalación distinta.</p>
+
+  <h1>13. Hallazgos y trabajo futuro</h1>
+  <p>La revisión detectó coherencia entre el modelo actual y los módulos de usuarios, servicios, inscripciones, contenido y reembolsos. También detectó elementos que requieren consolidación: endpoints heredados que dependen de tablas inexistentes en el inicializador, rutas de API expresadas de manera absoluta en algunos scripts, y una política de autorización no uniforme entre todos los endpoints.</p>
+  <p>Como mejoras futuras se recomiendan una batería de pruebas, migraciones versionadas en lugar de un inicializador destructivo, validación y almacenamiento seguro de archivos, manejo transaccional uniforme de pagos/reembolsos, auditoría de roles, una pasarela de pago si el negocio lo requiere y generación formal de certificados en PDF. Estas mejoras no se declaran como funcionalidades actuales.</p>
+</section>
+
+<section class="page">
+  <h1>Conclusiones</h1>
+  <p>El proyecto implementa una plataforma web para la gestión de la oferta formativa y de servicios de Chef Jonathan Buitrago. Su núcleo funcional está compuesto por catálogo, autenticación, perfil, solicitudes de asesoría/evento, inscripciones, comprobantes de pago, contenidos de curso, progreso, certificados basados en finalización y reembolsos.</p>
+  <p>La arquitectura implementada es cliente–servidor y local: frontend HTML/CSS/JavaScript, backend PHP y MySQL/MariaDB mediante PDO. Esta conclusión se deriva directamente de los archivos del repositorio y reemplaza descripciones que mencionaban tecnologías o procesos no presentes.</p>
+  <p>La actualización deja una base documental útil para mantenimiento y evaluación académica porque establece los límites reales del sistema, explica sus flujos y relaciona cada módulo con las estructuras de datos y componentes de software que lo soportan.</p>
+
+  <h1>Referencias</h1>
+  <div class="references">
+    <p>Chef Jonathan Buitrago. (2026). <i>Chef-Jonathan-Buitrago</i> [Repositorio de código fuente]. GitHub. https://github.com/molstack-dev/Chef-Jonathan-Buitrago</p>
+    <p>Chef Jonathan Buitrago. (2026). <i>backend/init_db.php</i> [Archivo de código fuente]. Repositorio del proyecto.</p>
+    <p>Chef Jonathan Buitrago. (2026). <i>README.md</i> y <i>DOCUMENTACION.md</i> [Documentación interna]. Repositorio del proyecto.</p>
+  </div>
+</section>
+
+</body>
+</html>
