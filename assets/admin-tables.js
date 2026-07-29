@@ -24,6 +24,22 @@ function showToast(message, type = 'success') {
     }, 3000);
 }
 
+// Toggle password visibility
+function togglePassword(inputId) {
+    const passwordField = document.getElementById(inputId);
+    const iconSpan = passwordField.parentNode.querySelector('.password-toggle i');
+    
+    if (passwordField.type === 'password') {
+        passwordField.type = 'text';
+        iconSpan.classList.remove('fa-eye');
+        iconSpan.classList.add('fa-eye-slash');
+    } else {
+        passwordField.type = 'password';
+        iconSpan.classList.remove('fa-eye-slash');
+        iconSpan.classList.add('fa-eye');
+    }
+}
+
 function setupUserEmailSearch() {
     const input = document.getElementById('user-email-search');
     const clearBtn = document.getElementById('user-email-search-clear');
@@ -70,6 +86,8 @@ const response = await fetch('/backend/api/usuarios-get.php');
                 row.innerHTML = `
                     <td class="py-3 text-gray-400 text-sm">${String(user.id).padStart(3, '0')}</td>
                     <td class="py-3 text-white text-sm">${user.name}</td>
+                    <td class="py-3 text-gray-400 text-sm">${user.full_name || user.name}</td>
+                    <td class="py-3 text-gray-400 text-sm">${user.id_type || 'CC'} ${user.id_number || ''}</td>
                     <td class="py-3 text-gray-400 text-sm">${user.email}</td>
                     <td class="py-3 text-gray-400 text-sm">${user.role || 'user'}</td>
                     <td class="py-3 text-gray-400 text-sm">${new Date(user.created_at).toLocaleDateString('es-ES')}</td>
@@ -77,8 +95,6 @@ const response = await fetch('/backend/api/usuarios-get.php');
                         <div class="flex space-x-1">
                             <button type="button" class="edit-btn px-2 py-1 bg-amber-600 text-white rounded hover:bg-amber-700 text-xs" data-user-id="${user.id}">Modificar</button>
                             <button type="button" class="delete-btn px-2 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs" data-user-id="${user.id}">Eliminar</button>
-
-
                         </div>
                     </td>
                 `;
@@ -495,15 +511,29 @@ function setupCreateUserForm() {
         e.preventDefault();
 
         const name = document.getElementById('user-name').value.trim();
+        const full_name = document.getElementById('user-fullname') ? document.getElementById('user-fullname').value.trim() : name;
+        const id_type_select = document.getElementById('user-id-type');
+        const custom_doc_input = document.getElementById('user-custom-doc');
+        
+        // Determine the actual document type to send
+        let id_type = id_type_select ? id_type_select.value : 'CC';
+        let custom_doc_type = null;
+        
+        // If the selected option was 'Otro' and there's a custom value, use the custom value
+        if (id_type_select && id_type_select.value === 'Otro' && custom_doc_input && custom_doc_input.value.trim() !== '') {
+            custom_doc_type = custom_doc_input.value.trim();
+        }
+        
+        const id_number = document.getElementById('user-id-number') ? document.getElementById('user-id-number').value.trim() : '';
         const email = document.getElementById('user-email').value.trim();
         const role = document.getElementById('user-role').value;
         const password = document.getElementById('user-password').value;
 
-        console.log('[admin-tables] create-user submit', { name, email, role });
+        console.log('[admin-tables] create-user submit', { name, full_name, id_type, custom_doc_type, id_number, email, role });
 
 
-        if (!name || !email || !password) {
-            showToast('Completa nombre, email y contraseña.', 'error');
+        if (!name || !full_name || !id_number || !email || !password) {
+            showToast('Completa todos los campos requeridos.', 'error');
             return;
         }
 
@@ -519,9 +549,13 @@ function setupCreateUserForm() {
                 headers: {
                     'Content-Type': 'application/json',
                 },
-            body: JSON.stringify({
+                body: JSON.stringify({
                     action: 'create_user',
                     name,
+                    full_name,
+                    id_type,
+                    id_number,
+                    custom_doc_type: custom_doc_input && custom_doc_input.value.trim() !== '' ? custom_doc_input.value.trim() : null,
                     email,
                     role,
                     password,
@@ -535,19 +569,29 @@ function setupCreateUserForm() {
             });
             // Compatibilidad: si el backend espera el contrato de register.php
             // (security_question/security_answer/phone/notificaciones), enviar ese contrato.
-            if (!response.ok) throw new Error('create_user endpoint falló');
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('API Error Response:', errorText);
+                throw new Error(`create_user endpoint falló con estado ${response.status}`);
+            }
 
             const result = await response.json();
 
             if (result.success) {
                 showToast('Usuario creado exitosamente');
                 createForm.reset();
+                // Reset the custom document container visibility
+                const customDocContainer = document.getElementById('custom-doc-container');
+                if(customDocContainer) customDocContainer.style.display = 'none';
+                const customInput = document.getElementById('user-custom-doc');
+                if(customInput) customInput.value = '';
                 await loadUsers();
             } else {
                 showToast(result.message || 'No se pudo crear el usuario', 'error');
             }
         } catch (error) {
-            showToast('Error al procesar la solicitud', 'error');
+            console.error('Error creating user:', error);
+            showToast('Error al procesar la solicitud: ' + error.message, 'error');
         }
     });
 
@@ -581,6 +625,20 @@ function setupEditModal() {
         const email = document.getElementById('edit-user-email').value.trim();
         const role = document.getElementById('edit-user-role').value;
 
+        // Get document type fields
+        const idTypeSelect = document.getElementById('edit-user-id-type');
+        const customDocInput = document.getElementById('edit-user-custom-doc');
+        const idNumberInput = document.getElementById('edit-user-id-number');
+
+        let id_type = idTypeSelect ? idTypeSelect.value : 'CC';
+        let custom_doc_type = null;
+
+        if (idTypeSelect && idTypeSelect.value === 'Otro' && customDocInput && customDocInput.value.trim() !== '') {
+            custom_doc_type = customDocInput.value.trim();
+        }
+
+        const id_number = idNumberInput ? idNumberInput.value.trim() : '';
+
         if (!name || !email) {
             showToast('Completa nombre y email para actualizar el usuario.', 'error');
             return;
@@ -604,6 +662,9 @@ function setupEditModal() {
                     name,
                     email,
                     role,
+                    id_type,
+                    id_number,
+                    custom_doc_type,
                 }),
             });
 
@@ -685,6 +746,41 @@ function openEditModal(user) {
     document.getElementById('edit-user-id').value = user.id;
     document.getElementById('edit-user-name').value = user.name;
     document.getElementById('edit-user-email').value = user.email;
+    
+    // Set document type
+    const idTypeSelect = document.getElementById('edit-user-id-type');
+    const customDocContainer = document.getElementById('edit-custom-doc-container');
+    const customDocInput = document.getElementById('edit-user-custom-doc');
+    const idNumberInput = document.getElementById('edit-user-id-number');
+    
+    if (idTypeSelect) {
+        // Check if user.id_type is a custom value not in the dropdown
+        const standardTypes = ['Tarjeta de Identidad', 'Cédula de Ciudadanía', 'Cédula de Extranjería', 'Permiso por Protección Temporal (PPT)', 'Pasaporte', 'Otro'];
+        const userDocType = user.id_type || 'Cédula de Ciudadanía';
+        const userCustomDocType = user.custom_doc_type || null;
+        
+        if (standardTypes.includes(userDocType) && userDocType !== 'Otro') {
+            // Standard type that's not 'Otro'
+            idTypeSelect.value = userDocType;
+            if (customDocContainer) customDocContainer.style.display = 'none';
+            if (customDocInput) customDocInput.value = '';
+        } else if (userDocType === 'Otro' || userCustomDocType) {
+            // 'Otro' with custom type
+            idTypeSelect.value = 'Otro';
+            if (customDocContainer) customDocContainer.style.display = 'block';
+            if (customDocInput) customDocInput.value = userCustomDocType || userDocType;
+        } else {
+            // Unknown type - treat as standard
+            idTypeSelect.value = userDocType;
+            if (customDocContainer) customDocContainer.style.display = 'none';
+            if (customDocInput) customDocInput.value = '';
+        }
+    }
+    
+    if (idNumberInput) {
+        idNumberInput.value = user.id_number || '';
+    }
+    
     document.getElementById('edit-user-role').value = user.role || 'user';
     editModal.classList.remove('hidden');
 }

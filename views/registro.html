@@ -9,6 +9,7 @@
         <link href="../assets/style.css" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css2?family=Parisienne&display=swap" rel="stylesheet">
         <link rel="icon" type="image/png" href="../img/icono.png">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     </head>
     <body>
         <!-- Contenedor de notificaciones -->
@@ -68,9 +69,33 @@
                             <h4 class="text-2xl font-semibold mb-6 text-white text-center">Crear Cuenta</h4>
                             <form id="register-form">
                                 <div class="mb-4">
-                                    <label for="register-name" class="block text-gray-300 mb-2">Nombre </label>
+                                    <label for="register-name" class="block text-gray-300 mb-2">Nombre de Usuario / Alias</label>
                                     <input type="text" id="register-name" class="w-full" onkeypress="return /^[a-zA-ZÁéíóúÁÉÍÓÚñÑ ]+$/.test(event.key)" required>
                                 </div>
+                                <div class="mb-4">
+                                    <label for="register-fullname" class="block text-gray-300 mb-2">Nombre Completo</label>
+                                    <input type="text" id="register-fullname" class="w-full" onkeypress="return /^[a-zA-ZÁéíóúÁÉÍÓÚñÑ ]+$/.test(event.key)" required>
+                                </div>
+                                <div class="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label for="register-id-type" class="block text-gray-300 mb-2">Tipo de Documento</label>
+                                        <select id="register-id-type" class="w-full py-4 bg-gray-700 text-gray-300 border border-gray-600" required>
+                                            <option value="Tarjeta de Identidad">Tarjeta de Identidad</option>
+                                            <option value="Cédula de Ciudadanía">Cédula de Ciudadanía</option>
+                                            <option value="Cédula de Extranjería">Cédula de Extranjería</option>
+                                            <option value="Permiso por Protección Temporal (PPT)">Permiso por Protección Temporal (PPT)</option>
+                                            <option value="Pasaporte">Pasaporte</option>
+                                            <option value="Otro">Otro</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label for="register-id-number" class="block text-gray-300 mb-2">Número de Documento</label>
+                                        <input type="text" id="register-id-number" class="w-full" required>
+                                    </div>
+                                    <div id="register-custom-doc-container" class="md:col-span-2" style="display: none;">
+                                        <label for="register-custom-doc" class="block text-gray-300 mb-2">Especifique el tipo de documento</label>
+                                        <input type="text" id="register-custom-doc" class="w-full" placeholder="Escriba el tipo de documento">
+                                    </div>
                                 <div class="mb-4">
                                     <label for="register-email" class="block text-gray-300 mb-2">Correo Electrónico</label>
                                     <input type="email" id="register-email" class="w-full" required>
@@ -79,30 +104,69 @@
                                     <label for="register-phone" class="block text-gray-300 mb-2">Número de Teléfono</label>
                                     <input type="number" id="register-phone" inputmode="numeric" class="w-full py-3" placeholder="   Ej: 3229452346" min="0" step="1" required>
                                 </div>
-
                                 <div class="mb-4">
                                     <label for="register-password" class="block text-gray-300 mb-2">Contraseña (Minimo 8 caracteres con: <strong>Abc1*</strong>)</label>
-                                    <input type="password" id="register-password" class="w-full" required>
+                                    <div class="relative">
+                                        <input type="password" id="register-password" class="w-full pr-10" required>
+                                        <span class="password-toggle absolute inset-y-0 right-0 flex items-center pr-3" onclick="togglePassword('register-password')">
+                                            <i class="fas fa-eye text-gray-500"></i>
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="mb-4">
                                     <label for="register-confirm-password" class="block text-gray-300 mb-2">Confirmar Contraseña</label>
-                                    <input type="password" id="register-confirm-password" class="w-full" required>
+                                    <div class="relative">
+                                        <input type="password" id="register-confirm-password" class="w-full pr-10" required>
+                                        <span class="password-toggle absolute inset-y-0 right-0 flex items-center pr-3" onclick="togglePassword('register-confirm-password')">
+                                            <i class="fas fa-eye text-gray-500"></i>
+                                        </span>
+                                    </div>
                                 </div>
                                 <div class="mb-4">
                                     <label for="register-security-question" class="block text-gray-300 mb-2">Pregunta de Seguridad</label>
-                                    <select id="register-security-question" class="w-full py-4 bg-gray-700 text-gray-300 border border-gray-600" required>
-                                        <option value="">Selecciona una pregunta</option>
+                                    <select id="register-security-question" class="w-full py-2 bg-gray-700 text-gray-300 border border-gray-600" required>
+                                        <option value="">Selecciona una pregunta de seguridad</option>
                                         <option value="¿Cuál es el nombre de tu primera mascota?">¿Cuál es el nombre de tu primera mascota?</option>
-                                        <option value="¿Cuál es tu postre favorito?">¿Cuál es tu postre favorito?</option>
-                                        <option value="¿En qué ciudad naciste?">¿En qué ciudad naciste?</option>
-                                        <option value="¿Cuál es el nombre de tu mejor amigo/a?">¿Cuál es el nombre de tu mejor amigo/a?</option>
-                                        <option value="¿Cuál fue tu primera canción favorita?">¿Cuál fue tu primera canción favorita?</option>
+                                        <option value="¿En qué ciudad nacieron tus padres?">¿En qué ciudad nacieron tus padres?</option>
+                                        <option value="¿Cuál era el nombre de tu mejor amigo de la infancia?">¿Cuál era el nombre de tu mejor amigo de la infancia?</option>
+                                        <option value="¿Cuál fue tu primer trabajo?">¿Cuál fue tu primer trabajo?</option>
+                                        <option value="¿Cuál es el nombre de tu abuela materna?">¿Cuál es el nombre de tu abuela materna?</option>
+                                        <option value="¿Cuál es tu libro favorito?">¿Cuál es tu libro favorito?</option>
+                                        <option value="¿En qué colegio estudiaste?">¿En qué colegio estudiaste?</option>
+                                        <option value="¿Cómo se llama tu artista favorito?">¿Cómo se llama tu artista favorito?</option>
                                     </select>
                                 </div>
+                                
+                                <script>
+                                  // Show/hide custom document type field when 'Otro' is selected in registration form
+                                  document.addEventListener('DOMContentLoaded', function() {
+                                      var docTypeSelect = document.getElementById('register-id-type');
+                                      var customDocContainer = document.getElementById('register-custom-doc-container');
+                                      
+                                      if(docTypeSelect && customDocContainer) {
+                                          docTypeSelect.addEventListener('change', function() {
+                                              if(this.value === 'Otro') {
+                                                  customDocContainer.style.display = 'block';
+                                              } else {
+                                                  customDocContainer.style.display = 'none';
+                                                  // Clear the custom input when not using 'Otro'
+                                                  var customInput = document.getElementById('register-custom-doc');
+                                                  if(customInput) customInput.value = '';
+                                              }
+                                          });
+                                          
+                                          // Initialize visibility based on current value
+                                          if(docTypeSelect.value === 'Otro') {
+                                              customDocContainer.style.display = 'block';
+                                          }
+                                      }
+                                  });
+                                </script>
                                 <div class="mb-4">
                                     <label for="register-security-answer" class="block text-gray-300 mb-2">Respuesta de Seguridad</label>
                                     <input type="text" id="register-security-answer" class="w-full" required>
                                 </div>
+                            </div>
                                 <div class="mb-4">
                                     <label class="block text-gray-300 text-sm font-medium mb-2">Preferencias de Notificación</label>
                                     <div class="space-x-2 flex items-center">
@@ -115,9 +179,8 @@
                                             <span class="ml-2 text-gray-300 text-sm">WhatsApp</span>
                                         </label>
                                     </div>
-                                </div>
                                 <div class="mb-6">
-                                    <label class="flex items-center">
+                                    <label class="mt-2 flex items-center">
                                         <input type="checkbox" id="register-terminos" name="register-terminos" class="rounded bg-gray-700 border-gray-600 text-amber-600 focus:ring-amber-500" required>
                                         <span class="ml-2 text-gray-300 text-sm">Acepto los <a href="#" onclick="openTerminosModal(); return false;" class="text-amber-500 hover:text-amber-400">Términos y Condiciones</a></span>
                                     </label>
@@ -196,6 +259,21 @@
         </div>
 
         <script>
+        function togglePassword(inputId) {
+            const passwordField = document.getElementById(inputId);
+            const iconSpan = passwordField.parentNode.querySelector('.password-toggle i');
+            
+            if (passwordField.type === 'password') {
+                passwordField.type = 'text';
+                iconSpan.classList.remove('fa-eye');
+                iconSpan.classList.add('fa-eye-slash');
+            } else {
+                passwordField.type = 'password';
+                iconSpan.classList.remove('fa-eye-slash');
+                iconSpan.classList.add('fa-eye');
+            }
+        }
+
         function openTerminosModal() {
             document.getElementById('terminos-modal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
@@ -203,18 +281,6 @@
         function closeTerminosModal() {
             document.getElementById('terminos-modal').classList.add('hidden');
             document.body.style.overflow = '';
-        }
-
-        // Validar términos antes de enviar formulario de registro
-        const registerForm = document.getElementById('register-form');
-        if (registerForm) {
-            registerForm.addEventListener('submit', function(e) {
-                const terminosCheck = document.getElementById('register-terminos');
-                if (!terminosCheck.checked) {
-                    e.preventDefault();
-                    showToast('Debes aceptar los Términos y Condiciones', 'error');
-                }
-            });
         }
         </script>
         <script src="../assets/script.js"></script>

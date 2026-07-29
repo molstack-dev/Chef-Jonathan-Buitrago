@@ -782,70 +782,127 @@ document.addEventListener('DOMContentLoaded', function() {
     reveal(); // Initial check
 
     // Manejar envío del formulario de registro
-    const registerForm = document.getElementById('register-form');
-    if (registerForm) {
-        registerForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const name = document.getElementById('register-name').value;
-            const email = document.getElementById('register-email').value;
-            const password = document.getElementById('register-password').value;
-            const security_question = document.getElementById('register-security-question').value;
-            const security_answer = document.getElementById('register-security-answer').value;
-            const register_phoneEl = document.getElementById('register-phone');
-            let phone = '';
-            if (register_phoneEl && register_phoneEl.value) {
-                phone = register_phoneEl.value;
-            } else {
-                // Extraer el teléfono desde el placeholder si el input fue deshabilitado y no tiene value
-                const ph = register_phoneEl ? (register_phoneEl.getAttribute('placeholder') || '') : '';
-                // buscar el primer grupo de 10-15 dígitos
-                const m = ph.match(/\d{7,15}/);
-                phone = m ? m[0] : '';
-            }
-
+    document.addEventListener('DOMContentLoaded', function() {
+        const registerForm = document.getElementById('register-form');
+        if (registerForm) {
+            // Add event listener for document type select to show/hide custom field
+            const registerIdTypeSelect = document.getElementById('register-id-type');
+            const registerCustomDocContainer = document.getElementById('register-custom-doc-container');
+            const registerCustomDocInput = document.getElementById('register-custom-doc');
             
-            const notify_email = document.getElementById('register-notify-email').checked;
-            const notify_whatsapp = document.getElementById('register-notify-whatsapp').checked;
-
-
-            // Validar términos en runtime (evita bypass si otro script dispara el submit)
-            const terminosCheck = document.getElementById('register-terminos');
-            if (terminosCheck && !terminosCheck.checked) {
-                showAlert('Debes aceptar los Términos y Condiciones', 'error');
-                return;
-            }
-
-            try {
-const response = await fetch('/backend/api/register.php', {
-
-
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ name, email, password, phone, security_question, security_answer, notify_email, notify_whatsapp })
+            if (registerIdTypeSelect && registerCustomDocContainer) {
+                registerIdTypeSelect.addEventListener('change', function() {
+                    if (this.value === 'Otro') {
+                        registerCustomDocContainer.style.display = 'block';
+                    } else {
+                        registerCustomDocContainer.style.display = 'none';
+                        if (registerCustomDocInput) registerCustomDocInput.value = '';
+                    }
                 });
                 
-                const data = await response.json();
-                
-                if (response.ok) {
-                    showAlert('Registro exitoso. Por favor inicia sesión.', 'success');
-                    // Limpiar formulario
-                    registerForm.reset();
-                    // Redirigir al login después de 2 segundos
-                    setTimeout(() => {
-                        document.querySelector('#login-form').scrollIntoView({ behavior: 'smooth' });
-                    }, 2000);
+                // Initialize visibility based on current value
+                if (registerIdTypeSelect.value === 'Otro') {
+                    registerCustomDocContainer.style.display = 'block';
                 } else {
-                    showAlert(data.message || 'Error en el registro', 'error');
+                    registerCustomDocContainer.style.display = 'none';
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                showAlert('Error de conexión con el servidor', 'error');
             }
-        });
-    }
+
+            registerForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+
+                const name = document.getElementById('register-name').value;
+                const full_name = document.getElementById('register-fullname') ? document.getElementById('register-fullname').value : name;
+                const id_type_select = document.getElementById('register-id-type');
+                const custom_doc_input = document.getElementById('register-custom-doc');
+                
+                // Determine the actual document type to send
+                let id_type = id_type_select ? id_type_select.value : 'CC';
+                let custom_doc_type = null;
+                
+                // If the selected option was 'Otro' and there's a custom value, use the custom value
+                if (id_type_select && id_type_select.value === 'Otro' && custom_doc_input && custom_doc_input.value.trim() !== '') {
+                    custom_doc_type = custom_doc_input.value.trim();
+                }
+                
+                const id_number = document.getElementById('register-id-number') ? document.getElementById('register-id-number').value : '';
+                const email = document.getElementById('register-email').value;
+                const password = document.getElementById('register-password').value;
+                const security_question = document.getElementById('register-security-question').value;
+                const security_answer = document.getElementById('register-security-answer').value;
+                const register_phoneEl = document.getElementById('register-phone');
+                let phone = '';
+                if (register_phoneEl && register_phoneEl.value) {
+                    phone = register_phoneEl.value;
+                } else {
+                    // Extraer el teléfono desde el placeholder si el input fue deshabilitado y no tiene value
+                    const ph = register_phoneEl ? (register_phoneEl.getAttribute('placeholder') || '') : '';
+                    // buscar el primer grupo de 10-15 dígitos
+                    const m = ph.match(/\d{7,15}/);
+                    phone = m ? m[0] : '';
+                }
+
+                
+                const notify_email = document.getElementById('register-notify-email').checked;
+                const notify_whatsapp = document.getElementById('register-notify-whatsapp').checked;
+
+
+                // Validar términos en runtime (evita bypass si otro script dispara el submit)
+                const terminosCheck = document.getElementById('register-terminos');
+                if (terminosCheck && !terminosCheck.checked) {
+                    showAlert('Debes aceptar los Términos y Condiciones', 'error');
+                    return;
+                }
+
+                try {
+                    const response = await fetch('/backend/api/register.php', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ 
+                            name, 
+                            full_name, 
+                            id_type, 
+                            id_number, 
+                            custom_doc_type, 
+                            email, 
+                            password, 
+                            phone, 
+                            security_question, 
+                            security_answer, 
+                            notify_email, 
+                            notify_whatsapp 
+                        })
+                    });
+
+                    const result = await response.json();
+
+                    if (response.ok && result.message && !result.error) {
+                        showAlert('¡Registro exitoso! Por favor inicia sesión.', 'success');
+                        registerForm.reset();
+                        // Reset the custom document container visibility
+                        if (registerCustomDocContainer) {
+                            registerCustomDocContainer.style.display = 'none';
+                        }
+                        if (registerCustomDocInput) {
+                            registerCustomDocInput.value = '';
+                        }
+                        
+                        // Redirigir después de un breve delay
+                        setTimeout(() => {
+                            window.location.href = 'login.html';
+                        }, 2000);
+                    } else {
+                        showAlert(result.message || 'Error en el registro', 'error');
+                    }
+                } catch (error) {
+                    console.error('Error en el registro:', error);
+                    showAlert('Error de conexión con el servidor', 'error');
+                }
+            });
+        }
+    });
     
     // Manejar envío del formulario de login
     const loginForm = document.getElementById('login-form');

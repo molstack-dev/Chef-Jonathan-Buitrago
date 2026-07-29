@@ -20,27 +20,18 @@ try {
     $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
 
     // Parche determinista: asegurar esquema de refunds (aunque la tabla ya exista)
-    // - admin_receipt siempre exista
-    // - refund_status siempre tenga pending/approved/rejected
     try {
         $refundCols = $pdo->query("SHOW COLUMNS FROM refunds")->fetchAll(PDO::FETCH_COLUMN);
         if ($refundCols && !in_array('admin_receipt', $refundCols, true)) {
             $pdo->exec("ALTER TABLE refunds ADD COLUMN admin_receipt TEXT NULL");
         }
-        // Ajustar enum refund_status
         $hasRefundStatus = $refundCols && in_array('refund_status', $refundCols, true);
         if ($hasRefundStatus) {
             $pdo->exec("ALTER TABLE refunds MODIFY COLUMN refund_status ENUM('pending','approved','rejected') DEFAULT 'pending'");
         }
     } catch (Exception $e) {
-        // si refunds aún no existe, lo ignoramos (se creará más abajo)
+        // si refunds aún no existe, lo ignoramos
     }
-
-
-
-    // (Se reutiliza la validación al final del script, usando course_content)
-
-
 
     // Crear tabla de recuperación de contraseñas
     $pdo->exec("CREATE TABLE IF NOT EXISTS password_resets (
@@ -54,13 +45,16 @@ try {
         INDEX idx_token (token)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-    // Crear tabla de usuarios (antes de tablas que la referencian)
+    // Crear tabla de usuarios
     $pdo->exec("CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL COMMENT 'Alias / Username',
+        full_name VARCHAR(255) DEFAULT NULL COMMENT 'Nombre completo real',
+        id_type ENUM('Tarjeta de Identidad','Cédula de Ciudadanía','Cédula de Extranjería','Permiso por Protección Temporal (PPT)','Pasaporte','Otro') DEFAULT 'Cédula de Ciudadanía' COMMENT 'Tipo de documento',
+        id_number VARCHAR(50) DEFAULT NULL COMMENT 'Número de documento',
+        custom_doc_type VARCHAR(255) DEFAULT NULL COMMENT 'Tipo de documento personalizado cuando id_type es Otro',
         email VARCHAR(255) UNIQUE NOT NULL,
         phone VARCHAR(20) NOT NULL,
-
         password VARCHAR(255) NOT NULL,
         role ENUM('admin','user') NOT NULL DEFAULT 'user',
         security_question VARCHAR(255),
@@ -70,25 +64,25 @@ try {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-    // NOTA: Evitamos ALTERS sobre users (especialmente phone) porque este script hace TRUNCATE
-    // y ya definimos el esquema completo arriba. Los ALTERS aquí pueden causar errores como
-    // "Duplicate column name 'phone'" en ejecuciones parciales.
+    // Migración para usuarios existentes: copiar name a full_name si está vacío
+    try {
+        $pdo->exec("UPDATE users SET full_name = name WHERE full_name IS NULL OR full_name = ''");
+    } catch (Exception $e) {
+        // Ignorar si la columna aún no existe
+    }
+
+    // Migración: agregar custom_doc_type a users si no existe
+    $userCols = $pdo->query("SHOW COLUMNS FROM users")->fetchAll(PDO::FETCH_COLUMN);
+    if (!in_array('custom_doc_type', $userCols)) {
+        try {
+            $pdo->exec("ALTER TABLE users ADD COLUMN custom_doc_type VARCHAR(255) DEFAULT NULL COMMENT 'Tipo de documento personalizado cuando id_type es Otro'");
+        } catch (Exception $e) {
+            // Ignorar si ya existe
+        }
+    }
 
     // Agregar columnas de notificación si no existen (para compatibilidad)
     $userCols = $pdo->query("SHOW COLUMNS FROM users")->fetchAll(PDO::FETCH_COLUMN);
-
-    // Asegurar event_date en courses (para servicios tipo eventos)
-    try {
-        $courseCols = $pdo->query("SHOW COLUMNS FROM courses")->fetchAll(PDO::FETCH_COLUMN);
-        if ($courseCols && !in_array('event_date', $courseCols, true)) {
-            $pdo->exec("ALTER TABLE courses ADD COLUMN event_date DATE NULL");
-        }
-    } catch (Exception $e) {
-        // ignore
-    }
-
-
-
     if (!in_array('notify_email', $userCols)) {
         try { $pdo->exec("ALTER TABLE users ADD COLUMN notify_email BOOLEAN DEFAULT TRUE"); } catch (Exception $e) {}
     }
@@ -110,7 +104,6 @@ try {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-
     // Crear tabla de registros
     $pdo->exec("CREATE TABLE IF NOT EXISTS registrations (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -125,20 +118,6 @@ try {
         FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE SET NULL,
         FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-
-
-    // Corregir migraciones anteriores donde registrations.client_id referenciaba clients.id
-    try {
-        $oldFk = $pdo->query("SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'registrations' AND COLUMN_NAME = 'client_id' AND REFERENCED_TABLE_NAME = 'clients'")->fetchColumn();
-        if ($oldFk) {
-            $pdo->exec("SET FOREIGN_KEY_CHECKS = 0");
-            $pdo->exec("ALTER TABLE registrations DROP FOREIGN KEY `" . $oldFk . "`");
-            $pdo->exec("ALTER TABLE registrations ADD CONSTRAINT registrations_ibfk_1 FOREIGN KEY (client_id) REFERENCES users(id) ON DELETE SET NULL");
-            $pdo->exec("SET FOREIGN_KEY_CHECKS = 1");
-        }
-    } catch (Exception $e) {
-        // Si no existe la tabla o la clave ya es correcta, no hacemos nada.
-    }
 
     // Crear tabla de asesorías
     $pdo->exec("CREATE TABLE IF NOT EXISTS advisories (
@@ -165,72 +144,47 @@ try {
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-
-    // Agregar columnas nuevas si no existen (para actualizaciones)
-    $cols = $pdo->query("SHOW COLUMNS FROM advisories")->fetchAll(PDO::FETCH_COLUMN);
-    if (!in_array('service_type', $cols)) {
-        try { $pdo->exec("ALTER TABLE advisories ADD COLUMN service_type ENUM('asesoria', 'curso', 'evento') NOT NULL DEFAULT 'asesoria'"); } catch (Exception $e) {}
+    // Agregar columnas nuevas si no existen
+    $advisoryCols = $pdo->query("SHOW COLUMNS FROM advisories")->fetchAll(PDO::FETCH_COLUMN);
+    $advisoryColMap = [
+        'service_type' => "ALTER TABLE advisories ADD COLUMN service_type ENUM('asesoria', 'curso', 'evento') NOT NULL DEFAULT 'asesoria'",
+        'advisory_type' => "ALTER TABLE advisories ADD COLUMN advisory_type VARCHAR(50)",
+        'advisory_service' => "ALTER TABLE advisories ADD COLUMN advisory_service VARCHAR(255)",
+        'advisory_mode' => "ALTER TABLE advisories ADD COLUMN advisory_mode VARCHAR(50)",
+        'event_name' => "ALTER TABLE advisories ADD COLUMN event_name VARCHAR(255)",
+        'payment_status' => "ALTER TABLE advisories ADD COLUMN payment_status ENUM('pending', 'paid', 'rejected', 'refund_requested', 'refunded') DEFAULT 'pending'",
+        'payment_date' => "ALTER TABLE advisories ADD COLUMN payment_date DATETIME",
+        'num_persons' => "ALTER TABLE advisories ADD COLUMN num_persons INT DEFAULT 1",
+        'payment_method' => "ALTER TABLE advisories ADD COLUMN payment_method ENUM('nequi', 'bancolombia', 'daviplata', 'nu')",
+    ];
+    foreach ($advisoryColMap as $col => $sql) {
+        if (!in_array($col, $advisoryCols)) {
+            try { $pdo->exec($sql); } catch (Exception $e) {}
+        }
     }
-    if (!in_array('advisory_type', $cols)) {
-        try { $pdo->exec("ALTER TABLE advisories ADD COLUMN advisory_type VARCHAR(50)"); } catch (Exception $e) {}
-    }
-    if (!in_array('advisory_service', $cols)) {
-        try { $pdo->exec("ALTER TABLE advisories ADD COLUMN advisory_service VARCHAR(255)"); } catch (Exception $e) {}
-    }
-    if (!in_array('advisory_mode', $cols)) {
-        try { $pdo->exec("ALTER TABLE advisories ADD COLUMN advisory_mode VARCHAR(50)"); } catch (Exception $e) {}
-    }
-    if (!in_array('event_name', $cols)) {
-        try { $pdo->exec("ALTER TABLE advisories ADD COLUMN event_name VARCHAR(255)"); } catch (Exception $e) {}
-    }
-    if (!in_array('payment_status', $cols)) {
-        try { $pdo->exec("ALTER TABLE advisories ADD COLUMN payment_status ENUM('pending', 'paid', 'rejected', 'refund_requested', 'refunded') DEFAULT 'pending'"); } catch (Exception $e) {}
-    }
-
-    if (!in_array('payment_receipt', $cols)) {
+    if (!in_array('payment_receipt', $advisoryCols)) {
         try { $pdo->exec("ALTER TABLE advisories ADD COLUMN payment_receipt LONGTEXT"); } catch (Exception $e) {}
     } else {
         try { $pdo->exec("ALTER TABLE advisories MODIFY COLUMN payment_receipt LONGTEXT"); } catch (Exception $e) {}
     }
-    if (!in_array('payment_date', $cols)) {
-        try { $pdo->exec("ALTER TABLE advisories ADD COLUMN payment_date DATETIME"); } catch (Exception $e) {}
-    }
-    if (!in_array('num_persons', $cols)) {
-        try { $pdo->exec("ALTER TABLE advisories ADD COLUMN num_persons INT DEFAULT 1"); } catch (Exception $e) {}
-    }
-    
-    // Agregar columna para método de pago
-    if (!in_array('payment_method', $cols)) {
-        try { $pdo->exec("ALTER TABLE advisories ADD COLUMN payment_method ENUM('nequi', 'bancolombia', 'daviplata', 'nu')"); } catch (Exception $e) {}
-    }
-    // Hacer phone NOT NULL si aún no lo es
-    try {
-        $pdo->exec("ALTER TABLE advisories MODIFY COLUMN phone VARCHAR(20) NOT NULL");
-    } catch (Exception $e) {
-        // Puede fallar si ya es NOT NULL
-    }
 
     // Agregar columnas de pago a registrations si no existen
     $regCols = $pdo->query("SHOW COLUMNS FROM registrations")->fetchAll(PDO::FETCH_COLUMN);
-    if (!in_array('payment_status', $regCols)) {
-        try { $pdo->exec("ALTER TABLE registrations ADD COLUMN payment_status ENUM('pending', 'paid', 'rejected', 'refund_requested', 'refunded') DEFAULT 'pending'"); } catch (Exception $e) {}
+    $regColMap = [
+        'payment_status' => "ALTER TABLE registrations ADD COLUMN payment_status ENUM('pending', 'paid', 'rejected', 'refund_requested', 'refunded') DEFAULT 'pending'",
+        'payment_date' => "ALTER TABLE registrations ADD COLUMN payment_date DATETIME",
+        'course_price' => "ALTER TABLE registrations ADD COLUMN course_price DECIMAL(10,2)",
+        'payment_method' => "ALTER TABLE registrations ADD COLUMN payment_method ENUM('nequi', 'bancolombia', 'daviplata', 'nu')",
+    ];
+    foreach ($regColMap as $col => $sql) {
+        if (!in_array($col, $regCols)) {
+            try { $pdo->exec($sql); } catch (Exception $e) {}
+        }
     }
-
     if (!in_array('payment_receipt', $regCols)) {
         try { $pdo->exec("ALTER TABLE registrations ADD COLUMN payment_receipt LONGTEXT"); } catch (Exception $e) {}
     } else {
         try { $pdo->exec("ALTER TABLE registrations MODIFY COLUMN payment_receipt LONGTEXT"); } catch (Exception $e) {}
-    }
-    if (!in_array('payment_date', $regCols)) {
-        try { $pdo->exec("ALTER TABLE registrations ADD COLUMN payment_date DATETIME"); } catch (Exception $e) {}
-    }
-    if (!in_array('course_price', $regCols)) {
-        try { $pdo->exec("ALTER TABLE registrations ADD COLUMN course_price DECIMAL(10,2)"); } catch (Exception $e) {}
-    }
-
-    // Agregar columna para método de pago
-    if (!in_array('payment_method', $regCols)) {
-        try { $pdo->exec("ALTER TABLE registrations ADD COLUMN payment_method ENUM('nequi', 'bancolombia', 'daviplata', 'nu')"); } catch (Exception $e) {}
     }
 
     // Crear tabla de reservas
@@ -255,9 +209,8 @@ try {
         FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE SET NULL
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-    // Tabla exclusiva de reembolsos
-        $pdo->exec("CREATE TABLE IF NOT EXISTS refunds (
-
+    // Tabla de reembolsos
+    $pdo->exec("CREATE TABLE IF NOT EXISTS refunds (
         id INT AUTO_INCREMENT PRIMARY KEY,
         user_id INT NOT NULL,
         type ENUM('registration','advisory_course','advisory_asesoria','advisory_evento') NOT NULL,
@@ -272,7 +225,6 @@ try {
         rejection_reason TEXT NULL,
         admin_receipt LONGTEXT NULL,
         INDEX idx_refund_status (refund_status),
-
         INDEX idx_refund_user (user_id),
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (processed_by) REFERENCES users(id) ON DELETE SET NULL
@@ -280,7 +232,6 @@ try {
 
     // Crear tabla de contenido de cursos
     $pdo->exec("CREATE TABLE IF NOT EXISTS course_content (
-
         id INT AUTO_INCREMENT PRIMARY KEY,
         course_id INT NOT NULL,
         title VARCHAR(255) NOT NULL,
@@ -288,7 +239,6 @@ try {
         content_type VARCHAR(50) DEFAULT 'video',
         video_url TEXT NOT NULL,
         duration VARCHAR(20),
-
         order_index INT DEFAULT 0,
         is_active INT DEFAULT 1,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -297,7 +247,7 @@ try {
         INDEX idx_course_content_order (course_id, order_index)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-    // Insertar datos iniciales en cada ejecución para reiniciar la BD.
+    // Tabla seed_meta
     $pdo->exec("CREATE TABLE IF NOT EXISTS seed_meta (
         `key` VARCHAR(100) PRIMARY KEY,
         `value` VARCHAR(255) NOT NULL,
@@ -306,14 +256,14 @@ try {
 
     // Insertar usuarios de prueba
     $hashedPassword = password_hash('Admin@2026', PASSWORD_DEFAULT);
-    $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role, security_question, security_answer) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute(['Jonathan', 'admin@chefjonathan.com', '3220000000', $hashedPassword, 'admin', '¿Cuál es tu postre favorito?', 'torta de chocolate']);
+    $stmt = $pdo->prepare("INSERT INTO users (name, full_name, id_type, id_number, email, phone, password, role, security_question, security_answer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute(['Jonathan', 'jonathan buitrago', 'Cédula de Ciudadanía', '59384702', 'admin@chefjonathan.com', '3220000000', $hashedPassword, 'admin', '¿Cuál es tu postre favorito?', 'torta de chocolate']);
 
     $hashedPassword2 = password_hash('User@2026', PASSWORD_DEFAULT);
-    $stmt = $pdo->prepare("INSERT INTO users (name, email, phone, password, role, security_question, security_answer) VALUES (?, ?, ?, ?, ?, ?, ?)");
-    $stmt->execute(['Alex', 'edwinalex8712@gmail.com', '3508085470', $hashedPassword2, 'user', '¿Cuál es el nombre de tu primera mascota?', 'max']);
+    $stmt = $pdo->prepare("INSERT INTO users (name, full_name, id_type, id_number, email, phone, password, role, security_question, security_answer) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->execute(['Edwin', 'edwin alexander molina sanabria', 'Tarjeta de Identidad', '1032682086', 'edwinalex8712@gmail.com', '3508085470', $hashedPassword2, 'user', '¿Cuál es el nombre de tu primera mascota?', 'max']);
 
-    // Insertar cursos (guardar imágenes como base64)
+    // Insertar cursos
     $img1 = file_exists('../img/chef_jonathan_buitrago_post_12_5_2024_10_07_303366402308080947431.jpg')
         ? base64_encode(file_get_contents('../img/chef_jonathan_buitrago_post_12_5_2024_10_07_303366402308080947431.jpg')) : null;
     $img2 = file_exists('../img/chef_jonathan_buitrago_post_12_9_2019_8_46_522131343889580551158.jpg')
@@ -322,9 +272,9 @@ try {
         ? base64_encode(file_get_contents('../img/chef_jonathan_buitrago_post_29_12_2021_8_36_232739425447496136534.jpg')) : null;
 
     $courses = [
-        ['Cata de Cacao', 'Descubre los sabores y aromas del cacao en una experiencia única.', 'Explora los secretos del cacao en una cata sensorial. Identificarás notas y orígenes de variedades colombianas, aprenderás a reconocer perfiles de sabor (frutal, floral, terrestre) y comprenderás el proceso desde la cosecha hasta la fermentación. Ideal para amantes del chocolate y profesionales de la gastronomía.', 50000, '2 horas', 'eventos', '2026-08-03', $img1],
-        ['Pastelería de Vanguardia', 'Técnicas modernas para crear postres sorprendentes.', 'Domina las últimas tendencias de la pastelería mundial. Aprende sobre esferificación, espumas, gels, textures de chocolate y técnicas de emplatado profesional. Desarrollarás habilidades para innovar y crear postres que combinen estética y sabor de manera excepcional.', 150000, '10 semanas', 'asesorias', null, $img2],
-        ['Bombonería', 'Elabora bombones artesanales con acabados profesionales.', 'Aprende a crear bombones de chocolate con rellenos sofisticados (ganache, praliné, fruitpaste). Estudiarás templado, técnicas de acabado brillante y decorado. Al finalizar podrás desarrollar tu propia línea de bombones artesanales con presentación de altura.', 95000, '6 semanas', 'cursos', null, $img3],
+        ['Cata de Cacao', 'Descubre los sabores y aromas del cacao en una experiencia única.', 'Explora los secretos del cacao en una cata sensorial.', 50000, '2 horas', 'eventos', '2026-08-03', $img1],
+        ['Pastelería de Vanguardia', 'Técnicas modernas para crear postres sorprendentes.', 'Domina las últimas tendencias de la pastelería mundial.', 150000, '10 semanas', 'asesorias', null, $img2],
+        ['Bombonería', 'Elabora bombones artesanales con acabados profesionales.', 'Aprende a crear bombones de chocolate con rellenos sofisticados.', 95000, '6 semanas', 'cursos', null, $img3],
     ];
 
     $stmt = $pdo->prepare("INSERT INTO courses (title, description, description_detail, price, duration, category, event_date, image) VALUES (?, ?, ?, ?, ?, ?, ?, ?)");

@@ -2,6 +2,22 @@
 document.addEventListener('DOMContentLoaded', function() {
     let currentUserData = {};
 
+    // Toggle password visibility
+    window.togglePassword = function(inputId) {
+        const passwordField = document.getElementById(inputId);
+        const iconSpan = passwordField.parentNode.querySelector('.password-toggle i');
+        
+        if (passwordField.type === 'password') {
+            passwordField.type = 'text';
+            iconSpan.classList.remove('fa-eye');
+            iconSpan.classList.add('fa-eye-slash');
+        } else {
+            passwordField.type = 'password';
+            iconSpan.classList.remove('fa-eye-slash');
+            iconSpan.classList.add('fa-eye');
+        }
+    };
+
     // ===== Cargar datos del usuario =====
     async function loadUserData() {
 
@@ -14,6 +30,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
             // Llenar datos personales
             document.getElementById('profile-name').value = data.name || '';
+            document.getElementById('profile-fullname').value = data.full_name || data.name || '';
+            if (document.getElementById('profile-id-type')) {
+                document.getElementById('profile-id-type').value = data.id_type || 'CC';
+                
+                // Show/hide custom document field based on selected value
+                const customDocContainer = document.getElementById('profile-custom-doc-container');
+                const customDocInput = document.getElementById('profile-custom-doc');
+                
+                if (data.id_type === 'Otro' && data.custom_doc_type) {
+                    if (customDocContainer) customDocContainer.style.display = 'block';
+                    if (customDocInput) {
+                        customDocInput.value = data.custom_doc_type;
+                    }
+                } else {
+                    if (customDocContainer) customDocContainer.style.display = 'none';
+                }
+            }
+            document.getElementById('profile-id-number').value = data.id_number || '';
             document.getElementById('profile-email').value = data.email || '';
 
             // Llenar preferencias de notificación
@@ -31,21 +65,70 @@ document.addEventListener('DOMContentLoaded', function() {
 
     loadUserData();
 
-    // ===== Editar Nombre y Email (Información Personal) =====
+    // Add event listener for document type select to show/hide custom field
+    function setupProfileDocumentTypeListener() {
+        const profileIdTypeSelect = document.getElementById('profile-id-type');
+        const profileCustomDocContainer = document.getElementById('profile-custom-doc-container');
+        const profileCustomDocInput = document.getElementById('profile-custom-doc');
+        
+        if (profileIdTypeSelect && profileCustomDocContainer) {
+            profileIdTypeSelect.addEventListener('change', function() {
+                if (this.value === 'Otro') {
+                    profileCustomDocContainer.style.display = 'block';
+                } else {
+                    profileCustomDocContainer.style.display = 'none';
+                    if (profileCustomDocInput) profileCustomDocInput.value = '';
+                }
+            });
+        }
+    }
+
+    // Setup the listener after DOM is loaded
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupProfileDocumentTypeListener);
+    } else {
+        setupProfileDocumentTypeListener();
+    }
+
+    // ===== Editar Información Personal =====
     const editProfileBtn = document.getElementById('edit-profile-btn');
     const profileNameInput = document.getElementById('profile-name');
+    const profileFullnameInput = document.getElementById('profile-fullname');
+    const profileIdTypeSelect = document.getElementById('profile-id-type');
+    const profileIdNumberInput = document.getElementById('profile-id-number');
     const profileEmailInput = document.getElementById('profile-email');
 
+    // Add event listener for document type select to show/hide custom field
+    if (profileIdTypeSelect) {
+        profileIdTypeSelect.addEventListener('change', function() {
+            const customDocContainer = document.getElementById('profile-custom-doc-container');
+            const customDocInput = document.getElementById('profile-custom-doc');
+            
+            if (this.value === 'Otro') {
+                if (customDocContainer) customDocContainer.style.display = 'block';
+            } else {
+                if (customDocContainer) customDocContainer.style.display = 'none';
+                if (customDocInput) customDocInput.value = '';
+            }
+        });
+    }
+
     if (editProfileBtn && profileNameInput && profileEmailInput) {
-        // Inicialmente readonly
+        // Inicialmente readonly/disabled
         profileNameInput.readOnly = true;
         profileEmailInput.readOnly = true;
+        if (profileFullnameInput) profileFullnameInput.readOnly = true;
+        if (profileIdTypeSelect) profileIdTypeSelect.disabled = true;
+        if (profileIdNumberInput) profileIdNumberInput.readOnly = true;
 
         editProfileBtn.addEventListener('click', async function() {
-            // Si ya está habilitado, no hacemos nada (el guardado se hace desde profile-update.php cuando se confirma)
+            // Si ya está habilitado, no hacemos nada
             // Habilitar inputs
             profileNameInput.readOnly = false;
             profileEmailInput.readOnly = false;
+            if (profileFullnameInput) profileFullnameInput.readOnly = false;
+            if (profileIdTypeSelect) profileIdTypeSelect.disabled = false;
+            if (profileIdNumberInput) profileIdNumberInput.readOnly = false;
 
             // Crear botones si no existen
             let actions = document.getElementById('profile-actions');
@@ -71,38 +154,68 @@ document.addEventListener('DOMContentLoaded', function() {
                 cancelBtn.addEventListener('click', function() {
                     profileNameInput.readOnly = true;
                     profileEmailInput.readOnly = true;
+                    if (profileFullnameInput) profileFullnameInput.readOnly = true;
+                    if (profileIdTypeSelect) profileIdTypeSelect.disabled = true;
+                    if (profileIdNumberInput) profileIdNumberInput.readOnly = true;
+                    // Restaurar valores originales
+                    if (currentUserData.name) profileNameInput.value = currentUserData.name;
+                    if (currentUserData.email) profileEmailInput.value = currentUserData.email;
+                    if (currentUserData.full_name && profileFullnameInput) profileFullnameInput.value = currentUserData.full_name;
+                    if (currentUserData.id_type && profileIdTypeSelect) profileIdTypeSelect.value = currentUserData.id_type;
+                    if (currentUserData.id_number && profileIdNumberInput) profileIdNumberInput.value = currentUserData.id_number;
                     actions.remove();
                 });
             }
 
             if (saveBtn) {
                 saveBtn.addEventListener('click', async function() {
-                    const name = profileNameInput.value.trim();
-                    const email = profileEmailInput.value.trim();
+                        const name = profileNameInput.value.trim();
+                        const email = profileEmailInput.value.trim();
+                        const full_name = document.getElementById('profile-fullname') ? document.getElementById('profile-fullname').value.trim() : '';
+                        const id_type_select = document.getElementById('profile-id-type');
+                        const custom_doc_input = document.getElementById('profile-custom-doc');
+                        
+                        // Determine the actual document type and custom type
+                        let id_type = id_type_select ? id_type_select.value : 'CC';
+                        let custom_doc_type = null;
+                        
+                        // If the selected option was 'Otro' and there's a custom value, use the custom value
+                        if (id_type_select && id_type_select.value === 'Otro' && custom_doc_input && custom_doc_input.value.trim() !== '') {
+                            custom_doc_type = custom_doc_input.value.trim();
+                        }
+                        
+                        const id_number = document.getElementById('profile-id-number') ? document.getElementById('profile-id-number').value.trim() : '';
 
-                    if (!name || !email) {
-                        showAlert('Nombre y email son requeridos', 'error');
-                        return;
-                    }
+                        if (!name || !email) {
+                            showAlert('Nombre y email son requeridos', 'error');
+                            return;
+                        }
 
-                    try {
-                        const response = await fetch('../../backend/api/profile-update.php', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            credentials: 'include',
-                            body: JSON.stringify({ name, email })
-                        });
+                        try {
+                            const response = await fetch('../../backend/api/profile-update.php', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                credentials: 'include',
+                                body: JSON.stringify({ name, full_name, id_type, custom_doc_type, id_number, email })
+                            });
 
-                        const data = await response.json();
-                        if (data.success) {
-                            showAlert('Perfil actualizado exitosamente', 'success');
-                            profileNameInput.readOnly = true;
-                            profileEmailInput.readOnly = true;
-                            actions.remove();
+                            const data = await response.json();
+                            if (data.success) {
+                                showAlert('Perfil actualizado exitosamente', 'success');
+                                profileNameInput.readOnly = true;
+                                profileEmailInput.readOnly = true;
+                                // Restablecer readonly/disabled en los nuevos campos
+                                const fnInput = document.getElementById('profile-fullname');
+                                const idTypeSelect = document.getElementById('profile-id-type');
+                                const idNumInput = document.getElementById('profile-id-number');
+                                if (fnInput) fnInput.readOnly = true;
+                                if (idTypeSelect) idTypeSelect.disabled = true;
+                                if (idNumInput) idNumInput.readOnly = true;
+                                actions.remove();
 
-                            // refrescar valores locales
-                            currentUserData = { ...currentUserData, name, email };
-                        } else {
+                                // refrescar valores locales
+                                currentUserData = { ...currentUserData, name, full_name, id_type, custom_doc_type, id_number, email };
+                            } else {
                             showAlert(data.message || 'Error al actualizar perfil', 'error');
                         }
                     } catch (err) {
