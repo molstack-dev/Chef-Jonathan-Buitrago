@@ -32,6 +32,31 @@ function ensureContentProgressTableExists() {
     );
 }
 
+function ensureCertificatesTableExists() {
+    global $pdo;
+    $pdo->exec(
+        'CREATE TABLE IF NOT EXISTS certificates (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            user_id INT NOT NULL,
+            course_id INT NOT NULL,
+            registration_id INT,
+            certificate_number VARCHAR(50) UNIQUE NOT NULL,
+            issue_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expiry_date DATE NULL,
+            is_valid BOOLEAN DEFAULT TRUE,
+            pdf_path VARCHAR(500),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+            FOREIGN KEY (registration_id) REFERENCES registrations(id) ON DELETE SET NULL,
+            INDEX idx_user_certificate (user_id),
+            INDEX idx_course_certificate (course_id),
+            INDEX idx_certificate_number (certificate_number)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4'
+    );
+}
+
 function verifyAuthenticatedUser(): array {
     global $pdo;
 
@@ -83,6 +108,37 @@ function getCourseProgress(int $userId, int $courseId): array {
     ];
 }
 
+// Función para emitir un certificado automáticamente
+function emitCertificate(int $userId, int $courseId, int $registrationId): bool {
+    global $pdo;
+    
+    try {
+        ensureCertificatesTableExists();
+        
+        // Verificar si ya existe un certificado para esta combinación usuario-curso
+        $checkStmt = $pdo->prepare('SELECT id FROM certificates WHERE user_id = ? AND course_id = ? AND registration_id = ?');
+        $checkStmt->execute([$userId, $courseId, $registrationId]);
+        if ($checkStmt->fetch()) {
+            // Ya existe un certificado para esta inscripción
+            return true;
+        }
+        
+        // Generar número único de certificado
+        $certificate_number = 'CERT-' . strtoupper(substr(uniqid(), -8)) . '-' . date('Y');
+        
+        // Insertar el certificado
+        $stmt = $pdo->prepare("
+            INSERT INTO certificates (user_id, course_id, registration_id, certificate_number, issue_date, is_valid)
+            VALUES (?, ?, ?, ?, NOW(), 1)
+        ");
+        
+        return $stmt->execute([$userId, $courseId, $registrationId, $certificate_number]);
+    } catch (PDOException $e) {
+        error_log('Error al emitir certificado: ' . $e->getMessage());
+        return false;
+    }
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $body = json_decode(file_get_contents('php://input'), true);
     $courseId = isset($body['course_id']) ? intval($body['course_id']) : 0;
@@ -125,6 +181,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($progress['total_items'] > 0 && $progress['completed_count'] === $progress['total_items']) {
             $stmtUpdate = $pdo->prepare('UPDATE registrations SET status = "completed" WHERE client_id = ? AND course_id = ? AND payment_status = "paid" AND status != "completed"');
             $stmtUpdate->execute([$auth['user_id'], $courseId]);
+            
+            // Verificar si la actualización fue efectiva
+            if ($stmtUpdate->rowCount() > 0) {
+                // Obtener el ID de la inscripción para emitir el certificado
+                $regStmt = $pdo->prepare('SELECT id FROM registrations WHERE client_id = ? AND course_id = ?');
+                $regStmt->execute([$auth['user_id'], $courseId]);
+                $registration = $regStmt->fetch();
+                
+                if ($registration) {
+                    // Emitir certificado automáticamente
+                    $certificateIssued = emitCertificate($auth['user_id'], $courseId, $registration['id']);
+                    
+                    if (!$certificateIssued) {
+                        error_log('Error al emitir certificado para el usuario ' . $auth['user_id'] . ' y curso ' . $courseId);
+                    }
+                }
+            }
         }
 
         echo json_encode(array_merge(['success' => true], $progress));

@@ -119,6 +119,27 @@ try {
         FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
+    // Crear tabla de certificados
+    $pdo->exec("CREATE TABLE IF NOT EXISTS certificates (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        course_id INT NOT NULL,
+        registration_id INT,
+        certificate_number VARCHAR(50) UNIQUE NOT NULL,
+        issue_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        expiry_date DATE NULL,
+        is_valid BOOLEAN DEFAULT TRUE,
+        pdf_path VARCHAR(500),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE,
+        FOREIGN KEY (registration_id) REFERENCES registrations(id) ON DELETE SET NULL,
+        INDEX idx_user_certificate (user_id),
+        INDEX idx_course_certificate (course_id),
+        INDEX idx_certificate_number (certificate_number)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
     // Crear tabla de asesorías
     $pdo->exec("CREATE TABLE IF NOT EXISTS advisories (
         id INT AUTO_INCREMENT PRIMARY KEY,

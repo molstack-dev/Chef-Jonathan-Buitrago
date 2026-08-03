@@ -52,6 +52,7 @@ try {
     $advisories = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     // Obtener eventos del usuario (tipo 'evento') que no tengan reembolso aprobado
+    // Para eventos, buscamos la fecha en la tabla de cursos si está disponible
     $stmt = $pdo->prepare(
         "SELECT 
             a.id,
@@ -63,7 +64,10 @@ try {
             a.advisory_service,
             a.advisory_mode,
             a.event_name,
-            a.date,
+            CASE 
+                WHEN c.event_date IS NOT NULL THEN c.event_date
+                ELSE a.date
+            END AS date,
             a.time,
             a.notes,
             a.status,
@@ -75,6 +79,7 @@ try {
             a.created_at
          FROM advisories a
          LEFT JOIN refunds r ON (r.refundable_id = a.id AND r.type = 'advisory_evento')
+         LEFT JOIN courses c ON (a.event_name = c.title OR a.advisory_service = c.title)
          WHERE a.user_id = ? AND a.service_type = 'evento'
          AND (r.id IS NULL OR r.refund_status != 'approved')
          ORDER BY a.date ASC, a.time ASC"

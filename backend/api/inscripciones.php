@@ -25,6 +25,35 @@ function requireSessionAdmin() {
     }
 }
 
+// Función para emitir un certificado automáticamente
+function emitCertificate(int $userId, int $courseId, int $registrationId): bool {
+    global $pdo;
+    
+    try {
+        // Verificar si ya existe un certificado para esta combinación usuario-curso
+        $checkStmt = $pdo->prepare('SELECT id FROM certificates WHERE user_id = ? AND course_id = ? AND registration_id = ?');
+        $checkStmt->execute([$userId, $courseId, $registrationId]);
+        if ($checkStmt->fetch()) {
+            // Ya existe un certificado para esta inscripción
+            return true;
+        }
+        
+        // Generar número único de certificado
+        $certificate_number = 'CERT-' . strtoupper(substr(uniqid(), -8)) . '-' . date('Y');
+        
+        // Insertar el certificado
+        $stmt = $pdo->prepare("
+            INSERT INTO certificates (user_id, course_id, registration_id, certificate_number, issue_date, is_valid)
+            VALUES (?, ?, ?, ?, NOW(), 1)
+        ");
+        
+        return $stmt->execute([$userId, $courseId, $registrationId, $certificate_number]);
+    } catch (PDOException $e) {
+        error_log('Error al emitir certificado: ' . $e->getMessage());
+        return false;
+    }
+}
+
 $method = $_SERVER['REQUEST_METHOD'];
 
 // GET: listar (admin todas, user las suyas)
@@ -209,6 +238,15 @@ if ($method === 'POST') {
             // columna no existe, no hacemos nada
         }
 
+        // Si se crea con estado 'completed', emitir certificado automáticamente
+        if ($payment_status === 'completed' && $client_id) {
+            $certificateIssued = emitCertificate($client_id, $course_id, $id);
+            
+            if (!$certificateIssued) {
+                error_log('Error al emitir certificado para la inscripción ' . $id);
+            }
+        }
+
         // Respuesta consistente con advisory-registration.php (data.id)
         echo json_encode(['success'=>true, 'data'=>['id'=>$id]]);
     } catch (PDOException $e) {
@@ -277,6 +315,29 @@ if ($method === 'PUT') {
     }
 
     try {
+        // Si se está cambiando a estado 'completed', emitir certificado
+        if ($status === 'completed') {
+            // Primero obtenemos los datos de la inscripción antes de actualizar
+            $regStmt = $pdo->prepare('SELECT client_id, course_id FROM registrations WHERE id = ?');
+            $regStmt->execute([$id]);
+            $registration = $regStmt->fetch(PDO::FETCH_ASSOC);
+            
+            if ($registration && $registration['client_id'] && $registration['course_id']) {
+                $stmt = $pdo->prepare('UPDATE registrations SET status = ? WHERE id = ?');
+                $stmt->execute([$status, $id]);
+                
+                // Emitir certificado automáticamente
+                $certificateIssued = emitCertificate($registration['client_id'], $registration['course_id'], $id);
+                
+                if (!$certificateIssued) {
+                    error_log('Error al emitir certificado para la inscripción ' . $id);
+                }
+                
+                echo json_encode(['success'=>true]);
+                exit;
+            }
+        }
+        
         $stmt = $pdo->prepare('UPDATE registrations SET status = ? WHERE id = ?');
         $stmt->execute([$status, $id]);
         echo json_encode(['success'=>true]);
@@ -310,4 +371,3 @@ if ($method === 'DELETE') {
 }
 
 jsonResponse(405, ['success'=>false, 'message'=>'Método no permitido']);
-
