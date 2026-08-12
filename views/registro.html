@@ -42,29 +42,39 @@
                 <div class="max-w-4xl mx-auto">
                     <h3 class="text-4xl font-bold text-center mb-16 text-white parisienne-font">Área de Miembros</h3>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <!-- Formulario de Login -->
-                        <div class="product-card p-8 rounded-xl bg-gray-800 bg-opacity-90">
-                            <h4 class="text-2xl font-semibold mb-6 text-white text-center">Iniciar Sesión</h4>
-                            <form id="login-form">
-                                <div class="mb-6">
-                                    <label for="login-email" class="block text-gray-300 mb-2">Correo Electrónico</label>
-                                    <input type="email" id="login-email" class="w-full" required>
-                                </div>
-                                <div class="mb-6">
-                                    <label for="login-password" class="block text-gray-300 mb-2">Contraseña</label>
-                                    <input type="password" id="login-password" class="w-full" required>
-                                </div>
-                                <div class="mb-6">
-                                    <a href="forgot-password.html" class="text-amber-500 text-sm hover:text-amber-400">¿Olvidaste tu contraseña?</a>
-                                </div>
-                                <button type="submit" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:opacity-90 transition-opacity">
-                                    Iniciar Sesión
-                                </button>
-                            </form>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-10">
+                        <!-- Columna 1: Login + Imagen -->
+                        <div class="flex flex-col gap-8">
+                            <!-- Formulario de Login -->
+                            <div class="product-card p- rounded-xl bg-gray-800 bg-opacity-90">
+                                <h4 class="text-2xl font-semibold mb-6 text-white text-center">Iniciar Sesión</h4>
+                                <form id="login-form">
+                                    <div class="mb-6">
+                                        <label for="login-email" class="block text-gray-300 mb-2">Correo Electrónico</label>
+                                        <input type="email" id="login-email" class="w-full" required>
+                                    </div>
+                                    <div class="mb-6">
+                                        <label for="login-password" class="block text-gray-300 mb-2">Contraseña</label>
+                                        <div class="relative">
+                                        <input type="password" id="login-password" class="w-full pr-10" required>
+                                        <span class="password-toggle absolute inset-y-0 right-0 flex items-center pr-3" onclick="togglePassword('login-password')">
+                                            <i class="fas fa-eye text-gray-500"></i>
+                                        </span>
+                                    </div>
+                                    </div>
+                                    <div class="mb-6">
+                                        <a href="forgot-password.html" class="text-amber-500 text-sm hover:text-amber-400">¿Olvidaste tu contraseña?</a>
+                                    </div>
+                                    <button type="submit" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 text-white py-3 rounded-lg font-semibold shadow-lg hover:opacity-90 transition-opacity">
+                                        Iniciar Sesión
+                                    </button>
+                                </form>
+                            </div>
+                            <!-- Imagen debajo del login -->
+                            <div class="product-card p-1 rounded-xl bg-gray-800 bg-opacity-90 flex-1">
+                                <img src="../img/chef_jonathan_buitrago_post_5_7_2019_14_55_082081519712904515788.jpg" alt="Imagen debajo del inicio de sesión" class="w-full h-full object-cover rounded-lg">
+                            </div>
                         </div>
-                        
-                        <!-- Formulario de Registro -->
                         <div class="product-card p-8 rounded-xl bg-gray-800 bg-opacity-90">
                             <h4 class="text-2xl font-semibold mb-6 text-white text-center">Crear Cuenta</h4>
                             <form id="register-form">
